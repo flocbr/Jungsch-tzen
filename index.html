@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Spieß-Zentrale</title>
+    <style>
+        :root { --green: #1a472a; --gold: #c5a059; --red: #d9534f; --bg: #f4f7f4; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header { 
+            background: var(--green); 
+            color: white; 
+            padding: 15px 10px; 
+            text-align: center; 
+            border-bottom: 4px solid var(--gold);
+            flex-shrink: 0;
+        }
+
+        /* Hauptbereich scrollbar machen */
+        .content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px 15px 100px 15px; /* Platz für die Navbar unten */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Navbar FIX für Handys */
+        .navbar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: white; 
+            display: flex; 
+            border-top: 2px solid var(--gold); 
+            z-index: 9999; 
+            padding-bottom: env(safe-area-inset-bottom); /* Fix für iPhone Notch unten */
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-item { 
+            flex: 1; 
+            text-align: center; 
+            padding: 12px 5px; 
+            color: #666; 
+            font-size: 12px; 
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        
+        .nav-item.active { color: var(--green); font-weight: bold; background: #f0f0f0; }
+        .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        h3 { color: var(--green); margin: 0 0 10px 0; border-bottom: 2px solid var(--gold); padding-bottom: 5px; font-size: 16px; }
+
+        /* Kalender Optimierung */
+        .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ccc; border-radius: 8px; overflow: hidden; }
+        .cal-head { background: var(--green); color: white; padding: 8px; text-align: center; font-size: 10px; }
+        .cal-day { background: white; min-height: 55px; padding: 4px; font-size: 10px; position: relative; box-sizing: border-box; }
+        .today { background: #fff9e6; box-shadow: inset 0 0 0 1px var(--gold); }
+        .ev-badge { background: #e8f0e8; color: var(--green); font-size: 8px; padding: 2px; border-radius: 3px; display: block; margin-top: 2px; border-left: 2px solid var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+        .btn { background: var(--green); color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; -webkit-appearance: none; }
+        .btn-red { background: var(--red); }
+        .btn-wa { background: #25D366; }
+        
+        .member-item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: white; border-radius: 10px; margin-bottom: 8px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .trash { color: #ccc; padding: 5px 10px; font-size: 20px; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; overflow-y: auto; }
+        .modal-content { background: white; margin: 10% auto; padding: 20px; width: 90%; border-radius: 15px; box-sizing: border-box; }
+        .badge { display: inline-block; background: var(--green); color: white; padding: 4px 10px; border-radius: 15px; margin: 2px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 style="margin:0; font-size: 18px;">Jungschützen Dannenbüttel</h1>
+</div>
+
+<div class="content">
+    <div id="page-kalender" class="page active">
+        <div class="card">
+            <div class="cal-nav">
+                <button onclick="chMonth(-1)" style="border:none; background:none; font-size:24px; padding:0 10px;">◀</button>
+                <b id="mLabel" style="font-size: 18px;"></b>
+                <button onclick="chMonth(1)" style="border:none; background:none; font-size:24px; padding:0 10px;">▶</button>
+            </div>
+            <div id="cGrid" class="calendar-grid"></div>
+        </div>
+    </div>
+
+    <div id="page-mitglieder" class="page">
+        <div id="mList"></div>
+        <button class="btn" style="background:var(--gold)" onclick="addM()">+ Mitglied hinzufügen</button>
+        <button class="btn btn-wa" style="margin-top:15px;" onclick="wa()">📋 WhatsApp Export</button>
+    </div>
+
+    <div id="page-termine" class="page">
+        <div class="card">
+            <h3>Neuen Termin anlegen</h3>
+            <input type="text" id="eN" placeholder="Name (z.B. Antreten)">
+            <input type="datetime-local" id="eDT">
+            <button class="btn" onclick="addE()">Termin speichern</button>
+        </div>
+        <div class="card" style="margin-top:30px; border:1px solid var(--red);">
+            <p style="font-size:12px; color:var(--red);">Achtung: Löscht alle eingetragenen Daten auf diesem Handy.</p>
+            <button class="btn btn-red" onclick="if(confirm('Wirklich ALLES löschen?')) {localStorage.clear(); location.reload();}">Daten-Reset</button>
+        </div>
+    </div>
+</div>
+
+<div class="navbar">
+    <div id="nav-kalender" class="nav-item active" onclick="showPage('kalender')">
+        <span class="nav-icon">📅</span>Kalender
+    </div>
+    <div id="nav-mitglieder" class="nav-item" onclick="showPage('mitglieder')">
+        <span class="nav-icon">👤</span>Schützen
+    </div>
+    <div id="nav-termine" class="nav-item" onclick="showPage('termine')">
+        <span class="nav-icon">⚙️</span>Termine
+    </div>
+</div>
+
+<div id="modalM" class="modal">
+    <div class="modal-content">
+        <h2 id="modN" style="margin:0; color:var(--green);"></h2>
+        <p id="modAge" style="font-weight:bold; margin:5px 0;"></p>
+        <hr>
+        <label>Abmelden für:</label>
+        <select id="evSel"></select>
+        <button class="btn" style="background:orange; color:black;" onclick="doAbm()">🕒 Abmelden (24h Check)</button>
+        <hr>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button class="btn btn-red" style="grid-column: span 2;" onclick="f('Fehlen', 10, false)">🚫 Unentschuldigt Fehlen</button>
+            <button class="btn btn-red" style="grid-column: span 2;" onclick="f('Verspätung', 5, false)">⏰ Verspätung</button>
+            <button class="btn" onclick="f('Unfug', 1, false)">🤡 Unfug</button>
+            <button class="btn" onclick="f('Uniform', 1, false)">👔 Uniform</button>
+            <button class="btn" onclick="f('Spieß', 1, false)">🗣️ Spieß</button>
+            <button class="btn" onclick="f('Austreten', 1, false)">🚶 Austreten</button>
+        </div>
+        <div style="margin-top:10px; padding:10px; background:#f0f0f0; border-radius:8px;">
+            <input type="number" id="customVal" placeholder="Fixer Betrag (€)" step="0.50">
+            <button class="btn" style="background:#555" onclick="customFine()">Indiv. Betrag buchen</button>
+        </div>
+        <button class="btn" style="background:#28a745; margin-top:15px;" onclick="pay()">💰 Schulden auf 0€</button>
+        <button class="btn" style="background:black; margin-top:10px;" onclick="closeM('modalM')">Schließen</button>
+    </div>
+</div>
+
+<div id="modalCheck" class="modal">
+    <div class="modal-content">
+        <h2 id="checkTitle" style="color:var(--green); margin:0;"></h2>
+        <p id="checkDate" style="font-weight:bold;"></p>
+        <hr>
+        <h4>Entschuldigt fehlen:</h4>
+        <div id="checkList"></div>
+        <button class="btn" style="background:black; margin-top:20px;" onclick="closeM('modalCheck')">Schließen</button>
+    </div>
+</div>
+
+<script>
+let members = JSON.parse(localStorage.getItem('js_m')) || [];
+let events = JSON.parse(localStorage.getItem('js_e')) || [];
+let vD = new Date();
+let aI = null;
+
+function save() { localStorage.setItem('js_m', JSON.stringify(members)); localStorage.setItem('js_e', JSON.stringify(events)); render(); }
+
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.getElementById('nav-' + id).classList.add('active');
+    render();
+}
+
+function parseDE(str) {
+    const p = str.split('.');
+    return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : null;
+}
+
+function getAge(bday) {
+    const bd = new Date(bday); const today = new Date();
+    let age = today.getFullYear() - bd.getFullYear();
+    if (today.getMonth() < bd.getMonth() || (today.getMonth() == bd.getMonth() && today.getDate() < bd.getDate())) age--;
+    return age;
+}
+
+function addM() { 
+    const n = prompt("Name:"); 
+    const bRaw = prompt("Geburtstag (TT.MM.JJJJ):", "01.01.2005");
+    const b = parseDE(bRaw);
+    if(n && b) { members.push({name:n, bday:b, fines:[], abm:[]}); save(); } 
+}
+
+function delM(idx) { if(confirm("Mitglied löschen?")) { members.splice(idx, 1); save(); } }
+
+function addE() { 
+    const n = document.getElementById('eN').value; 
+    const dt = document.getElementById('eDT').value; 
+    if(n && dt) { events.push({n, dt}); save(); alert("Termin gespeichert!"); } 
+}
+
+function chMonth(d) { vD.setMonth(vD.getMonth() + d); render(); }
+
+function render() {
+    document.getElementById('mLabel').innerText = vD.toLocaleString('de-DE', {month:'long', year:'numeric'});
+    const grid = document.getElementById('cGrid'); grid.innerHTML = '';
+    ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(t => grid.innerHTML += `<div class="cal-head">${t}</div>`);
+    const y = vD.getFullYear(), m = vD.getMonth();
+    const first = new Date(y, m, 1).getDay(); const off = first === 0 ? 6 : first - 1;
+    for(let i=0; i<off; i++) grid.innerHTML += '<div class="cal-day" style="background:#eee"></div>';
+    for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
+        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const evs = events.filter(e => e.dt.startsWith(ds));
+        grid.innerHTML += `<div class="cal-day ${d==new Date().getDate()&&m==new Date().getMonth()&&y==new Date().getFullYear()?'today':''}" onclick="checkEv('${ds}')">
+            <b>${d}</b>${evs.map(e => `<span class="ev-badge">${e.n}</span>`).join('')}
+        </div>`;
+    }
+    const list = document.getElementById('mList'); list.innerHTML = "";
+    members.sort((a,b)=>a.name.localeCompare(b.name)).forEach((m, i) => {
+        const factor = getAge(m.bday) < 18 ? 1 : 2;
+        let sum = 0; m.fines.forEach(x => sum += x.isFixed ? x.a : (x.a * factor));
+        list.innerHTML += `<div class="member-item">
+            <div style="flex-grow:1" onclick="opM(${i})"><b>${m.name}</b><br><small>${getAge(m.bday)} J.</small></div>
+            <b style="color:var(--red); margin-right:10px;">${sum.toFixed(2)}€</b>
+            <span class="trash" onclick="delM(${i})">🗑️</span>
+        </div>`;
+    });
+}
+
+function checkEv(ds) {
+    const evs = events.filter(e => e.dt.startsWith(ds));
+    if(evs.length === 0) return;
+    const e = evs[0];
+    document.getElementById('checkTitle').innerText = e.n;
+    document.getElementById('checkDate').innerText = new Date(e.dt).toLocaleString();
+    const gone = members.filter(m => m.abm && m.abm.includes(e.n));
+    document.getElementById('checkList').innerHTML = gone.length === 0 ? "Keine Abmeldungen." : gone.map(m => `<span class="badge">${m.name}</span>`).join('');
+    document.getElementById('modalCheck').style.display = 'block';
+}
+
+function opM(i) { 
+    aI = i; const m = members[i];
+    document.getElementById('modN').innerText = m.name; 
+    document.getElementById('modAge').innerText = getAge(m.bday) + " Jahre (" + (getAge(m.bday)<18?'U18':'Ü18') + ")";
+    document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
+    document.getElementById('modalM').style.display = "block"; 
+}
+
+function f(t, a, isFixed) { members[aI].fines.push({t, a, isFixed}); save(); if(t!='Verspätung'&&t!='Fehlen') closeM('modalM'); }
+
+function customFine() {
+    const val = parseFloat(document.getElementById('customVal').value);
+    if(!isNaN(val)) { f('Fixbetrag', val, true); document.getElementById('customVal').value = ''; closeM('modalM'); }
+}
+
+function doAbm() {
+    const sel = document.getElementById('evSel').value; if(!sel) return;
+    const [dt, name] = sel.split('|');
+    if((new Date(dt) - new Date()) / 3600000 < 24) f('Spät-Abmeldung: '+name, 5, false);
+    if(!members[aI].abm) members[aI].abm = [];
+    if(!members[aI].abm.includes(name)) members[aI].abm.push(name);
+    save(); closeM('modalM'); alert("Abgemeldet!");
+}
+
+function pay() { if(confirm("Beglichen?")) { members[aI].fines = []; save(); closeM('modalM'); } }
+function closeM(id) { document.getElementById(id).style.display = "none"; }
+function wa() { 
+    let t = "*DEPPENSOLD DANNENBÜTTEL*\n\n"; 
+    members.forEach(m => { 
+        const factor = getAge(m.bday) < 18 ? 1 : 2;
+        let s = 0; m.fines.forEach(x => s += x.isFixed ? x.a : (x.a * factor)); if(s>0) t += `${m.name}: ${s.toFixed(2)}€\n`; 
+    });
+    navigator.clipboard.writeText(t).then(() => alert("Kopiert!"));
+}
+render();
+</script>
+</body>
+</html>
