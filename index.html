@@ -13,9 +13,11 @@
             margin: 0; 
             padding: 0;
             height: 100vh;
+            height: 100dvh; 
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow: -viewport;
+            touch-action: manipulation;
         }
 
         .header { 
@@ -26,6 +28,7 @@
             border-bottom: 4px solid var(--gold);
             flex-shrink: 0;
             position: relative;
+            z-index: 10;
         }
 
         .cash-banner {
@@ -56,8 +59,10 @@
         .content {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 15px 15px 100px 15px;
+            padding: 15px 15px 120px 15px; 
             -webkit-overflow-scrolling: touch;
+            position: relative;
+            z-index: 1;
         }
 
         .page { display: none; }
@@ -72,20 +77,20 @@
             display: flex; 
             border-top: 2px solid var(--gold); 
             z-index: 99999; 
-            padding-bottom: 15px; /* Festes Polster für Handys */
+            padding-bottom: calc(15px + env(safe-area-inset-bottom)); 
             box-shadow: 0 -3px 10px rgba(0,0,0,0.15);
         }
         
         .nav-item { 
             flex: 1; 
             text-align: center; 
-            padding: 15px 5px; /* Mehr Platz zum Tippen */
+            padding: 15px 5px; 
             color: #666; 
             font-size: 13px; 
             cursor: pointer;
             border: none;
             background: none;
-            -webkit-tap-highlight-color: transparent; /* Verhindert blaues Flackern */
+            -webkit-tap-highlight-color: transparent;
         }
         
         .nav-item.active { color: var(--green); font-weight: bold; background: #f0f0f0; }
@@ -94,28 +99,20 @@
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
         h3 { color: var(--green); margin: 0 0 10px 0; border-bottom: 2px solid var(--gold); padding-bottom: 5px; font-size: 16px; }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ccc; border-radius: 8px; overflow: hidden; }
-        .cal-head { background: var(--green); color: white; padding: 8px; text-align: center; font-size: 10px; }
-        .cal-day { background: white; min-height: 55px; padding: 4px; font-size: 10px; position: relative; box-sizing: border-box; }
-        .today { background: #fff9e6; box-shadow: inset 0 0 0 1px var(--gold); }
-        .ev-badge { background: #e8f0e8; color: var(--green); font-size: 8px; padding: 2px; border-radius: 3px; display: block; margin-top: 2px; border-left: 2px solid var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
         .btn { background: var(--green); color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; -webkit-appearance: none; }
         .btn-red { background: var(--red); }
         .btn-wa { background: #25D366; }
-        .btn-wa { background: #25D366; }
         .btn-sm { padding: 8px 12px; font-size: 14px; width: auto; display: inline-block; margin-right: 5px; }
         
         .member-item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: white; border-radius: 10px; margin-bottom: 8px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .t-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f9f9f9; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--green); }
+        .t-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--green); box-shadow: 0 2px 5px rgba(0,0,0,0.08); cursor: pointer; }
         .trash { color: #ccc; padding: 5px 10px; font-size: 20px; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; overflow-y: auto; }
         .modal-content { background: white; margin: 5% auto; padding: 20px; width: 92%; border-radius: 15px; box-sizing: border-box; }
-        .badge { display: inline-block; background: var(--green); color: white; padding: 4px 10px; border-radius: 15px; margin: 2px; font-size: 12px; }
+        .badge { display: inline-block; background: var(--green); color: white; padding: 6px 12px; border-radius: 15px; margin: 4px; font-size: 13px; font-weight: bold; }
         
-        /* Toggle Switch */
         .switch-container { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #eee; }
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -135,14 +132,8 @@
 
 <div class="content">
     <div id="page-kalender" class="page active">
-        <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <button onclick="chMonth(-1)" style="border:none; background:none; font-size:24px; padding:0 10px;">◀</button>
-                <b id="mLabel" style="font-size: 18px;"></b>
-                <button onclick="chMonth(1)" style="border:none; background:none; font-size:24px; padding:0 10px;">▶</button>
-            </div>
-            <div id="cGrid" class="calendar-grid"></div>
-        </div>
+        <h3 style="margin-bottom: 15px;">📅 Anstehende Termine</h3>
+        <div id="calendarTermineList"></div>
     </div>
 
     <div id="page-mitglieder" class="page">
@@ -162,7 +153,7 @@
         </div>
 
         <div class="card">
-            <h3>Bestehende Termine</h3>
+            <h3>Termine bearbeiten / löschen</h3>
             <div id="tList"></div>
         </div>
 
@@ -180,7 +171,7 @@
 
 <div class="navbar">
     <div id="nav-kalender" class="nav-item active" onclick="showPage('kalender')">
-        <span class="nav-icon">📅</span>Kalender
+        <span class="nav-icon">📅</span>Termine
     </div>
     <div id="nav-mitglieder" class="nav-item" onclick="showPage('mitglieder')">
         <span class="nav-icon">👤</span>Schützen
@@ -234,21 +225,20 @@
 <div id="modalCheck" class="modal">
     <div class="modal-content">
         <h2 id="checkTitle" style="color:var(--green); margin:0;"></h2>
-        <p id="checkDate" style="font-weight:bold;"></p>
+        <p id="checkDate" style="font-weight:bold; margin-top:5px; color:#666;"></p>
         <hr>
-        <h4>Entschuldigt fehlen / Dauerabgemeldet:</h4>
+        <h4 style="margin:15px 0 5px 0;">Abgemeldet / Entschuldigt:</h4>
         <div id="checkList"></div>
-        <button class="btn" style="background:black; margin-top:20px;" onclick="closeM('modalCheck')">Schließen</button>
+        <button class="btn" style="background:black; margin-top:25px;" onclick="closeM('modalCheck')">Schließen</button>
     </div>
 </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyk4uncRo-T3dcVlz5CSWm9RW4YBRiCEjKKxP1hztpBxpcepc0pZ_KbUUZIkURjm5PQJQ/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxe92SEys_t2XZVWHMTtQWHdjfEpgozCPIV3bQjXUrbE9C2rTknzm5efxXwFX75soXbMA/exec";
 
 let members = [];
 let events = [];
 let cashBalance = 0.0;
-let vD = new Date();
 let aI = null; 
 
 function showLoading(show) { document.getElementById('spinner').style.display = show ? 'block' : 'none'; }
@@ -262,9 +252,18 @@ async function saveToCloud(actionType) {
     if (actionType === "saveCash") payload.cashBalance = cashBalance;
 
     try {
-        await fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", cache: "no-cache", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    } catch (e) { console.error("Fehler beim Sichern:", e); }
-    finally { showLoading(false); }
+        await fetch(WEB_APP_URL, { 
+            method: "POST", 
+            mode: "no-cors", 
+            cache: "no-cache", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify(payload) 
+        });
+    } catch (e) { 
+        console.error("Fehler beim Sichern:", e); 
+    } finally { 
+        showLoading(false); 
+    }
 }
 
 async function loadFromCloud() {
@@ -272,15 +271,20 @@ async function loadFromCloud() {
     showLoading(true);
     try {
         const response = await fetch(WEB_APP_URL);
-        const data = await response.json();
-        if (data) {
+        const rawText = await response.text();
+        
+        if (rawText && rawText.trim().startsWith("{")) {
+            const data = JSON.parse(rawText);
             members = data.members || [];
             events = data.events || [];
             cashBalance = Number(data.cashBalance) || 0.0;
-            render();
         }
-    } catch (e) { console.error("Fehler beim Laden:", e); }
-    finally { showLoading(false); }
+        render();
+    } catch (e) { 
+        console.error("Fehler beim Laden:", e); 
+    } finally { 
+        showLoading(false); 
+    }
 }
 
 function showPage(id) {
@@ -306,13 +310,16 @@ function getAge(bday) {
 function getMemberFineSum(m) {
     const factor = getAge(m.bday) < 18 ? 1 : 2;
     let sum = 0; 
-    m.fines.forEach(x => sum += x.isFixed ? x.a : (x.a * factor));
+    if (m.fines) {
+        m.fines.forEach(x => sum += x.isFixed ? x.a : (x.a * factor));
+    }
     return sum;
 }
 
 function addM() { 
     const n = prompt("Name:"); 
     const bRaw = prompt("Geburtstag (TT.MM.JJJJ):", "01.01.2005");
+    if(!n || !bRaw) return;
     const b = parseDE(bRaw);
     if(n && b) { 
         const id = "m_" + Date.now();
@@ -386,24 +393,44 @@ function toggleDauer() {
     saveToCloud("saveMembers");
 }
 
-function chMonth(d) { vD.setMonth(vD.getMonth() + d); render(); }
+function openEventCheck(name, dtString) {
+    document.getElementById('checkTitle').innerText = name;
+    document.getElementById('checkDate').innerText = new Date(dtString).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + " Uhr";
+    
+    const gone = members.filter(m => (m.abm && m.abm.includes(name)) || m.isDauer);
+    document.getElementById('checkList').innerHTML = gone.length === 0 
+        ? '<span style="color:#666; font-style:italic;">Keine Abmeldungen für diesen Termin.</span>' 
+        : gone.map(m => `<span class="badge" style="${m.isDauer?'background:orange;color:black;':''}">${m.name}${m.isDauer?' (Dauer)':''}</span>`).join('');
+    
+    document.getElementById('modalCheck').style.display = 'block';
+}
 
 function render() {
     document.getElementById('cashDisplay').innerText = cashBalance.toFixed(2);
-    document.getElementById('mLabel').innerText = vD.toLocaleString('de-DE', {month:'long', year:'numeric'});
     
-    // Kalender rendern
-    const grid = document.getElementById('cGrid'); grid.innerHTML = '';
-    ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(t => grid.innerHTML += `<div class="cal-head">${t}</div>`);
-    const y = vD.getFullYear(), m = vD.getMonth();
-    const first = new Date(y, m, 1).getDay(); const off = first === 0 ? 6 : first - 1;
-    for(let i=0; i<off; i++) grid.innerHTML += '<div class="cal-day" style="background:#eee"></div>';
-    for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
-        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const evs = events.filter(e => e.dt.startsWith(ds));
-        grid.innerHTML += `<div class="cal-day ${d==new Date().getDate()&&m==new Date().getMonth()&&y==new Date().getFullYear()?'today':''}" onclick="checkEv('${ds}')">
-            <b>${d}</b>${evs.map(e => `<span class="ev-badge">${e.n}</span>`).join('')}
-        </div>`;
+    // Sortierung der Events nach Datum
+    const sortedEvents = [...events].sort((a,b) => new Date(a.dt) - new Date(b.dt));
+
+    // Hauptseite: Terminliste rendern
+    const calList = document.getElementById('calendarTermineList');
+    calList.innerHTML = "";
+    if(sortedEvents.length === 0) {
+        calList.innerHTML = '<div class="card" style="text-align:center;color:#666;">Keine Termine eingetragen.</div>';
+    } else {
+        sortedEvents.forEach(e => {
+            const countAbm = members.filter(m => (m.abm && m.abm.includes(e.n)) || m.isDauer).length;
+            const abmText = countAbm === 1 ? "1 Abmeldung" : `${countAbm} Abmeldungen`;
+            
+            calList.innerHTML += `<div class="t-item" onclick="openEventCheck('${e.n}', '${e.dt}')">
+                <div>
+                    <b style="font-size:16px; color:var(--green);">${e.n}</b><br>
+                    <small style="color:#555;">📅 ${new Date(e.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})} Uhr</small>
+                </div>
+                <div style="text-align:right; font-size:12px; color:#666; font-weight:bold; background:#eee; padding:5px 10px; border-radius:20px;">
+                    👤 ${abmText}
+                </div>
+            </div>`;
+        });
     }
     
     // Schützen-Liste rendern
@@ -420,29 +447,18 @@ function render() {
         </div>`;
     });
 
-    // Termin-Liste (Verwaltung) rendern
+    // Verwaltung: Bearbeitungs-Liste rendern
     const tl = document.getElementById('tList'); tl.innerHTML = "";
-    events.sort((a,b)=> new Date(a.dt) - new Date(b.dt)).forEach((e, idx) => {
-        tl.innerHTML += `<div class="t-item">
+    sortedEvents.forEach((e) => {
+        const originalIdx = events.findIndex(orig => orig.dt === e.dt && orig.n === e.n);
+        tl.innerHTML += `<div class="member-item" style="padding:10px 15px;">
             <div><b>${e.n}</b><br><small>${new Date(e.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})} Uhr</small></div>
             <div>
-                <button class="btn btn-sm" style="background:var(--gold);" onclick="editE(${idx})">✏️</button>
-                <button class="btn btn-sm btn-red" onclick="delE(${idx})">🗑️</button>
+                <button class="btn btn-sm" style="background:var(--gold); margin:0;" onclick="editE(${originalIdx})">✏️</button>
+                <button class="btn btn-sm btn-red" style="margin:0;" onclick="delE(${originalIdx})">🗑️</button>
             </div>
         </div>`;
     });
-}
-
-function checkEv(ds) {
-    const evs = events.filter(e => e.dt.startsWith(ds));
-    if(evs.length === 0) return;
-    const e = evs[0];
-    document.getElementById('checkTitle').innerText = e.n;
-    document.getElementById('checkDate').innerText = new Date(e.dt).toLocaleString();
-    
-    const gone = members.filter(m => (m.abm && m.abm.includes(e.n)) || m.isDauer);
-    document.getElementById('checkList').innerHTML = gone.length === 0 ? "Keine Abmeldungen." : gone.map(m => `<span class="badge" style="${m.isDauer?'background:orange;color:black;':''}">${m.name}${m.isDauer?' (Dauer)':''}</span>`).join('');
-    document.getElementById('modalCheck').style.display = 'block';
 }
 
 function opM(id) { 
@@ -475,7 +491,9 @@ function removeAbm(eventName) {
     const mIdx = members.findIndex(m => m.id === aI);
     if(mIdx === -1) return;
     members[mIdx].abm = members[mIdx].abm.filter(name => name !== eventName);
-    members[mIdx].fines = members[mIdx].fines.filter(f => f.t !== 'Spät-Abmeldung: ' + eventName);
+    if(members[mIdx].fines) {
+        members[mIdx].fines = members[mIdx].fines.filter(f => f.t !== 'Spät-Abmeldung: ' + eventName);
+    }
     
     render(); saveToCloud("saveMembers");
     opM(aI);
@@ -485,6 +503,7 @@ function removeAbm(eventName) {
 function f(t, a, isFixed) { 
     const mIdx = members.findIndex(m => m.id === aI);
     if(mIdx === -1) return;
+    if(!members[mIdx].fines) members[mIdx].fines = [];
     members[mIdx].fines.push({t, a, isFixed}); 
     render(); saveToCloud("saveMembers");
     if(t!='Verspätung'&&t!='Fehlen') closeM('modalM'); 
@@ -499,9 +518,10 @@ function customFine() {
 function doAbm() {
     const sel = document.getElementById('evSel').value; if(!sel) return;
     const [dt, name] = sel.split('|');
-    const mIdx = members.f02:59 21.05.2026a02:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.202602:59 21.05.2026indIndex(m => m.id === aI);
+    const mIdx = members.findIndex(m => m.id === aI);
     if(mIdx === -1) return;
 
+    if(!members[mIdx].fines) members[mIdx].fines = [];
     if (!members[mIdx].isDauer && (new Date(dt) - new Date()) / 3600000 < 24) {
         members[mIdx].fines.push({t: 'Spät-Abmeldung: '+name, a: 5, isFixed: false});
     }
