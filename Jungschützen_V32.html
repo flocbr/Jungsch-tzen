@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Spieß-Zentrale v32</title>
+    <style>
+        :root { --green: #1a472a; --gold: #c5a059; --red: #d9534f; --bg: #f4f7f4; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header { 
+            background: var(--green); 
+            color: white; 
+            padding: 12px 10px; 
+            text-align: center; 
+            border-bottom: 4px solid var(--gold);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .cash-banner {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+            margin-top: 5px;
+            font-weight: bold;
+            border: 1px solid var(--gold);
+        }
+
+        .loading-spinner {
+            display: none;
+            position: absolute;
+            right: 15px;
+            top: 18px;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top: 2px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px 15px 100px 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .navbar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: white; 
+            display: flex; 
+            border-top: 2px solid var(--gold); 
+            z-index: 9999; 
+            padding-bottom: env(safe-area-inset-bottom);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-item { 
+            flex: 1; 
+            text-align: center; 
+            padding: 12px 5px; 
+            color: #666; 
+            font-size: 12px; 
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        
+        .nav-item.active { color: var(--green); font-weight: bold; background: #f0f0f0; }
+        .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        h3 { color: var(--green); margin: 0 0 10px 0; border-bottom: 2px solid var(--gold); padding-bottom: 5px; font-size: 16px; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ccc; border-radius: 8px; overflow: hidden; }
+        .cal-head { background: var(--green); color: white; padding: 8px; text-align: center; font-size: 10px; }
+        .cal-day { background: white; min-height: 55px; padding: 4px; font-size: 10px; position: relative; box-sizing: border-box; }
+        .today { background: #fff9e6; box-shadow: inset 0 0 0 1px var(--gold); }
+        .ev-badge { background: #e8f0e8; color: var(--green); font-size: 8px; padding: 2px; border-radius: 3px; display: block; margin-top: 2px; border-left: 2px solid var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+        .btn { background: var(--green); color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; -webkit-appearance: none; }
+        .btn-red { background: var(--red); }
+        .btn-wa { background: #25D366; }
+        .btn-sm { padding: 8px 12px; font-size: 14px; width: auto; display: inline-block; margin-right: 5px; }
+        
+        .member-item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: white; border-radius: 10px; margin-bottom: 8px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .t-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f9f9f9; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--green); }
+        .trash { color: #ccc; padding: 5px 10px; font-size: 20px; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; overflow-y: auto; }
+        .modal-content { background: white; margin: 5% auto; padding: 20px; width: 92%; border-radius: 15px; box-sizing: border-box; }
+        .badge { display: inline-block; background: var(--green); color: white; padding: 4px 10px; border-radius: 15px; margin: 2px; font-size: 12px; }
+        
+        /* Toggle Switch */
+        .switch-container { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #eee; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--green); }
+        input:checked + .slider:before { transform: translateX(24px); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 style="margin:0; font-size: 18px;">Jungschützen Dannenbüttel</h1>
+    <div class="cash-banner">💰 Kasse: <span id="cashDisplay">0.00</span> €</div>
+    <div id="spinner" class="loading-spinner"></div>
+</div>
+
+<div class="content">
+    <div id="page-kalender" class="page active">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <button onclick="chMonth(-1)" style="border:none; background:none; font-size:24px; padding:0 10px;">◀</button>
+                <b id="mLabel" style="font-size: 18px;"></b>
+                <button onclick="chMonth(1)" style="border:none; background:none; font-size:24px; padding:0 10px;">▶</button>
+            </div>
+            <div id="cGrid" class="calendar-grid"></div>
+        </div>
+    </div>
+
+    <div id="page-mitglieder" class="page">
+        <div id="mList"></div>
+        <button class="btn" style="background:var(--gold)" onclick="addM()">+ Mitglied hinzufügen</button>
+        <button class="btn btn-wa" style="margin-top:15px;" onclick="wa()">📋 WhatsApp Export</button>
+    </div>
+
+    <div id="page-termine" class="page">
+        <div class="card">
+            <h3 id="tFormTitle">Neuen Termin anlegen</h3>
+            <input type="hidden" id="editTIdx" value="">
+            <input type="text" id="eN" placeholder="Name (z.B. Antreten)">
+            <input type="datetime-local" id="eDT">
+            <button class="btn" id="btnSaveE" onclick="addE()">Termin speichern</button>
+            <button class="btn" id="btnCancelE" style="background:#888; display:none; margin-top:5px;" onclick="cancelEditE()">Abbrechen</button>
+        </div>
+
+        <div class="card">
+            <h3>Bestehende Termine</h3>
+            <div id="tList"></div>
+        </div>
+
+        <div class="card">
+            <h3>Manuelle Kassenbuchung</h3>
+            <input type="number" id="cashAmt" placeholder="Betrag in € (z.B. 20 oder -15)" step="0.01">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <button class="btn" style="background:#28a745;" onclick="modCash(true)">[+] Einzahlen</button>
+                <button class="btn btn-red" onclick="modCash(false)">[-] Auszahlen</button>
+            </div>
+        </div>
+        <button class="btn" style="background:#555; margin-top:20px;" onclick="loadFromCloud()">🔄 Cloud-Daten manuell laden</button>
+    </div>
+</div>
+
+<div class="navbar">
+    <div id="nav-kalender" class="nav-item active" onclick="showPage('kalender')">
+        <span class="nav-icon">📅</span>Kalender
+    </div>
+    <div id="nav-mitglieder" class="nav-item" onclick="showPage('mitglieder')">
+        <span class="nav-icon">👤</span>Schützen
+    </div>
+    <div id="nav-termine" class="nav-item" onclick="showPage('termine')">
+        <span class="nav-icon">⚙️</span>Verwaltung
+    </div>
+</div>
+
+<div id="modalM" class="modal">
+    <div class="modal-content">
+        <h2 id="modN" style="margin:0; color:var(--green);"></h2>
+        <p id="modAge" style="font-weight:bold; margin:5px 0;"></p>
+        
+        <div class="switch-container">
+            <span>Dauerabgemeldet (Kein 24h Check)</span>
+            <label class="switch">
+                <input type="checkbox" id="modDauer" onchange="toggleDauer()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <hr>
+        <label>Abmelden für Termin:</label>
+        <select id="evSel"></select>
+        <button class="btn" style="background:orange; color:black;" onclick="doAbm()">🕒 Abmelden (24h Check)</button>
+        
+        <div id="abmCancelArea" style="margin-top:10px; display:none;">
+            <label style="font-size:12px; color:#666;">Abmeldung aufheben für:</label>
+            <div id="abmCancelButtons"></div>
+        </div>
+        
+        <hr>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <button class="btn btn-red" style="grid-column: span 2;" onclick="f('Fehlen', 10, false)">🚫 Unentschuldigt Fehlen</button>
+            <button class="btn btn-red" style="grid-column: span 2;" onclick="f('Verspätung', 5, false)">⏰ Verspätung</button>
+            <button class="btn" onclick="f('Unfug', 1, false)">🤡 Unfug</button>
+            <button class="btn" onclick="f('Uniform', 1, false)">👔 Uniform</button>
+            <button class="btn" onclick="f('Spieß', 1, false)">🗣️ Spieß</button>
+            <button class="btn" onclick="f('Austreten', 1, false)">🚶 Austreten</button>
+        </div>
+        <div style="margin-top:10px; padding:10px; background:#f0f0f0; border-radius:8px;">
+            <input type="number" id="customVal" placeholder="Fixer Betrag (€)" step="0.50">
+            <button class="btn" style="background:#555" onclick="customFine()">Indiv. Betrag buchen</button>
+        </div>
+        <button class="btn" style="background:#28a745; margin-top:15px;" id="btnPayAll" onclick="pay()">💰 Schulden beglichen (Wandert in Kasse)</button>
+        <button class="btn" style="background:black; margin-top:10px;" onclick="closeM('modalM')">Schließen</button>
+    </div>
+</div>
+
+<div id="modalCheck" class="modal">
+    <div class="modal-content">
+        <h2 id="checkTitle" style="color:var(--green); margin:0;"></h2>
+        <p id="checkDate" style="font-weight:bold;"></p>
+        <hr>
+        <h4>Entschuldigt fehlen / Dauerabgemeldet:</h4>
+        <div id="checkList"></div>
+        <button class="btn" style="background:black; margin-top:20px;" onclick="closeM('modalCheck')">Schließen</button>
+    </div>
+</div>
+
+<script>
+// !!! HIER DEINE GOOGLE APPS SCRIPT URL EINTRAGEN !!!
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyk4uncRo-T3dcVlz5CSWm9RW4YBRiCEjKKxP1hztpBxpcepc0pZ_KbUUZIkURjm5PQJQ/exec";
+
+let members = [];
+let events = [];
+let cashBalance = 0.0;
+let vD = new Date();
+let aI = null; 
+
+function showLoading(show) { document.getElementById('spinner').style.display = show ? 'block' : 'none'; }
+
+async function saveToCloud(actionType) {
+    if (!WEB_APP_URL || WEB_APP_URL.startsWith("DEINE_")) return;
+    showLoading(true);
+    let payload = { action: actionType };
+    if (actionType === "saveMembers") payload.members = members;
+    if (actionType === "saveEvents") payload.events = events;
+    if (actionType === "saveCash") payload.cashBalance = cashBalance;
+
+    try {
+        await fetch(WEB_APP_URL, { method: "POST", mode: "no-cors", cache: "no-cache", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    } catch (e) { console.error("Fehler beim Sichern:", e); }
+    finally { showLoading(false); }
+}
+
+async function loadFromCloud() {
+    if (!WEB_APP_URL || WEB_APP_URL.startsWith("DEINE_")) return;
+    showLoading(true);
+    try {
+        const response = await fetch(WEB_APP_URL);
+        const data = await response.json();
+        if (data) {
+            members = data.members || [];
+            events = data.events || [];
+            cashBalance = Number(data.cashBalance) || 0.0;
+            render();
+        }
+    } catch (e) { console.error("Fehler beim Laden:", e); }
+    finally { showLoading(false); }
+}
+
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    document.getElementById('nav-' + id).classList.add('active');
+    render();
+}
+
+function parseDE(str) {
+    const p = str.split('.');
+    return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : null;
+}
+
+function getAge(bday) {
+    const bd = new Date(bday); const today = new Date();
+    let age = today.getFullYear() - bd.getFullYear();
+    if (today.getMonth() < bd.getMonth() || (today.getMonth() == bd.getMonth() && today.getDate() < bd.getDate())) age--;
+    return age;
+}
+
+function getMemberFineSum(m) {
+    const factor = getAge(m.bday) < 18 ? 1 : 2;
+    let sum = 0; 
+    m.fines.forEach(x => sum += x.isFixed ? x.a : (x.a * factor));
+    return sum;
+}
+
+function addM() { 
+    const n = prompt("Name:"); 
+    const bRaw = prompt("Geburtstag (TT.MM.JJJJ):", "01.01.2005");
+    const b = parseDE(bRaw);
+    if(n && b) { 
+        const id = "m_" + Date.now();
+        members.push({id: id, name:n, bday:b, isDauer:false, fines:[], abm:[]}); 
+        render(); saveToCloud("saveMembers");
+    } 
+}
+
+function delM(id) { 
+    if(confirm("Mitglied löschen?")) { 
+        members = members.filter(m => m.id !== id); 
+        render(); saveToCloud("saveMembers");
+    } 
+}
+
+function addE() { 
+    const n = document.getElementById('eN').value; 
+    const dt = document.getElementById('eDT').value; 
+    const editIdx = document.getElementById('editTIdx').value;
+    if(n && dt) { 
+        if(editIdx !== "") {
+            events[parseInt(editIdx)] = {n, dt};
+            cancelEditE();
+        } else {
+            events.push({n, dt}); 
+        }
+        document.getElementById('eN').value = '';
+        document.getElementById('eDT').value = '';
+        render(); saveToCloud("saveEvents");
+    } 
+}
+
+function editE(idx) {
+    const ev = events[idx];
+    document.getElementById('editTIdx').value = idx;
+    document.getElementById('eN').value = ev.n;
+    document.getElementById('eDT').value = ev.dt;
+    document.getElementById('tFormTitle').innerText = "Termin bearbeiten";
+    document.getElementById('btnSaveE').innerText = "Änderung speichern";
+    document.getElementById('btnCancelE').style.display = "block";
+}
+
+function cancelEditE() {
+    document.getElementById('editTIdx').value = "";
+    document.getElementById('eN').value = "";
+    document.getElementById('eDT').value = "";
+    document.getElementById('tFormTitle').innerText = "Neuen Termin anlegen";
+    document.getElementById('btnSaveE').innerText = "Termin speichern";
+    document.getElementById('btnCancelE').style.display = "none";
+}
+
+function delE(idx) {
+    if(confirm("Termin wirklich löschen?")) {
+        events.splice(idx, 1);
+        render(); saveToCloud("saveEvents");
+    }
+}
+
+function modCash(isAdd) {
+    const val = parseFloat(document.getElementById('cashAmt').value);
+    if(isNaN(val)) return;
+    cashBalance += isAdd ? val : -val;
+    document.getElementById('cashAmt').value = '';
+    render(); saveToCloud("saveCash");
+}
+
+function toggleDauer() {
+    const mIdx = members.findIndex(m => m.id === aI);
+    if(mIdx === -1) return;
+    members[mIdx].isDauer = document.getElementById('modDauer').checked;
+    saveToCloud("saveMembers");
+}
+
+function chMonth(d) { vD.setMonth(vD.getMonth() + d); render(); }
+
+function render() {
+    document.getElementById('cashDisplay').innerText = cashBalance.toFixed(2);
+    document.getElementById('mLabel').innerText = vD.toLocaleString('de-DE', {month:'long', year:'numeric'});
+    
+    // Kalender rendern
+    const grid = document.getElementById('cGrid'); grid.innerHTML = '';
+    ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(t => grid.innerHTML += `<div class="cal-head">${t}</div>`);
+    const y = vD.getFullYear(), m = vD.getMonth();
+    const first = new Date(y, m, 1).getDay(); const off = first === 0 ? 6 : first - 1;
+    for(let i=0; i<off; i++) grid.innerHTML += '<div class="cal-day" style="background:#eee"></div>';
+    for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
+        const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const evs = events.filter(e => e.dt.startsWith(ds));
+        grid.innerHTML += `<div class="cal-day ${d==new Date().getDate()&&m==new Date().getMonth()&&y==new Date().getFullYear()?'today':''}" onclick="checkEv('${ds}')">
+            <b>${d}</b>${evs.map(e => `<span class="ev-badge">${e.n}</span>`).join('')}
+        </div>`;
+    }
+    
+    // Schützen-Liste rendern
+    const list = document.getElementById('mList'); list.innerHTML = "";
+    members.sort((a,b)=>a.name.localeCompare(b.name)).forEach((m) => {
+        const sum = getMemberFineSum(m);
+        list.innerHTML += `<div class="member-item">
+            <div style="flex-grow:1" onclick="opM('${m.id}')">
+                <b>${m.name}</b> ${m.isDauer ? '⭐<small style="color:orange">(Dauerabgem.)</small>':''}<br>
+                <small>${getAge(m.bday)} J.</small>
+            </div>
+            <b style="color:var(--red); margin-right:10px;">${sum.toFixed(2)}€</b>
+            <span class="trash" onclick="delM('${m.id}')">🗑️</span>
+        </div>`;
+    });
+
+    // Termin-Liste (Verwaltung) rendern
+    const tl = document.getElementById('tList'); tl.innerHTML = "";
+    events.sort((a,b)=> new Date(a.dt) - new Date(b.dt)).forEach((e, idx) => {
+        tl.innerHTML += `<div class="t-item">
+            <div><b>${e.n}</b><br><small>${new Date(e.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})} Uhr</small></div>
+            <div>
+                <button class="btn btn-sm" style="background:var(--gold);" onclick="editE(${idx})">✏️</button>
+                <button class="btn btn-sm btn-red" onclick="delE(${idx})">🗑️</button>
+            </div>
+        </div>`;
+    });
+}
+
+function checkEv(ds) {
+    const evs = events.filter(e => e.dt.startsWith(ds));
+    if(evs.length === 0) return;
+    const e = evs[0];
+    document.getElementById('checkTitle').innerText = e.n;
+    document.getElementById('checkDate').innerText = new Date(e.dt).toLocaleString();
+    
+    const gone = members.filter(m => (m.abm && m.abm.includes(e.n)) || m.isDauer);
+    document.getElementById('checkList').innerHTML = gone.length === 0 ? "Keine Abmeldungen." : gone.map(m => `<span class="badge" style="${m.isDauer?'background:orange;color:black;':''}">${m.name}${m.isDauer?' (Dauer)':''}</span>`).join('');
+    document.getElementById('modalCheck').style.display = 'block';
+}
+
+function opM(id) { 
+    aI = id; 
+    const m = members.find(m => m.id === id);
+    if(!m) return;
+    document.getElementById('modN').innerText = m.name; 
+    document.getElementById('modAge').innerText = getAge(m.bday) + " Jahre (" + (getAge(m.bday)<18?'U18':'Ü18') + ")";
+    document.getElementById('modDauer').checked = m.isDauer || false;
+    document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
+    
+    const cancelArea = document.getElementById('abmCancelArea');
+    const cancelButtons = document.getElementById('abmCancelButtons');
+    cancelButtons.innerHTML = "";
+    if(m.abm && m.abm.length > 0) {
+        cancelArea.style.display = "block";
+        m.abm.forEach(name => {
+            cancelButtons.innerHTML += `<button class="btn btn-sm btn-red" style="margin-bottom:5px;" onclick="removeAbm('${name}')">❌ ${name} aufheben</button>`;
+        });
+    } else {
+        cancelArea.style.display = "none";
+    }
+
+    const fineSum = getMemberFineSum(m);
+    document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (+${fineSum.toFixed(2)}€ in Kasse)`;
+    document.getElementById('modalM').style.display = "block"; 
+}
+
+function removeAbm(eventName) {
+    const mIdx = members.findIndex(m => m.id === aI);
+    if(mIdx === -1) return;
+    members[mIdx].abm = members[mIdx].abm.filter(name => name !== eventName);
+    members[mIdx].fines = members[mIdx].fines.filter(f => f.t !== 'Spät-Abmeldung: ' + eventName);
+    
+    render(); saveToCloud("saveMembers");
+    opM(aI);
+    alert(`Abmeldung für "${eventName}" wurde aufgehoben!`);
+}
+
+function f(t, a, isFixed) { 
+    const mIdx = members.findIndex(m => m.id === aI);
+    if(mIdx === -1) return;
+    members[mIdx].fines.push({t, a, isFixed}); 
+    render(); saveToCloud("saveMembers");
+    if(t!='Verspätung'&&t!='Fehlen') closeM('modalM'); 
+    else opM(aI);
+}
+
+function customFine() {
+    const val = parseFloat(document.getElementById('customVal').value);
+    if(!isNaN(val)) {
