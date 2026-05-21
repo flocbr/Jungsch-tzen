@@ -243,7 +243,6 @@
 </div>
 
 <script>
-// !!! HIER DEINE GOOGLE APPS SCRIPT URL EINTRAGEN !!!
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyk4uncRo-T3dcVlz5CSWm9RW4YBRiCEjKKxP1hztpBxpcepc0pZ_KbUUZIkURjm5PQJQ/exec";
 
 let members = [];
@@ -410,4 +409,135 @@ function render() {
     // Schützen-Liste rendern
     const list = document.getElementById('mList'); list.innerHTML = "";
     members.sort((a,b)=>a.name.localeCompare(b.name)).forEach((m) => {
-        const sum = get
+        const sum = getMemberFineSum(m);
+        list.innerHTML += `<div class="member-item">
+            <div style="flex-grow:1" onclick="opM('${m.id}')">
+                <b>${m.name}</b> ${m.isDauer ? '⭐<small style="color:orange">(Dauerabgem.)</small>':''}<br>
+                <small>${getAge(m.bday)} J.</small>
+            </div>
+            <b style="color:var(--red); margin-right:10px;">${sum.toFixed(2)}€</b>
+            <span class="trash" onclick="delM('${m.id}')">🗑️</span>
+        </div>`;
+    });
+
+    // Termin-Liste (Verwaltung) rendern
+    const tl = document.getElementById('tList'); tl.innerHTML = "";
+    events.sort((a,b)=> new Date(a.dt) - new Date(b.dt)).forEach((e, idx) => {
+        tl.innerHTML += `<div class="t-item">
+            <div><b>${e.n}</b><br><small>${new Date(e.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})} Uhr</small></div>
+            <div>
+                <button class="btn btn-sm" style="background:var(--gold);" onclick="editE(${idx})">✏️</button>
+                <button class="btn btn-sm btn-red" onclick="delE(${idx})">🗑️</button>
+            </div>
+        </div>`;
+    });
+}
+
+function checkEv(ds) {
+    const evs = events.filter(e => e.dt.startsWith(ds));
+    if(evs.length === 0) return;
+    const e = evs[0];
+    document.getElementById('checkTitle').innerText = e.n;
+    document.getElementById('checkDate').innerText = new Date(e.dt).toLocaleString();
+    
+    const gone = members.filter(m => (m.abm && m.abm.includes(e.n)) || m.isDauer);
+    document.getElementById('checkList').innerHTML = gone.length === 0 ? "Keine Abmeldungen." : gone.map(m => `<span class="badge" style="${m.isDauer?'background:orange;color:black;':''}">${m.name}${m.isDauer?' (Dauer)':''}</span>`).join('');
+    document.getElementById('modalCheck').style.display = 'block';
+}
+
+function opM(id) { 
+    aI = id; 
+    const m = members.find(m => m.id === id);
+    if(!m) return;
+    document.getElementById('modN').innerText = m.name; 
+    document.getElementById('modAge').innerText = getAge(m.bday) + " Jahre (" + (getAge(m.bday)<18?'U18':'Ü18') + ")";
+    document.getElementById('modDauer').checked = m.isDauer || false;
+    document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
+    
+    const cancelArea = document.getElementById('abmCancelArea');
+    const cancelButtons = document.getElementById('abmCancelButtons');
+    cancelButtons.innerHTML = "";
+    if(m.abm && m.abm.length > 0) {
+        cancelArea.style.display = "block";
+        m.abm.forEach(name => {
+            cancelButtons.innerHTML += `<button class="btn btn-sm btn-red" style="margin-bottom:5px;" onclick="removeAbm('${name}')">❌ ${name} aufheben</button>`;
+        });
+    } else {
+        cancelArea.style.display = "none";
+    }
+
+    const fineSum = getMemberFineSum(m);
+    document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (+${fineSum.toFixed(2)}€ in Kasse)`;
+    document.getElementById('modalM').style.display = "block"; 
+}
+
+function removeAbm(eventName) {
+    const mIdx = members.findIndex(m => m.id === aI);
+    if(mIdx === -1) return;
+    members[mIdx].abm = members[mIdx].abm.filter(name => name !== eventName);
+    members[mIdx].fines = members[mIdx].fines.filter(f => f.t !== 'Spät-Abmeldung: ' + eventName);
+    
+    render(); saveToCloud("saveMembers");
+    opM(aI);
+    alert(`Abmeldung für "${eventName}" wurde aufgehoben!`);
+}
+
+function f(t, a, isFixed) { 
+    const mIdx = members.findIndex(m => m.id === aI);
+    if(mIdx === -1) return;
+    members[mIdx].fines.push({t, a, isFixed}); 
+    render(); saveToCloud("saveMembers");
+    if(t!='Verspätung'&&t!='Fehlen') closeM('modalM'); 
+    else opM(aI);
+}
+
+function customFine() {
+    const val = parseFloat(document.getElementById('customVal').value);
+    if(!isNaN(val)) { f('Fixbetrag', val, true); document.getElementById('customVal').value = ''; closeM('modalM'); }
+}
+
+function doAbm() {
+    const sel = document.getElementById('evSel').value; if(!sel) return;
+    const [dt, name] = sel.split('|');
+    const mIdx = members.findIndex(m => m.id === aI);
+    if(mIdx === -1) return;
+
+    if (!members[mIdx].isDauer && (new Date(dt) - new Date()) / 3600000 < 24) {
+        members[mIdx].fines.push({t: 'Spät-Abmeldung: '+name, a: 5, isFixed: false});
+    }
+    if(!members[mIdx].abm) members[mIdx].abm = [];
+    if(!members[mIdx].abm.includes(name)) members[mIdx].abm.push(name);
+    
+    render(); saveToCloud("saveMembers");
+    closeM('modalM'); alert("Abgemeldet!");
+}
+
+function pay() { 
+    const mIdx = members.findIndex(m => m.id === aI);
+    if(mIdx === -1) return;
+    const sum = getMemberFineSum(members[mIdx]);
+    
+    if(confirm(`${members[mIdx].name} hat ${sum.toFixed(2)}€ bezahlt?`)) { 
+        cashBalance += sum; 
+        members[mIdx].fines = []; 
+        render();
+        saveToCloud("saveMembers");
+        saveToCloud("saveCash");
+        closeM('modalM'); 
+    } 
+}
+
+function closeM(id) { document.getElementById(id).style.display = "none"; }
+
+function wa() { 
+    let t = "*DEPPENSOLD DANNENBÜTTEL*\n\n"; 
+    members.forEach(m => { 
+        const s = getMemberFineSum(m); if(s>0) t += `${m.name}: ${s.toFixed(2)}€\n`; 
+    });
+    navigator.clipboard.writeText(t).then(() => alert("Kopiert!"));
+}
+
+loadFromCloud();
+</script>
+</body>
+</html>
