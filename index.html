@@ -571,7 +571,6 @@ function getAge(bday) {
     return age;
 }
 
-// Logik: U18 trägt Weißjacke (Faktor 1), Ü18 trägt Graujacke (Faktor 2)
 function getMemberFineSum(m) {
     const factor = getAge(m.bday) < 18 ? 1 : 2;
     let sum = 0; 
@@ -701,7 +700,15 @@ function toggleAttendance(mId, eventId, eventName, eventDtString) {
     }
     
     saveToCloud("saveMembers");
-    setTimeout(() => { openEventCheck(eventId); }, 100);
+    
+    // UI aktualisieren, ohne das Fenster zu flackern
+    const currentStatus = members[mIdx].attendance[eventId] || "";
+    const badgeSpan = document.getElementById(`badge-container-${mId}`);
+    if (badgeSpan) {
+        if (currentStatus === "pünktlich") badgeSpan.innerHTML = '<span class="status-badge status-ontime">Pünktlich</span>';
+        else if (currentStatus === "verspätet") badgeSpan.innerHTML = '<span class="status-badge status-late">Zu Spät ⏰</span>';
+        else badgeSpan.innerHTML = '';
+    }
 }
 
 function openEventCheck(eventId) {
@@ -733,7 +740,8 @@ function openEventCheck(eventId) {
             
             return `<div class="attendance-row">
                 <div>
-                    <span style="font-weight:bold;">${m.name}</span> ${statusBadge}
+                    <span style="font-weight:bold;">${m.name}</span> 
+                    <span id="badge-container-${m.id}">${statusBadge}</span>
                 </div>
                 <input type="checkbox" id="chk-${m.id}" class="checkbox-large" 
                     ${isChecked ? 'checked' : ''} 
