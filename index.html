@@ -151,9 +151,10 @@
         input:checked + .slider { background-color: var(--green); }
         input:checked + .slider:before { transform: translateX(24px); }
 
-        table.ordnung-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        table.ordnung-table th, table.ordnung-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        table.ordnung-table th { background: var(--green); color: white; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
+        table.ordnung-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
+        table.ordnung-table th, table.ordnung-table td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+        table.ordnung-table th { background: var(--green); color: white; font-size: 14px; }
 
         .attendance-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
         .attendance-row:last-child { border: none; }
@@ -173,56 +174,147 @@
 </div>
 
 <div class="content">
-    <!-- Tab 1: Termine -->
     <div id="page-kalender" class="page active">
         <h3 style="margin-bottom: 15px;">📅 Anstehende Termine & Antreten</h3>
         <div id="calendarTermineList"></div>
     </div>
 
-    <!-- Tab 2: Schützen -->
     <div id="page-mitglieder" class="page">
         <div id="mList"></div>
         <button class="btn" style="background:var(--gold)" onclick="addM()">+ Mitglied hinzufügen</button>
         <button class="btn btn-wa" style="margin-top:15px;" onclick="wa()">📋 WhatsApp Export</button>
     </div>
 
-    <!-- Tab 3: Regelwerk -->
     <div id="page-regeln" class="page">
-        <div class="card">
-            <h3>👔 Kleidungsordnung</h3>
-            <table class="ordnung-table">
-                <thead>
-                    <tr><th>Anlass</th><th>Vorschrift</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td><b>Schützenfest / Ausmarsch</b></td><td>Grüner Schützenrock, weiße Hose, weißes Hemd, Vereinskrawatte, schwarze Schuhe, Hut mit Feder.</td></tr>
-                    <tr><td><b>Königsball / Kommers</b></td><td>Grüner Schützenrock, schwarze Hose, weißes Hemd, Vereinskrawatte, schwarze Schuhe (ohne Hut).</td></tr>
-                    <tr><td><b>Versammlungen</b></td><td>Zivil, aber ordentlich. Vereins-Poloshirt (falls vorhanden) erwünscht.</td></tr>
-                    <tr><td><b>Arbeitsdienst / Aufbau</b></td><td>Alte Kleidung / Arbeitskleidung, festes Schuhwerk. Vereins-T-Shirt.</td></tr>
-                </tbody>
-            </table>
+        <div class="card" style="padding: 10px;">
+            <h3>👔 Offizielle Kleidungsordnung</h3>
+            <p style="font-size: 11px; color: #666; margin-top: -5px;">👉 Tabelle lässt sich auf dem Handy seitlich wischen!</p>
+            <div class="table-responsive">
+                <table class="ordnung-table">
+                    <thead>
+                        <tr>
+                            <th>Kategorie</th>
+                            <th>Graujacken (Herren)</th>
+                            <th>Graujacken (Damen)</th>
+                            <th>Weißjacken (Herren)</th>
+                            <th>Weißjacken (Damen)</th>
+                            <th>Sonderposten</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>Kopf</b></td>
+                            <td>Schützenhut, grau meliert, mit Feder (einfach oder doppelt)</td>
+                            <td>-</td>
+                            <td>Schiffchen</td>
+                            <td>Schiffchen</td>
+                            <td><b>Bierkutscher:</b> Seppelhut</td>
+                        </tr>
+                        <tr>
+                            <td><b>Hals</b></td>
+                            <td>Krawatte, dunkelgrün, mit Schützenlogo</td>
+                            <td>Krawatte, dunkelgrün, mit Schützenlogo</td>
+                            <td>Krawatte, dunkelgrün, mit Schützenlogo</td>
+                            <td>Krawatte, dunkelgrün, mit Schützenlogo</td>
+                            <td><b>Würdenträger:</b> Kette, sofern vorhanden</td>
+                        </tr>
+                        <tr>
+                            <td><b>Oberkörper</b></td>
+                            <td>Hemd, weiß<br>- lang<br>- kurz</td>
+                            <td>Bluse, weiß, mit Halsknopf!<br>- lang<br>- kurz</td>
+                            <td>Hemd, weiß<br>- lang<br>- kurz</td>
+                            <td>Bluse, weiß, mit Halsknopf!<br>- lang<br>- kurz</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><b>Jacke / Details</b></td>
+                            <td>
+                                Graujacke (mittelgrau)<br>
+                                - oberer Kragen: Eichenlaub, silber, mit Ästen nach außen<br>
+                                - unterer Kragen: ggf. Nadeln, Abzeichen, Pins<br>
+                                - Knöpfe: grün, mit Schützenlogo, 3 Stück, 22mm<br>
+                                - Knöpfe: grün, mit Schützenlogo, 2 Stück, 17mm (Schulterklappen)<br>
+                                - rechter Ärmel: Wappen Schützenverein Dannenbüttel<br>
+                                - linker Ärmel: Wappen Kreisschützenverband Gifhorn<br>
+                                - Schulterklappen mit gelben Litzen: Dem Dienstgrad entsprechend<br>
+                                - Vorderseite links: ggf. Orden
+                            </td>
+                            <td>-</td>
+                            <td>
+                                Weißjacke<br>
+                                - oberer Kragen: Eichenlaub, silber, mit Ästen nach außen<br>
+                                - unterer Kragen: ggf. Nadeln, Abzeichen, Pins<br>
+                                - Knöpfe: grün, mit Schützenlogo, 3 Stück, 22mm<br>
+                                - Knöpfe: grün, mit Schützenlogo, 2 Stück, 17mm (Schulterklappen)<br>
+                                - rechter Ärmel: Wappen Schützenverein Dannenbüttel<br>
+                                - linker Ärmel: Wappen Kreisschützenverband Gifhorn<br>
+                                - Schulterklappen mit gelben Litzen: Dem Dienstgrad entsprechend<br>
+                                - Vorderseite links: ggf. Orden
+                            </td>
+                            <td>-</td>
+                            <td>
+                                <b>Kommandeur:</b> weiße Handschuhe, Kordeln (silber), Säbel<br>
+                                <b>Spieße:</b> Kordeln, gelb<br>
+                                <b>Würdenträger:</b> Schärpen<br>
+                                <b>Standartenträger:</b> Riemen, Standarte<br>
+                                <b>Fahnenträger:</b> Riemen, Fahne
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><b>Beine</b></td>
+                            <td>Hose, schwarz, lang</td>
+                            <td>Hose, schwarz, lang<br>oder Rock, schwarz, knielang</td>
+                            <td>Hose, schwarz, lang</td>
+                            <td>Hose, schwarz, lang</td>
+                            <td><b>Samstagsrock</b></td>
+                        </tr>
+                        <tr>
+                            <td><b>Füße</b></td>
+                            <td>Socken, schwarz, hoch<br>Schuhe, schwarz</td>
+                            <td>
+                                Socken, schwarz, hoch<br>Schuhe, schwarz<br><b>ODER</b><br>
+                                Socken/Strumpfhosen, nylon<br>Absatzschuhe, schwarz<br>Ballerinas, schwarz
+                            </td>
+                            <td>Socken, schwarz, hoch<br>Schuhe, schwarz</td>
+                            <td>
+                                Socken, schwarz, hoch<br>Schuhe, schwarz<br><b>ODER</b><br>
+                                Socken/Strumpfhosen, nylon<br>Absatzschuhe, schwarz<br>Ballerinas, schwarz
+                            </td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><b>Sonstiges</b></td>
+                            <td>Liederbuch<br>ggf. Tasche, schwarz, möglichst klein</td>
+                            <td>Liederbuch<br>ggf. Tasche, schwarz, möglichst klein</td>
+                            <td>Liederbuch<br>ggf. Tasche, schwarz, möglichst klein</td>
+                            <td>Liederbuch<br>ggf. Tasche, schwarz, möglichst klein</td>
+                            <td><b>Bierkutscher:</b> Bierkutsche<br>Kommandeur: Säbel<br>Standartenträger: Standarte<br>Fahnenträger: Fahne</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
         
         <div class="card">
-            <h3>📖 Offizieller Strafenkatalog</h3>
-            <p style="font-size: 12px; color:#666; margin-top:-5px;">*Ü18 zahlt bei verhaltensbasierten Strafen den doppelten Satz.</p>
-            <table class="ordnung-table">
+            <h3>📖 Offizieller Deppensold</h3>
+            <table class="ordnung-table" style="min-width: 100%;">
                 <thead>
-                    <tr><th>Vergehen</th><th>U18</th><th>Ü18</th></tr>
+                    <tr><th>Delikt</th><th>Weißjacke</th><th>Graujacke</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Unentschuldigt Fehlen</td><td>10.00 €</td><td>20.00 €</td></tr>
-                    <tr><td>Verspätung beim Antreten</td><td>5.00 €</td><td>10.00 €</td></tr>
-                    <tr><td>Spät-Abmeldung (&lt;24h)</td><td>5.00 € (Fix)</td><td>5.00 € (Fix)</td></tr>
-                    <tr><td>Fehlerhafte Uniform / Kleidung</td><td>1.00 €</td><td>2.00 €</td></tr>
-                    <tr><td>Unfug / Spieß-Missachtung</td><td>1.00 €</td><td>2.00 €</td></tr>
-                    <tr><td>Austreten ohne Erlaubnis</td><td>1.00 €</td><td>2.00 €</td></tr>
+                    <tr><td>Grober Unfug</td><td>1.00 €</td><td>2.00 €</td></tr>
+                    <tr><td>Fehlerhafte Uniform</td><td>1.00 €</td><td>2.00 €</td></tr>
+                    <tr><td>Diskussion mit Spieß</td><td>1.00 €</td><td>2.00 €</td></tr>
+                    <tr><td>Unerlaubtes Austreten</td><td>1.00 €</td><td>2.00 €</td></tr>
+                    <tr><td>Unentschuldigtes Verspäten</td><td>2.50 €</td><td>5.00 €</td></tr>
+                    <tr><td>Unentschuldigtes Fehlen</td><td>5.00 €</td><td>10.00 €</td></tr>
+                    <tr><td>Fehlbenehmen Totenehrung / Denkmal</td><td>25.00 €</td><td>50.00 €</td></tr>
+                    <tr><td>Spät-Abmeldung (&lt;24h)</td><td colspan="2" style="text-align:center;">5.00 € (Fixer Satz)</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Tab 4: Verwaltung -->
     <div id="page-termine" class="page">
         <div class="card">
             <h3 id="tFormTitle">Neuen Termin anlegen</h3>
@@ -271,7 +363,6 @@
     </div>
 </div>
 
-<!-- Modal Mitglied-Details -->
 <div id="modalM" class="modal">
     <div class="modal-content">
         <h2 id="modN" style="margin:0; color:var(--green);"></h2>
@@ -296,12 +387,13 @@
             </div>
             <hr>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Fehlen', 10, false)">🚫 Unentschuldigt Fehlen</button>
-                <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Verspätung', 5, false)">⏰ Verspätung</button>
-                <button class="btn action-btn" onclick="f('Unfug', 1, false)">🤡 Unfug</button>
-                <button class="btn action-btn" onclick="f('Uniform', 1, false)">👔 Uniform</button>
-                <button class="btn action-btn" onclick="f('Spieß', 1, false)">🗣️ Spieß</button>
-                <button class="btn action-btn" onclick="f('Austreten', 1, false)">🚶 Austreten</button>
+                <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Unentschuldigtes Fehlen', 5, false)">🚫 Unentschuldigtes Fehlen</button>
+                <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Unentschuldigtes Verspäten', 2.5, false)">⏰ Verspätung</button>
+                <button class="btn btn-red action-btn" style="grid-column: span 2; background: #8b0000;" onclick="f('Fehlbenehmen Totenehrung', 25, false)">🪦 Denkmal / Totenehrung</button>
+                <button class="btn action-btn" onclick="f('Grober Unfug', 1, false)">🤡 Grober Unfug</button>
+                <button class="btn action-btn" onclick="f('Fehlerhafte Uniform', 1, false)">👔 Uniformfehler</button>
+                <button class="btn action-btn" onclick="f('Diskussion mit Spieß', 1, false)">🗣️ Spieß-Diskussion</button>
+                <button class="btn action-btn" onclick="f('Unerlaubtes Austreten', 1, false)">🚶 Unerlaubt Austreten</button>
             </div>
             <div style="margin-top:10px; padding:10px; background:#f0f0f0; border-radius:8px;">
                 <input type="number" id="customVal" placeholder="Fixer Betrag (€)" step="0.50">
@@ -320,7 +412,6 @@
     </div>
 </div>
 
-<!-- Modal Termin-Abmeldungen / Anwesenheit -->
 <div id="modalCheck" class="modal">
     <div class="modal-content">
         <h2 id="checkTitle" style="color:var(--green); margin:0;"></h2>
@@ -328,7 +419,7 @@
         <hr>
         
         <h4 style="margin:10px 0 5px 0;">🎯 Anwesenheit abhaken:</h4>
-        <p style="font-size:11px; color:#666; margin:0 0 10px 0;">*Nach der Soll-Zeit abgehakt = Autom. Verspätungsstrafe!</p>
+        <p style="font-size:11px; color:#666; margin:0 0 10px 0;">*Nach der Soll-Zeit abgehaken = Autom. Verspätungsstrafe!</p>
         <div id="attendanceList" style="background:#fff; border-radius:8px; border:1px solid #ddd; max-height:250px; overflow-y:auto; margin-bottom:15px;"></div>
 
         <h4 style="margin:15px 0 5px 0;">Abgemeldet / Entschuldigt:</h4>
@@ -338,7 +429,7 @@
 </div>
 
 <script>
-// --- DIENST-REVERENZ-LINKS ---
+// --- DIENST-REFERENZ-LINKS ---
 // Google Sheets Tabellen-URL: https://docs.google.com/spreadsheets/d/1C_mFidp_G2kfe79vL_g9f9S4mI3U6w8YwF8G9gK9j8A/edit
 // -----------------------------
 
@@ -350,7 +441,7 @@ let sysLog = [];
 let cashBalance = 0.0;
 let aI = null; 
 let currentUser = "Florian"; 
-let isSaving = false; // INTERNET-DUPLIKATS-BREMSE SCHLÜSSELVARIABLE
+let isSaving = false;
 
 function showLoading(show) { document.getElementById('spinner').style.display = show ? 'block' : 'none'; }
 
@@ -393,14 +484,13 @@ function setButtonsDisabled(disabled) {
     document.querySelectorAll('.action-btn').forEach(btn => btn.disabled = disabled);
 }
 
-// INTERNET-ABSICHERUNG: SPEICHER-SPERRE BEI SCHLECHTEM NETZWERK
 async function saveToCloud(actionType) {
     if (!WEB_APP_URL || WEB_APP_URL.startsWith("DEINE_")) return;
-    if (isSaving) return; // Blockiert sofort, wenn ein Sendevorgang bereits aktiv läuft!
+    if (isSaving) return; 
     
     isSaving = true;
     showLoading(true);
-    setButtonsDisabled(true); // Deaktiviert Buttons temporär gegen "Mehrfach-Tippen" im Funkloch
+    setButtonsDisabled(true);
 
     let payload = { action: actionType };
     if (actionType === "saveMembers") payload.members = members;
@@ -419,7 +509,6 @@ async function saveToCloud(actionType) {
     } catch (e) { 
         console.error("Fehler beim Sichern:", e); 
     } finally { 
-        // 1,2 Sekunden künstliche Abklingzeit, damit Google die Zeile fertig schreiben kann
         setTimeout(() => {
             isSaving = false;
             showLoading(false);
@@ -438,7 +527,6 @@ async function loadFromCloud() {
         if (rawText && rawText.trim().startsWith("{")) {
             const data = JSON.parse(rawText);
             
-            // INTERNET-ABSICHERUNG: AUTOMATISCHE DUPLIKATS-BREMSE BEIM AUSLESEN
             let uniqueMembers = [];
             let seenIds = new Set();
             if (data.members) {
@@ -483,6 +571,7 @@ function getAge(bday) {
     return age;
 }
 
+// Logik: U18 trägt Weißjacke (Faktor 1), Ü18 trägt Graujacke (Faktor 2)
 function getMemberFineSum(m) {
     const factor = getAge(m.bday) < 18 ? 1 : 2;
     let sum = 0; 
@@ -583,14 +672,13 @@ function toggleAttendance(mId, eventId, eventName, eventDtString) {
     if (mIdx === -1) return;
     
     if (!members[mIdx].attendance) members[mIdx].attendance = {};
-    
     const isChecked = document.getElementById(`chk-${mId}`).checked;
     
     if (isChecked) {
         const now = new Date();
         const eventTime = new Date(eventDtString);
-        
         let status = "pünktlich";
+        
         if (now > eventTime) {
             status = "verspätet";
             if (!members[mIdx].fines) members[mIdx].fines = [];
@@ -599,23 +687,21 @@ function toggleAttendance(mId, eventId, eventName, eventDtString) {
             const dateString = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
             
             members[mIdx].fines.push({
-                t: 'Verspätung (Automatik)', 
-                a: 5, 
+                t: 'Unentschuldigtes Verspäten', 
+                a: 2.5, 
                 isFixed: false, 
                 date: dateString,
-                time: timeString,
-                context: eventName
+                time: timeString
             });
             alert(`⏰ Zu spät! Automatische Verspätung für ${members[mIdx].name} erfasst.`);
         }
-        
         members[mIdx].attendance[eventId] = status;
     } else {
         delete members[mIdx].attendance[eventId];
     }
     
     saveToCloud("saveMembers");
-    openEventCheck(eventId);
+    setTimeout(() => { openEventCheck(eventId); }, 100);
 }
 
 function openEventCheck(eventId) {
@@ -716,11 +802,12 @@ function opMDetail(id) {
     const m = members.find(m => m.id === id);
     if(!m) return;
     
-    const isU18 = getAge(m.bday) < 18;
-    const factor = isU18 ? 1 : 2;
+    const isWeissjacke = getAge(m.bday) < 18;
+    const jackenName = isWeissjacke ? "Weißjacke" : "Graujacke";
+    const factor = isWeissjacke ? 1 : 2;
 
     document.getElementById('modN').innerText = m.name; 
-    document.getElementById('modAge').innerText = getAge(m.bday) + " Jahre (" + (isU18?'U18':'Ü18') + ")";
+    document.getElementById('modAge').innerText = `${getAge(m.bday)} Jahre (${jackenName})`;
     document.getElementById('modDauer').checked = m.isDauer || false;
     document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
     
@@ -734,7 +821,7 @@ function opMDetail(id) {
             const dateStr = f.date ? ` [${f.date}${timeStr}]` : '';
             const noteStr = f.note ? ` <br><i style="color:#555;">📝 Notiz: "${f.note}"</i>` : '';
             return `<div style="padding:6px 0; border-bottom:1px solid #eee; color:var(--red); line-height: 1.4;">
-                <b>${finalAmt.toFixed(2)}€</b> - ${f.t}${f.context?` (${f.context})`:''}<small style="color:#888; font-weight:bold;">${dateStr}</small>${noteStr}
+                <b>${finalAmt.toFixed(2)}€</b> - ${f.t}<small style="color:#888; font-weight:bold;">${dateStr}</small>${noteStr}
             </div>`;
         }).join('');
     }
@@ -762,7 +849,7 @@ function removeAbm(eventName) {
     logAction(`Abmeldung für ${members[mIdx].name} bei "${eventName}" aufgehoben.`);
     members[mIdx].abm = members[mIdx].abm.filter(name => name !== eventName);
     if(members[mIdx].fines) {
-        members[mIdx].fines = members[mIdx].fines.filter(f => f.t !== 'Spät-Abmeldung: ' + eventName);
+        members[mIdx].fines = members[mIdx].fines.filter(f => f.t !== 'Spät-Abmeldung');
     }
     
     render(); saveToCloud("saveMembers");
@@ -778,10 +865,6 @@ function f(t, a, isFixed, customNoteText = "") {
     const now = new Date();
     const todayStr = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
     const timeStr = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-    
-    let contextName = "";
-    const sel = document.getElementById('evSel').value;
-    if(sel) { contextName = sel.split('|')[1]; }
 
     members[mIdx].fines.push({
         t: t, 
@@ -789,11 +872,13 @@ function f(t, a, isFixed, customNoteText = "") {
         isFixed: isFixed, 
         date: todayStr,
         time: timeStr,
-        context: contextName,
         note: customNoteText !== "" ? customNoteText : null
     }); 
     
-    logAction(`Strafe erteilt an ${members[mIdx].name} : ${t} (${isFixed?a:a*(getAge(members[mIdx].bday)<18?1:2)}€)`);
+    const currentFactor = (getAge(members[mIdx].bday) < 18) ? 1 : 2;
+    const berechneterBetrag = isFixed ? a : (a * currentFactor);
+    
+    logAction(`Strafe erteilt an ${members[mIdx].name} : ${t} (${berechneterBetrag.toFixed(2)}€)`);
     render(); saveToCloud("saveMembers");
     opMDetail(aI);
 }
@@ -821,7 +906,7 @@ function doAbm() {
 
     let spatText = "";
     if (!members[mIdx].isDauer && (new Date(dt) - now) / 3600000 < 24) {
-        members[mIdx].fines.push({t: 'Spät-Abmeldung: '+name, a: 5, isFixed: true, date: todayStr, time: timeStr});
+        members[mIdx].fines.push({t: 'Spät-Abmeldung', a: 5, isFixed: true, date: todayStr, time: timeStr});
         spatText = " (Zuspät! 5€ verbucht)";
     }
     if(!members[mIdx].abm) members[mIdx].abm = [];
