@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spieß-Zentrale v32</title>
+    <title>Spieß-Zentrale v35-Pro</title>
     <style>
         :root { --green: #1a472a; --gold: #c5a059; --red: #d9534f; --bg: #f4f7f4; }
         
@@ -16,8 +16,13 @@
             height: 100dvh; 
             display: flex;
             flex-direction: column;
-            overflow: -viewport;
             touch-action: manipulation;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
         }
 
         .header { 
@@ -42,6 +47,19 @@
             border: 1px solid var(--gold);
         }
 
+        .user-badge {
+            position: absolute;
+            left: 10px;
+            top: 15px;
+            font-size: 12px;
+            background: var(--gold);
+            color: black;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
         .loading-spinner {
             display: none;
             position: absolute;
@@ -61,8 +79,6 @@
             overflow-y: auto;
             padding: 15px 15px 120px 15px; 
             -webkit-overflow-scrolling: touch;
-            position: relative;
-            z-index: 1;
         }
 
         .page { display: none; }
@@ -76,7 +92,7 @@
             background: white; 
             display: flex; 
             border-top: 2px solid var(--gold); 
-            z-index: 99999; 
+            z-index: 9999; 
             padding-bottom: calc(15px + env(safe-area-inset-bottom)); 
             box-shadow: 0 -3px 10px rgba(0,0,0,0.15);
         }
@@ -86,7 +102,7 @@
             text-align: center; 
             padding: 15px 5px; 
             color: #666; 
-            font-size: 13px; 
+            font-size: 12px; 
             cursor: pointer;
             border: none;
             background: none;
@@ -94,13 +110,14 @@
         }
         
         .nav-item.active { color: var(--green); font-weight: bold; background: #f0f0f0; }
-        .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+        .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
 
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
         h3 { color: var(--green); margin: 0 0 10px 0; border-bottom: 2px solid var(--gold); padding-bottom: 5px; font-size: 16px; }
 
         input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
         .btn { background: var(--green); color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; -webkit-appearance: none; }
+        .btn:disabled { background: #ccc !important; cursor: not-allowed; }
         .btn-red { background: var(--red); }
         .btn-wa { background: #25D366; }
         .btn-sm { padding: 8px 12px; font-size: 14px; width: auto; display: inline-block; margin-right: 5px; }
@@ -109,9 +126,22 @@
         .t-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--green); box-shadow: 0 2px 5px rgba(0,0,0,0.08); cursor: pointer; }
         .trash { color: #ccc; padding: 5px 10px; font-size: 20px; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; overflow-y: auto; }
-        .modal-content { background: white; margin: 5% auto; padding: 20px; width: 92%; border-radius: 15px; box-sizing: border-box; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; }
+        .modal-content { 
+            background: white; 
+            margin: 5% auto; 
+            padding: 20px; 
+            width: 92%; 
+            max-height: 85vh;
+            border-radius: 15px; 
+            box-sizing: border-box; 
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
         .badge { display: inline-block; background: var(--green); color: white; padding: 6px 12px; border-radius: 15px; margin: 4px; font-size: 13px; font-weight: bold; }
+        .log-item { font-size: 12px; padding: 6px; border-bottom: 1px solid #eee; font-family: monospace; }
+        .log-item:last-child { border: none; }
         
         .switch-container { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #eee; }
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
@@ -120,28 +150,79 @@
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--green); }
         input:checked + .slider:before { transform: translateX(24px); }
+
+        table.ordnung-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        table.ordnung-table th, table.ordnung-table td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        table.ordnung-table th { background: var(--green); color: white; }
+
+        .attendance-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .attendance-row:last-child { border: none; }
+        .checkbox-large { width: 24px; height: 24px; cursor: pointer; }
+        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
+        .status-ontime { background: #d4edda; color: #155724; }
+        .status-late { background: #f8d7da; color: #721c24; }
     </style>
 </head>
 <body>
 
 <div class="header">
+    <div id="userRoleBadge" class="user-badge" onclick="switchUserPrompt()">Bediener: ?</div>
     <h1 style="margin:0; font-size: 18px;">Jungschützen Dannenbüttel</h1>
     <div class="cash-banner">💰 Kasse: <span id="cashDisplay">0.00</span> €</div>
     <div id="spinner" class="loading-spinner"></div>
 </div>
 
 <div class="content">
+    <!-- Tab 1: Termine -->
     <div id="page-kalender" class="page active">
-        <h3 style="margin-bottom: 15px;">📅 Anstehende Termine</h3>
+        <h3 style="margin-bottom: 15px;">📅 Anstehende Termine & Antreten</h3>
         <div id="calendarTermineList"></div>
     </div>
 
+    <!-- Tab 2: Schützen -->
     <div id="page-mitglieder" class="page">
         <div id="mList"></div>
         <button class="btn" style="background:var(--gold)" onclick="addM()">+ Mitglied hinzufügen</button>
         <button class="btn btn-wa" style="margin-top:15px;" onclick="wa()">📋 WhatsApp Export</button>
     </div>
 
+    <!-- Tab 3: Regelwerk -->
+    <div id="page-regeln" class="page">
+        <div class="card">
+            <h3>👔 Kleidungsordnung</h3>
+            <table class="ordnung-table">
+                <thead>
+                    <tr><th>Anlass</th><th>Vorschrift</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><b>Schützenfest / Ausmarsch</b></td><td>Grüner Schützenrock, weiße Hose, weißes Hemd, Vereinskrawatte, schwarze Schuhe, Hut mit Feder.</td></tr>
+                    <tr><td><b>Königsball / Kommers</b></td><td>Grüner Schützenrock, schwarze Hose, weißes Hemd, Vereinskrawatte, schwarze Schuhe (ohne Hut).</td></tr>
+                    <tr><td><b>Versammlungen</b></td><td>Zivil, aber ordentlich. Vereins-Poloshirt (falls vorhanden) erwünscht.</td></tr>
+                    <tr><td><b>Arbeitsdienst / Aufbau</b></td><td>Alte Kleidung / Arbeitskleidung, festes Schuhwerk. Vereins-T-Shirt.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h3>📖 Offizieller Strafenkatalog</h3>
+            <p style="font-size: 12px; color:#666; margin-top:-5px;">*Ü18 zahlt bei verhaltensbasierten Strafen den doppelten Satz.</p>
+            <table class="ordnung-table">
+                <thead>
+                    <tr><th>Vergehen</th><th>U18</th><th>Ü18</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Unentschuldigt Fehlen</td><td>10.00 €</td><td>20.00 €</td></tr>
+                    <tr><td>Verspätung beim Antreten</td><td>5.00 €</td><td>10.00 €</td></tr>
+                    <tr><td>Spät-Abmeldung (&lt;24h)</td><td>5.00 € (Fix)</td><td>5.00 € (Fix)</td></tr>
+                    <tr><td>Fehlerhafte Uniform / Kleidung</td><td>1.00 €</td><td>2.00 €</td></tr>
+                    <tr><td>Unfug / Spieß-Missachtung</td><td>1.00 €</td><td>2.00 €</td></tr>
+                    <tr><td>Austreten ohne Erlaubnis</td><td>1.00 €</td><td>2.00 €</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab 4: Verwaltung -->
     <div id="page-termine" class="page">
         <div class="card">
             <h3 id="tFormTitle">Neuen Termin anlegen</h3>
@@ -165,6 +246,12 @@
                 <button class="btn btn-red" onclick="modCash(false)">[-] Auszahlen</button>
             </div>
         </div>
+
+        <div class="card">
+            <h3>📋 System-Konsole (Letzte Aktionen)</h3>
+            <div id="systemConsoleLog" style="max-height: 150px; overflow-y: auto; background: #222; color: #0f0; padding: 10px; border-radius: 6px;"></div>
+        </div>
+        
         <button class="btn" style="background:#555; margin-top:20px;" onclick="loadFromCloud()">🔄 Cloud-Daten manuell laden</button>
     </div>
 </div>
@@ -176,57 +263,74 @@
     <div id="nav-mitglieder" class="nav-item" onclick="showPage('mitglieder')">
         <span class="nav-icon">👤</span>Schützen
     </div>
+    <div id="nav-regeln" class="nav-item" onclick="showPage('regeln')">
+        <span class="nav-icon">📜</span>Regelwerk
+    </div>
     <div id="nav-termine" class="nav-item" onclick="showPage('termine')">
         <span class="nav-icon">⚙️</span>Verwaltung
     </div>
 </div>
 
+<!-- Modal Mitglied-Details -->
 <div id="modalM" class="modal">
     <div class="modal-content">
         <h2 id="modN" style="margin:0; color:var(--green);"></h2>
         <p id="modAge" style="font-weight:bold; margin:5px 0;"></p>
         
-        <div class="switch-container">
-            <span>Dauerabgemeldet (Kein 24h Check)</span>
-            <label class="switch">
-                <input type="checkbox" id="modDauer" onchange="toggleDauer()">
-                <span class="slider"></span>
-            </label>
+        <div>
+            <div class="switch-container">
+                <span>Dauerabgemeldet (Kein 24h Check)</span>
+                <label class="switch">
+                    <input type="checkbox" id="modDauer" onchange="toggleDauer()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <hr>
+            <label>Abmelden für Termin:</label>
+            <select id="evSel"></select>
+            <button class="btn" style="background:orange; color:black;" onclick="doAbm()">🕒 Abmelden (24h Check)</button>
+            
+            <div id="abmCancelArea" style="margin-top:10px; display:none;">
+                <label style="font-size:12px; color:#666;">Abmeldung aufheben für:</label>
+                <div id="abmCancelButtons"></div>
+            </div>
+            <hr>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Fehlen', 10, false)">🚫 Unentschuldigt Fehlen</button>
+                <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Verspätung', 5, false)">⏰ Verspätung</button>
+                <button class="btn action-btn" onclick="f('Unfug', 1, false)">🤡 Unfug</button>
+                <button class="btn action-btn" onclick="f('Uniform', 1, false)">👔 Uniform</button>
+                <button class="btn action-btn" onclick="f('Spieß', 1, false)">🗣️ Spieß</button>
+                <button class="btn action-btn" onclick="f('Austreten', 1, false)">🚶 Austreten</button>
+            </div>
+            <div style="margin-top:10px; padding:10px; background:#f0f0f0; border-radius:8px;">
+                <input type="number" id="customVal" placeholder="Fixer Betrag (€)" step="0.50">
+                <input type="text" id="customNote" placeholder="Optionale Notiz (z.B. Krawatte fehlt)">
+                <button class="btn action-btn" style="background:#555" onclick="customFine()">Indiv. Betrag buchen</button>
+            </div>
         </div>
 
-        <hr>
-        <label>Abmelden für Termin:</label>
-        <select id="evSel"></select>
-        <button class="btn" style="background:orange; color:black;" onclick="doAbm()">🕒 Abmelden (24h Check)</button>
-        
-        <div id="abmCancelArea" style="margin-top:10px; display:none;">
-            <label style="font-size:12px; color:#666;">Abmeldung aufheben für:</label>
-            <div id="abmCancelButtons"></div>
+        <div style="margin-top:15px;">
+            <h4 style="margin:5px 0;">📋 Dashboard / Sündenregister (Zeitstempel):</h4>
+            <div id="memberFineLog" style="background:#f9f9f9; padding:8px; border-radius:6px; font-size:13px; min-height:40px;"></div>
         </div>
-        
-        <hr>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <button class="btn btn-red" style="grid-column: span 2;" onclick="f('Fehlen', 10, false)">🚫 Unentschuldigt Fehlen</button>
-            <button class="btn btn-red" style="grid-column: span 2;" onclick="f('Verspätung', 5, false)">⏰ Verspätung</button>
-            <button class="btn" onclick="f('Unfug', 1, false)">🤡 Unfug</button>
-            <button class="btn" onclick="f('Uniform', 1, false)">👔 Uniform</button>
-            <button class="btn" onclick="f('Spieß', 1, false)">🗣️ Spieß</button>
-            <button class="btn" onclick="f('Austreten', 1, false)">🚶 Austreten</button>
-        </div>
-        <div style="margin-top:10px; padding:10px; background:#f0f0f0; border-radius:8px;">
-            <input type="number" id="customVal" placeholder="Fixer Betrag (€)" step="0.50">
-            <button class="btn" style="background:#555" onclick="customFine()">Indiv. Betrag buchen</button>
-        </div>
-        <button class="btn" style="background:#28a745; margin-top:15px;" id="btnPayAll" onclick="pay()">💰 Schulden beglichen (Wandert in Kasse)</button>
+
+        <button class="btn action-btn" style="background:#28a745; margin-top:15px;" id="btnPayAll" onclick="pay()">💰 Schulden beglichen (Wandert in Kasse)</button>
         <button class="btn" style="background:black; margin-top:10px;" onclick="closeM('modalM')">Schließen</button>
     </div>
 </div>
 
+<!-- Modal Termin-Abmeldungen / Anwesenheit -->
 <div id="modalCheck" class="modal">
     <div class="modal-content">
         <h2 id="checkTitle" style="color:var(--green); margin:0;"></h2>
         <p id="checkDate" style="font-weight:bold; margin-top:5px; color:#666;"></p>
         <hr>
+        
+        <h4 style="margin:10px 0 5px 0;">🎯 Anwesenheit abhaken:</h4>
+        <p style="font-size:11px; color:#666; margin:0 0 10px 0;">*Nach der Soll-Zeit abgehakt = Autom. Verspätungsstrafe!</p>
+        <div id="attendanceList" style="background:#fff; border-radius:8px; border:1px solid #ddd; max-height:250px; overflow-y:auto; margin-bottom:15px;"></div>
+
         <h4 style="margin:15px 0 5px 0;">Abgemeldet / Entschuldigt:</h4>
         <div id="checkList"></div>
         <button class="btn" style="background:black; margin-top:25px;" onclick="closeM('modalCheck')">Schließen</button>
@@ -234,22 +338,75 @@
 </div>
 
 <script>
+// --- DIENST-REVERENZ-LINKS ---
+// Google Sheets Tabellen-URL: https://docs.google.com/spreadsheets/d/1C_mFidp_G2kfe79vL_g9f9S4mI3U6w8YwF8G9gK9j8A/edit
+// -----------------------------
+
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxe92SEys_t2XZVWHMTtQWHdjfEpgozCPIV3bQjXUrbE9C2rTknzm5efxXwFX75soXbMA/exec";
 
 let members = [];
 let events = [];
+let sysLog = [];
 let cashBalance = 0.0;
 let aI = null; 
+let currentUser = "Florian"; 
+let isSaving = false; // INTERNET-DUPLIKATS-BREMSE SCHLÜSSELVARIABLE
 
 function showLoading(show) { document.getElementById('spinner').style.display = show ? 'block' : 'none'; }
 
+function openM(id) {
+    document.getElementById(id).style.display = 'block';
+    document.body.classList.add('modal-open');
+}
+function closeM(id) {
+    document.getElementById(id).style.display = 'none';
+    document.body.classList.remove('modal-open');
+}
+
+function checkUserIdentity() {
+    let savedUser = localStorage.getItem("spiess_active_user");
+    if (savedUser) { currentUser = savedUser; } 
+    else { currentUser = "Florian"; localStorage.setItem("spiess_active_user", currentUser); }
+    document.getElementById("userRoleBadge").innerText = "Bediener: " + currentUser;
+}
+
+function switchUserPrompt() {
+    let name = prompt("Wer bedient die App gerade? (Florian / Jill):");
+    if (name && (name.toLowerCase() === "florian" || name.toLowerCase() === "jill")) {
+        currentUser = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+        localStorage.setItem("spiess_active_user", currentUser);
+        checkUserIdentity();
+        alert(`Bediener auf ${currentUser} gewechselt.`);
+        render();
+    }
+}
+
+async function logAction(msg) {
+    const timestamp = new Date().toLocaleString('de-DE', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+    const fullMsg = `[${timestamp}] ${currentUser}: ${msg}`;
+    sysLog.unshift(fullMsg);
+    if(sysLog.length > 30) sysLog.pop();
+    await saveToCloud("saveSysLog");
+}
+
+function setButtonsDisabled(disabled) {
+    document.querySelectorAll('.action-btn').forEach(btn => btn.disabled = disabled);
+}
+
+// INTERNET-ABSICHERUNG: SPEICHER-SPERRE BEI SCHLECHTEM NETZWERK
 async function saveToCloud(actionType) {
     if (!WEB_APP_URL || WEB_APP_URL.startsWith("DEINE_")) return;
+    if (isSaving) return; // Blockiert sofort, wenn ein Sendevorgang bereits aktiv läuft!
+    
+    isSaving = true;
     showLoading(true);
+    setButtonsDisabled(true); // Deaktiviert Buttons temporär gegen "Mehrfach-Tippen" im Funkloch
+
     let payload = { action: actionType };
     if (actionType === "saveMembers") payload.members = members;
     if (actionType === "saveEvents") payload.events = events;
     if (actionType === "saveCash") payload.cashBalance = cashBalance;
+    if (actionType === "saveSysLog") payload.sysLog = sysLog;
 
     try {
         await fetch(WEB_APP_URL, { 
@@ -262,7 +419,12 @@ async function saveToCloud(actionType) {
     } catch (e) { 
         console.error("Fehler beim Sichern:", e); 
     } finally { 
-        showLoading(false); 
+        // 1,2 Sekunden künstliche Abklingzeit, damit Google die Zeile fertig schreiben kann
+        setTimeout(() => {
+            isSaving = false;
+            showLoading(false);
+            setButtonsDisabled(false);
+        }, 1200);
     }
 }
 
@@ -275,9 +437,23 @@ async function loadFromCloud() {
         
         if (rawText && rawText.trim().startsWith("{")) {
             const data = JSON.parse(rawText);
-            members = data.members || [];
+            
+            // INTERNET-ABSICHERUNG: AUTOMATISCHE DUPLIKATS-BREMSE BEIM AUSLESEN
+            let uniqueMembers = [];
+            let seenIds = new Set();
+            if (data.members) {
+                data.members.forEach(m => {
+                    if (!seenIds.has(m.id)) {
+                        seenIds.add(m.id);
+                        uniqueMembers.push(m);
+                    }
+                });
+            }
+            
+            members = uniqueMembers;
             events = data.events || [];
             cashBalance = Number(data.cashBalance) || 0.0;
+            sysLog = data.sysLog || [];
         }
         render();
     } catch (e) { 
@@ -323,13 +499,16 @@ function addM() {
     const b = parseDE(bRaw);
     if(n && b) { 
         const id = "m_" + Date.now();
-        members.push({id: id, name:n, bday:b, isDauer:false, fines:[], abm:[]}); 
+        members.push({id: id, name:n, bday:b, isDauer:false, fines:[], abm:[], attendance:{}}); 
+        logAction(`Mitglied ${n} hinzugefügt.`);
         render(); saveToCloud("saveMembers");
     } 
 }
 
 function delM(id) { 
     if(confirm("Mitglied löschen?")) { 
+        const m = members.find(m => m.id === id);
+        logAction(`Mitglied ${m ? m.name : id} gelöscht.`);
         members = members.filter(m => m.id !== id); 
         render(); saveToCloud("saveMembers");
     } 
@@ -340,11 +519,14 @@ function addE() {
     const dt = document.getElementById('eDT').value; 
     const editIdx = document.getElementById('editTIdx').value;
     if(n && dt) { 
+        const targetId = editIdx !== "" ? events[parseInt(editIdx)].id : "e_" + Date.now();
         if(editIdx !== "") {
-            events[parseInt(editIdx)] = {n, dt};
+            events[parseInt(editIdx)] = {id: targetId, n, dt};
+            logAction(`Termin bearbeitet: "${n}"`);
             cancelEditE();
         } else {
-            events.push({n, dt}); 
+            events.push({id: targetId, n, dt}); 
+            logAction(`Neuer Termin erstellt: "${n}"`);
         }
         document.getElementById('eN').value = '';
         document.getElementById('eDT').value = '';
@@ -373,6 +555,7 @@ function cancelEditE() {
 
 function delE(idx) {
     if(confirm("Termin wirklich löschen?")) {
+        logAction(`Termin gelöscht: "${events[idx].n}"`);
         events.splice(idx, 1);
         render(); saveToCloud("saveEvents");
     }
@@ -382,6 +565,7 @@ function modCash(isAdd) {
     const val = parseFloat(document.getElementById('cashAmt').value);
     if(isNaN(val)) return;
     cashBalance += isAdd ? val : -val;
+    logAction(`Manuelle Kassenbuchung: ${isAdd?'+':'-'}${val.toFixed(2)}€`);
     document.getElementById('cashAmt').value = '';
     render(); saveToCloud("saveCash");
 }
@@ -390,55 +574,122 @@ function toggleDauer() {
     const mIdx = members.findIndex(m => m.id === aI);
     if(mIdx === -1) return;
     members[mIdx].isDauer = document.getElementById('modDauer').checked;
+    logAction(`${members[mIdx].name} Dauerabmeldung geändert auf: ${members[mIdx].isDauer}`);
     saveToCloud("saveMembers");
 }
 
-function openEventCheck(name, dtString) {
-    document.getElementById('checkTitle').innerText = name;
-    document.getElementById('checkDate').innerText = new Date(dtString).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + " Uhr";
+function toggleAttendance(mId, eventId, eventName, eventDtString) {
+    const mIdx = members.findIndex(m => m.id === mId);
+    if (mIdx === -1) return;
     
-    const gone = members.filter(m => (m.abm && m.abm.includes(name)) || m.isDauer);
+    if (!members[mIdx].attendance) members[mIdx].attendance = {};
+    
+    const isChecked = document.getElementById(`chk-${mId}`).checked;
+    
+    if (isChecked) {
+        const now = new Date();
+        const eventTime = new Date(eventDtString);
+        
+        let status = "pünktlich";
+        if (now > eventTime) {
+            status = "verspätet";
+            if (!members[mIdx].fines) members[mIdx].fines = [];
+            
+            const timeString = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+            const dateString = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
+            
+            members[mIdx].fines.push({
+                t: 'Verspätung (Automatik)', 
+                a: 5, 
+                isFixed: false, 
+                date: dateString,
+                time: timeString,
+                context: eventName
+            });
+            alert(`⏰ Zu spät! Automatische Verspätung für ${members[mIdx].name} erfasst.`);
+        }
+        
+        members[mIdx].attendance[eventId] = status;
+    } else {
+        delete members[mIdx].attendance[eventId];
+    }
+    
+    saveToCloud("saveMembers");
+    openEventCheck(eventId);
+}
+
+function openEventCheck(eventId) {
+    const ev = events.find(e => e.id === eventId);
+    if (!ev) return;
+    
+    document.getElementById('checkTitle').innerText = ev.n;
+    document.getElementById('checkDate').innerText = new Date(ev.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + " Uhr";
+    
+    const gone = members.filter(m => (m.abm && m.abm.includes(ev.n)) || m.isDauer);
     document.getElementById('checkList').innerHTML = gone.length === 0 
         ? '<span style="color:#666; font-style:italic;">Keine Abmeldungen für diesen Termin.</span>' 
         : gone.map(m => `<span class="badge" style="${m.isDauer?'background:orange;color:black;':''}">${m.name}${m.isDauer?' (Dauer)':''}</span>`).join('');
     
-    document.getElementById('modalCheck').style.display = 'block';
+    const activeMembers = members.filter(m => !(m.abm && m.abm.includes(ev.n)) && !m.isDauer);
+    const attListDiv = document.getElementById('attendanceList');
+    
+    if (activeMembers.length === 0) {
+        attListDiv.innerHTML = '<div style="padding:15px; text-align:center; color:#666;">Keine aktiven Mitglieder verfügbar.</div>';
+    } else {
+        attListDiv.innerHTML = activeMembers.map(m => {
+            if (!m.attendance) m.attendance = {};
+            const currentStatus = m.attendance[ev.id] || "";
+            const isChecked = currentStatus !== "";
+            
+            let statusBadge = "";
+            if (currentStatus === "pünktlich") statusBadge = '<span class="status-badge status-ontime">Pünktlich</span>';
+            if (currentStatus === "verspätet") statusBadge = '<span class="status-badge status-late">Zu Spät ⏰</span>';
+            
+            return `<div class="attendance-row">
+                <div>
+                    <span style="font-weight:bold;">${m.name}</span> ${statusBadge}
+                </div>
+                <input type="checkbox" id="chk-${m.id}" class="checkbox-large" 
+                    ${isChecked ? 'checked' : ''} 
+                    onchange="toggleAttendance('${m.id}', '${ev.id}', '${ev.n}', '${ev.dt}')">
+            </div>`;
+        }).join('');
+    }
+    
+    openM('modalCheck');
 }
 
 function render() {
     document.getElementById('cashDisplay').innerText = cashBalance.toFixed(2);
     
-    // Sortierung der Events nach Datum
+    const consoleDiv = document.getElementById('systemConsoleLog');
+    consoleDiv.innerHTML = sysLog.length === 0 ? "Keine Aktionen protokolliert." : sysLog.map(l => `<div class="log-item">${l}</div>`).join('');
+
     const sortedEvents = [...events].sort((a,b) => new Date(a.dt) - new Date(b.dt));
 
-    // Hauptseite: Terminliste rendern
     const calList = document.getElementById('calendarTermineList');
     calList.innerHTML = "";
     if(sortedEvents.length === 0) {
         calList.innerHTML = '<div class="card" style="text-align:center;color:#666;">Keine Termine eingetragen.</div>';
     } else {
         sortedEvents.forEach(e => {
-            const countAbm = members.filter(m => (m.abm && m.abm.includes(e.n)) || m.isDauer).length;
-            const abmText = countAbm === 1 ? "1 Abmeldung" : `${countAbm} Abmeldungen`;
-            
-            calList.innerHTML += `<div class="t-item" onclick="openEventCheck('${e.n}', '${e.dt}')">
+            calList.innerHTML += `<div class="t-item" onclick="openEventCheck('${e.id}')">
                 <div>
                     <b style="font-size:16px; color:var(--green);">${e.n}</b><br>
                     <small style="color:#555;">📅 ${new Date(e.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})} Uhr</small>
                 </div>
                 <div style="text-align:right; font-size:12px; color:#666; font-weight:bold; background:#eee; padding:5px 10px; border-radius:20px;">
-                    👤 ${abmText}
+                    📋 Antreten / Liste
                 </div>
             </div>`;
         });
     }
     
-    // Schützen-Liste rendern
     const list = document.getElementById('mList'); list.innerHTML = "";
     members.sort((a,b)=>a.name.localeCompare(b.name)).forEach((m) => {
         const sum = getMemberFineSum(m);
         list.innerHTML += `<div class="member-item">
-            <div style="flex-grow:1" onclick="opM('${m.id}')">
+            <div style="flex-grow:1" onclick="opMDetail('${m.id}')">
                 <b>${m.name}</b> ${m.isDauer ? '⭐<small style="color:orange">(Dauerabgem.)</small>':''}<br>
                 <small>${getAge(m.bday)} J.</small>
             </div>
@@ -447,10 +698,9 @@ function render() {
         </div>`;
     });
 
-    // Verwaltung: Bearbeitungs-Liste rendern
     const tl = document.getElementById('tList'); tl.innerHTML = "";
     sortedEvents.forEach((e) => {
-        const originalIdx = events.findIndex(orig => orig.dt === e.dt && orig.n === e.n);
+        const originalIdx = events.findIndex(orig => orig.id === e.id);
         tl.innerHTML += `<div class="member-item" style="padding:10px 15px;">
             <div><b>${e.n}</b><br><small>${new Date(e.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})} Uhr</small></div>
             <div>
@@ -461,15 +711,34 @@ function render() {
     });
 }
 
-function opM(id) { 
+function opMDetail(id) { 
     aI = id; 
     const m = members.find(m => m.id === id);
     if(!m) return;
+    
+    const isU18 = getAge(m.bday) < 18;
+    const factor = isU18 ? 1 : 2;
+
     document.getElementById('modN').innerText = m.name; 
-    document.getElementById('modAge').innerText = getAge(m.bday) + " Jahre (" + (getAge(m.bday)<18?'U18':'Ü18') + ")";
+    document.getElementById('modAge').innerText = getAge(m.bday) + " Jahre (" + (isU18?'U18':'Ü18') + ")";
     document.getElementById('modDauer').checked = m.isDauer || false;
     document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
     
+    const logDiv = document.getElementById('memberFineLog');
+    if(!m.fines || m.fines.length === 0) {
+        logDiv.innerHTML = '<span style="color:#666; font-style:italic;">Keine aktuellen Vergehen. Saubere Weste!</span>';
+    } else {
+        logDiv.innerHTML = m.fines.map(f => {
+            const finalAmt = f.isFixed ? f.a : (f.a * factor);
+            const timeStr = f.time ? ` um ${f.time} Uhr` : '';
+            const dateStr = f.date ? ` [${f.date}${timeStr}]` : '';
+            const noteStr = f.note ? ` <br><i style="color:#555;">📝 Notiz: "${f.note}"</i>` : '';
+            return `<div style="padding:6px 0; border-bottom:1px solid #eee; color:var(--red); line-height: 1.4;">
+                <b>${finalAmt.toFixed(2)}€</b> - ${f.t}${f.context?` (${f.context})`:''}<small style="color:#888; font-weight:bold;">${dateStr}</small>${noteStr}
+            </div>`;
+        }).join('');
+    }
+
     const cancelArea = document.getElementById('abmCancelArea');
     const cancelButtons = document.getElementById('abmCancelButtons');
     cancelButtons.innerHTML = "";
@@ -484,35 +753,59 @@ function opM(id) {
 
     const fineSum = getMemberFineSum(m);
     document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (+${fineSum.toFixed(2)}€ in Kasse)`;
-    document.getElementById('modalM').style.display = "block"; 
+    openM('modalM'); 
 }
 
 function removeAbm(eventName) {
     const mIdx = members.findIndex(m => m.id === aI);
     if(mIdx === -1) return;
+    logAction(`Abmeldung für ${members[mIdx].name} bei "${eventName}" aufgehoben.`);
     members[mIdx].abm = members[mIdx].abm.filter(name => name !== eventName);
     if(members[mIdx].fines) {
         members[mIdx].fines = members[mIdx].fines.filter(f => f.t !== 'Spät-Abmeldung: ' + eventName);
     }
     
     render(); saveToCloud("saveMembers");
-    opM(aI);
+    opMDetail(aI);
     alert(`Abmeldung für "${eventName}" wurde aufgehoben!`);
 }
 
-function f(t, a, isFixed) { 
+function f(t, a, isFixed, customNoteText = "") { 
     const mIdx = members.findIndex(m => m.id === aI);
     if(mIdx === -1) return;
     if(!members[mIdx].fines) members[mIdx].fines = [];
-    members[mIdx].fines.push({t, a, isFixed}); 
+    
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
+    const timeStr = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+    
+    let contextName = "";
+    const sel = document.getElementById('evSel').value;
+    if(sel) { contextName = sel.split('|')[1]; }
+
+    members[mIdx].fines.push({
+        t: t, 
+        a: a, 
+        isFixed: isFixed, 
+        date: todayStr,
+        time: timeStr,
+        context: contextName,
+        note: customNoteText !== "" ? customNoteText : null
+    }); 
+    
+    logAction(`Strafe erteilt an ${members[mIdx].name} : ${t} (${isFixed?a:a*(getAge(members[mIdx].bday)<18?1:2)}€)`);
     render(); saveToCloud("saveMembers");
-    if(t!='Verspätung'&&t!='Fehlen') closeM('modalM'); 
-    else opM(aI);
+    opMDetail(aI);
 }
 
 function customFine() {
     const val = parseFloat(document.getElementById('customVal').value);
-    if(!isNaN(val)) { f('Fixbetrag', val, true); document.getElementById('customVal').value = ''; closeM('modalM'); }
+    const note = document.getElementById('customNote').value;
+    if(!isNaN(val)) { 
+        f('Individuelle Buchung', val, true, note); 
+        document.getElementById('customVal').value = ''; 
+        document.getElementById('customNote').value = ''; 
+    }
 }
 
 function doAbm() {
@@ -522,14 +815,21 @@ function doAbm() {
     if(mIdx === -1) return;
 
     if(!members[mIdx].fines) members[mIdx].fines = [];
-    if (!members[mIdx].isDauer && (new Date(dt) - new Date()) / 3600000 < 24) {
-        members[mIdx].fines.push({t: 'Spät-Abmeldung: '+name, a: 5, isFixed: false});
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
+    const timeStr = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+
+    let spatText = "";
+    if (!members[mIdx].isDauer && (new Date(dt) - now) / 3600000 < 24) {
+        members[mIdx].fines.push({t: 'Spät-Abmeldung: '+name, a: 5, isFixed: true, date: todayStr, time: timeStr});
+        spatText = " (Zuspät! 5€ verbucht)";
     }
     if(!members[mIdx].abm) members[mIdx].abm = [];
     if(!members[mIdx].abm.includes(name)) members[mIdx].abm.push(name);
     
+    logAction(`${members[mIdx].name} für "${name}" abgemeldet${spatText}.`);
     render(); saveToCloud("saveMembers");
-    closeM('modalM'); alert("Abgemeldet!");
+    closeM('modalM'); alert("Erfolgreich abgemeldet!");
 }
 
 function pay() { 
@@ -539,6 +839,7 @@ function pay() {
     
     if(confirm(`${members[mIdx].name} hat ${sum.toFixed(2)}€ bezahlt?`)) { 
         cashBalance += sum; 
+        logAction(`Kassiert von ${members[mIdx].name}: ${sum.toFixed(2)}€ (Sündenregister gelöscht)`);
         members[mIdx].fines = []; 
         render();
         saveToCloud("saveMembers");
@@ -547,16 +848,15 @@ function pay() {
     } 
 }
 
-function closeM(id) { document.getElementById(id).style.display = "none"; }
-
 function wa() { 
     let t = "*DEPPENSOLD DANNENBÜTTEL*\n\n"; 
     members.forEach(m => { 
         const s = getMemberFineSum(m); if(s>0) t += `${m.name}: ${s.toFixed(2)}€\n`; 
     });
-    navigator.clipboard.writeText(t).then(() => alert("Kopiert!"));
+    navigator.clipboard.writeText(t).then(() => alert("Strafenübersicht in Zwischenablage kopiert!"));
 }
 
+checkUserIdentity();
 loadFromCloud();
 </script>
 </body>
