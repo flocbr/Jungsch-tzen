@@ -92,7 +92,7 @@
             background: white; 
             display: flex; 
             border-top: 2px solid var(--gold); 
-            z-index: 9999; 
+            z-index: 999; 
             padding-bottom: calc(15px + env(safe-area-inset-bottom)); 
             box-shadow: 0 -3px 10px rgba(0,0,0,0.15);
         }
@@ -123,10 +123,25 @@
         .btn-sm { padding: 8px 12px; font-size: 14px; width: auto; display: inline-block; margin-right: 5px; }
         
         .member-item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: white; border-radius: 10px; margin-bottom: 8px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .t-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--green); box-shadow: 0 2px 5px rgba(0,0,0,0.08); cursor: pointer; }
-        .trash { color: #ccc; padding: 5px 10px; font-size: 20px; }
+        
+        .t-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 15px; 
+            background: white; 
+            border-radius: 12px; 
+            margin-bottom: 10px; 
+            border-left: 4px solid var(--green); 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08); 
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .t-item * { pointer-events: none; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; }
+        .trash { color: #ccc; padding: 5px 10px; font-size: 20px; cursor: pointer; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; }
         .modal-content { 
             background: white; 
             margin: 5% auto; 
@@ -156,15 +171,52 @@
         table.ordnung-table th, table.ordnung-table td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
         table.ordnung-table th { background: var(--green); color: white; font-size: 14px; }
 
-        .attendance-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .attendance-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 12px; border-bottom: 1px solid #eee; }
         .attendance-row:last-child { border: none; }
-        .checkbox-large { width: 24px; height: 24px; cursor: pointer; }
-        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
+        .checkbox-large { width: 28px; height: 28px; cursor: pointer; transform: scale(1.2); margin-right: 5px; }
+        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: bold; margin-left: 5px; }
         .status-ontime { background: #d4edda; color: #155724; }
         .status-late { background: #f8d7da; color: #721c24; }
+
+        /* Stil für den Login-Sperrbildschirm */
+        #loginBlocker {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--green);
+            z-index: 999999;
+            color: white;
+            text-align: center;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-btn {
+            background: white;
+            color: var(--green);
+            border: 3px solid var(--gold);
+            padding: 20px;
+            width: 80%;
+            max-width: 300px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 15px;
+            margin: 15px 0;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
+
+<div id="loginBlocker">
+    <h2 style="color: var(--gold); margin-bottom: 5px; font-size: 24px;">Spieß-Zentrale</h2>
+    <p style="margin-top: 0; font-size: 14px; opacity: 0.9;">Wer nutzt diese App auf diesem Gerät?</p>
+    <button class="login-btn" onclick="selectUser('Florian')">🤠 Florian</button>
+    <button class="login-btn" onclick="selectUser('Jill')">👩‍💻 Jill</button>
+</div>
 
 <div class="header">
     <div id="userRoleBadge" class="user-badge" onclick="switchUserPrompt()">Bediener: ?</div>
@@ -440,7 +492,7 @@ let events = [];
 let sysLog = [];
 let cashBalance = 0.0;
 let aI = null; 
-let currentUser = "Florian"; 
+let currentUser = ""; 
 let isSaving = false;
 
 function showLoading(show) { document.getElementById('spinner').style.display = show ? 'block' : 'none'; }
@@ -454,13 +506,29 @@ function closeM(id) {
     document.body.classList.remove('modal-open');
 }
 
+// Prüft, ob bereits ein Nutzer auf diesem Smartphone registriert ist
 function checkUserIdentity() {
     let savedUser = localStorage.getItem("spiess_active_user");
-    if (savedUser) { currentUser = savedUser; } 
-    else { currentUser = "Florian"; localStorage.setItem("spiess_active_user", currentUser); }
-    document.getElementById("userRoleBadge").innerText = "Bediener: " + currentUser;
+    if (savedUser) { 
+        currentUser = savedUser; 
+        document.getElementById("loginBlocker").style.display = "none";
+        document.getElementById("userRoleBadge").innerText = "Bediener: " + currentUser;
+    } else {
+        // Blocker anzeigen, falls kein Nutzer im Speicher liegt
+        document.getElementById("loginBlocker").style.display = "flex";
+    }
 }
 
+// Wird beim Klick auf die großen Buttons im Login-Bildschirm aufgerufen
+function selectUser(name) {
+    currentUser = name;
+    localStorage.setItem("spiess_active_user", name);
+    document.getElementById("loginBlocker").style.display = "none";
+    document.getElementById("userRoleBadge").innerText = "Bediener: " + currentUser;
+    render();
+}
+
+// Manuelles Wechseln des Bedieners bei Klick oben links
 function switchUserPrompt() {
     let name = prompt("Wer bedient die App gerade? (Florian / Jill):");
     if (name && (name.toLowerCase() === "florian" || name.toLowerCase() === "jill")) {
@@ -658,299 +726,4 @@ function modCash(isAdd) {
     render(); saveToCloud("saveCash");
 }
 
-function toggleDauer() {
-    const mIdx = members.findIndex(m => m.id === aI);
-    if(mIdx === -1) return;
-    members[mIdx].isDauer = document.getElementById('modDauer').checked;
-    logAction(`${members[mIdx].name} Dauerabmeldung geändert auf: ${members[mIdx].isDauer}`);
-    saveToCloud("saveMembers");
-}
-
-function toggleAttendance(mId, eventId, eventName, eventDtString) {
-    const mIdx = members.findIndex(m => m.id === mId);
-    if (mIdx === -1) return;
-    
-    if (!members[mIdx].attendance) members[mIdx].attendance = {};
-    const isChecked = document.getElementById(`chk-${mId}`).checked;
-    
-    if (isChecked) {
-        const now = new Date();
-        const eventTime = new Date(eventDtString);
-        let status = "pünktlich";
-        
-        if (now > eventTime) {
-            status = "verspätet";
-            if (!members[mIdx].fines) members[mIdx].fines = [];
-            
-            const timeString = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
-            const dateString = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
-            
-            members[mIdx].fines.push({
-                t: 'Unentschuldigtes Verspäten', 
-                a: 2.5, 
-                isFixed: false, 
-                date: dateString,
-                time: timeString
-            });
-            alert(`⏰ Zu spät! Automatische Verspätung für ${members[mIdx].name} erfasst.`);
-        }
-        members[mIdx].attendance[eventId] = status;
-    } else {
-        delete members[mIdx].attendance[eventId];
-    }
-    
-    saveToCloud("saveMembers");
-    
-    // UI aktualisieren, ohne das Fenster zu flackern
-    const currentStatus = members[mIdx].attendance[eventId] || "";
-    const badgeSpan = document.getElementById(`badge-container-${mId}`);
-    if (badgeSpan) {
-        if (currentStatus === "pünktlich") badgeSpan.innerHTML = '<span class="status-badge status-ontime">Pünktlich</span>';
-        else if (currentStatus === "verspätet") badgeSpan.innerHTML = '<span class="status-badge status-late">Zu Spät ⏰</span>';
-        else badgeSpan.innerHTML = '';
-    }
-}
-
-function openEventCheck(eventId) {
-    const ev = events.find(e => e.id === eventId);
-    if (!ev) return;
-    
-    document.getElementById('checkTitle').innerText = ev.n;
-    document.getElementById('checkDate').innerText = new Date(ev.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + " Uhr";
-    
-    const gone = members.filter(m => (m.abm && m.abm.includes(ev.n)) || m.isDauer);
-    document.getElementById('checkList').innerHTML = gone.length === 0 
-        ? '<span style="color:#666; font-style:italic;">Keine Abmeldungen für diesen Termin.</span>' 
-        : gone.map(m => `<span class="badge" style="${m.isDauer?'background:orange;color:black;':''}">${m.name}${m.isDauer?' (Dauer)':''}</span>`).join('');
-    
-    const activeMembers = members.filter(m => !(m.abm && m.abm.includes(ev.n)) && !m.isDauer);
-    const attListDiv = document.getElementById('attendanceList');
-    
-    if (activeMembers.length === 0) {
-        attListDiv.innerHTML = '<div style="padding:15px; text-align:center; color:#666;">Keine aktiven Mitglieder verfügbar.</div>';
-    } else {
-        attListDiv.innerHTML = activeMembers.map(m => {
-            if (!m.attendance) m.attendance = {};
-            const currentStatus = m.attendance[ev.id] || "";
-            const isChecked = currentStatus !== "";
-            
-            let statusBadge = "";
-            if (currentStatus === "pünktlich") statusBadge = '<span class="status-badge status-ontime">Pünktlich</span>';
-            if (currentStatus === "verspätet") statusBadge = '<span class="status-badge status-late">Zu Spät ⏰</span>';
-            
-            return `<div class="attendance-row">
-                <div>
-                    <span style="font-weight:bold;">${m.name}</span> 
-                    <span id="badge-container-${m.id}">${statusBadge}</span>
-                </div>
-                <input type="checkbox" id="chk-${m.id}" class="checkbox-large" 
-                    ${isChecked ? 'checked' : ''} 
-                    onchange="toggleAttendance('${m.id}', '${ev.id}', '${ev.n}', '${ev.dt}')">
-            </div>`;
-        }).join('');
-    }
-    
-    openM('modalCheck');
-}
-
-function render() {
-    document.getElementById('cashDisplay').innerText = cashBalance.toFixed(2);
-    
-    const consoleDiv = document.getElementById('systemConsoleLog');
-    consoleDiv.innerHTML = sysLog.length === 0 ? "Keine Aktionen protokolliert." : sysLog.map(l => `<div class="log-item">${l}</div>`).join('');
-
-    const sortedEvents = [...events].sort((a,b) => new Date(a.dt) - new Date(b.dt));
-
-    const calList = document.getElementById('calendarTermineList');
-    calList.innerHTML = "";
-    if(sortedEvents.length === 0) {
-        calList.innerHTML = '<div class="card" style="text-align:center;color:#666;">Keine Termine eingetragen.</div>';
-    } else {
-        sortedEvents.forEach(e => {
-            calList.innerHTML += `<div class="t-item" onclick="openEventCheck('${e.id}')">
-                <div>
-                    <b style="font-size:16px; color:var(--green);">${e.n}</b><br>
-                    <small style="color:#555;">📅 ${new Date(e.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})} Uhr</small>
-                </div>
-                <div style="text-align:right; font-size:12px; color:#666; font-weight:bold; background:#eee; padding:5px 10px; border-radius:20px;">
-                    📋 Antreten / Liste
-                </div>
-            </div>`;
-        });
-    }
-    
-    const list = document.getElementById('mList'); list.innerHTML = "";
-    members.sort((a,b)=>a.name.localeCompare(b.name)).forEach((m) => {
-        const sum = getMemberFineSum(m);
-        list.innerHTML += `<div class="member-item">
-            <div style="flex-grow:1" onclick="opMDetail('${m.id}')">
-                <b>${m.name}</b> ${m.isDauer ? '⭐<small style="color:orange">(Dauerabgem.)</small>':''}<br>
-                <small>${getAge(m.bday)} J.</small>
-            </div>
-            <b style="color:var(--red); margin-right:10px;">${sum.toFixed(2)}€</b>
-            <span class="trash" onclick="delM('${m.id}')">🗑️</span>
-        </div>`;
-    });
-
-    const tl = document.getElementById('tList'); tl.innerHTML = "";
-    sortedEvents.forEach((e) => {
-        const originalIdx = events.findIndex(orig => orig.id === e.id);
-        tl.innerHTML += `<div class="member-item" style="padding:10px 15px;">
-            <div><b>${e.n}</b><br><small>${new Date(e.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})} Uhr</small></div>
-            <div>
-                <button class="btn btn-sm" style="background:var(--gold); margin:0;" onclick="editE(${originalIdx})">✏️</button>
-                <button class="btn btn-sm btn-red" style="margin:0;" onclick="delE(${originalIdx})">🗑️</button>
-            </div>
-        </div>`;
-    });
-}
-
-function opMDetail(id) { 
-    aI = id; 
-    const m = members.find(m => m.id === id);
-    if(!m) return;
-    
-    const isWeissjacke = getAge(m.bday) < 18;
-    const jackenName = isWeissjacke ? "Weißjacke" : "Graujacke";
-    const factor = isWeissjacke ? 1 : 2;
-
-    document.getElementById('modN').innerText = m.name; 
-    document.getElementById('modAge').innerText = `${getAge(m.bday)} Jahre (${jackenName})`;
-    document.getElementById('modDauer').checked = m.isDauer || false;
-    document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
-    
-    const logDiv = document.getElementById('memberFineLog');
-    if(!m.fines || m.fines.length === 0) {
-        logDiv.innerHTML = '<span style="color:#666; font-style:italic;">Keine aktuellen Vergehen. Saubere Weste!</span>';
-    } else {
-        logDiv.innerHTML = m.fines.map(f => {
-            const finalAmt = f.isFixed ? f.a : (f.a * factor);
-            const timeStr = f.time ? ` um ${f.time} Uhr` : '';
-            const dateStr = f.date ? ` [${f.date}${timeStr}]` : '';
-            const noteStr = f.note ? ` <br><i style="color:#555;">📝 Notiz: "${f.note}"</i>` : '';
-            return `<div style="padding:6px 0; border-bottom:1px solid #eee; color:var(--red); line-height: 1.4;">
-                <b>${finalAmt.toFixed(2)}€</b> - ${f.t}<small style="color:#888; font-weight:bold;">${dateStr}</small>${noteStr}
-            </div>`;
-        }).join('');
-    }
-
-    const cancelArea = document.getElementById('abmCancelArea');
-    const cancelButtons = document.getElementById('abmCancelButtons');
-    cancelButtons.innerHTML = "";
-    if(m.abm && m.abm.length > 0) {
-        cancelArea.style.display = "block";
-        m.abm.forEach(name => {
-            cancelButtons.innerHTML += `<button class="btn btn-sm btn-red" style="margin-bottom:5px;" onclick="removeAbm('${name}')">❌ ${name} aufheben</button>`;
-        });
-    } else {
-        cancelArea.style.display = "none";
-    }
-
-    const fineSum = getMemberFineSum(m);
-    document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (+${fineSum.toFixed(2)}€ in Kasse)`;
-    openM('modalM'); 
-}
-
-function removeAbm(eventName) {
-    const mIdx = members.findIndex(m => m.id === aI);
-    if(mIdx === -1) return;
-    logAction(`Abmeldung für ${members[mIdx].name} bei "${eventName}" aufgehoben.`);
-    members[mIdx].abm = members[mIdx].abm.filter(name => name !== eventName);
-    if(members[mIdx].fines) {
-        members[mIdx].fines = members[mIdx].fines.filter(f => f.t !== 'Spät-Abmeldung');
-    }
-    
-    render(); saveToCloud("saveMembers");
-    opMDetail(aI);
-    alert(`Abmeldung für "${eventName}" wurde aufgehoben!`);
-}
-
-function f(t, a, isFixed, customNoteText = "") { 
-    const mIdx = members.findIndex(m => m.id === aI);
-    if(mIdx === -1) return;
-    if(!members[mIdx].fines) members[mIdx].fines = [];
-    
-    const now = new Date();
-    const todayStr = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
-    const timeStr = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-
-    members[mIdx].fines.push({
-        t: t, 
-        a: a, 
-        isFixed: isFixed, 
-        date: todayStr,
-        time: timeStr,
-        note: customNoteText !== "" ? customNoteText : null
-    }); 
-    
-    const currentFactor = (getAge(members[mIdx].bday) < 18) ? 1 : 2;
-    const berechneterBetrag = isFixed ? a : (a * currentFactor);
-    
-    logAction(`Strafe erteilt an ${members[mIdx].name} : ${t} (${berechneterBetrag.toFixed(2)}€)`);
-    render(); saveToCloud("saveMembers");
-    opMDetail(aI);
-}
-
-function customFine() {
-    const val = parseFloat(document.getElementById('customVal').value);
-    const note = document.getElementById('customNote').value;
-    if(!isNaN(val)) { 
-        f('Individuelle Buchung', val, true, note); 
-        document.getElementById('customVal').value = ''; 
-        document.getElementById('customNote').value = ''; 
-    }
-}
-
-function doAbm() {
-    const sel = document.getElementById('evSel').value; if(!sel) return;
-    const [dt, name] = sel.split('|');
-    const mIdx = members.findIndex(m => m.id === aI);
-    if(mIdx === -1) return;
-
-    if(!members[mIdx].fines) members[mIdx].fines = [];
-    const now = new Date();
-    const todayStr = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
-    const timeStr = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-
-    let spatText = "";
-    if (!members[mIdx].isDauer && (new Date(dt) - now) / 3600000 < 24) {
-        members[mIdx].fines.push({t: 'Spät-Abmeldung', a: 5, isFixed: true, date: todayStr, time: timeStr});
-        spatText = " (Zuspät! 5€ verbucht)";
-    }
-    if(!members[mIdx].abm) members[mIdx].abm = [];
-    if(!members[mIdx].abm.includes(name)) members[mIdx].abm.push(name);
-    
-    logAction(`${members[mIdx].name} für "${name}" abgemeldet${spatText}.`);
-    render(); saveToCloud("saveMembers");
-    closeM('modalM'); alert("Erfolgreich abgemeldet!");
-}
-
-function pay() { 
-    const mIdx = members.findIndex(m => m.id === aI);
-    if(mIdx === -1) return;
-    const sum = getMemberFineSum(members[mIdx]);
-    
-    if(confirm(`${members[mIdx].name} hat ${sum.toFixed(2)}€ bezahlt?`)) { 
-        cashBalance += sum; 
-        logAction(`Kassiert von ${members[mIdx].name}: ${sum.toFixed(2)}€ (Sündenregister gelöscht)`);
-        members[mIdx].fines = []; 
-        render();
-        saveToCloud("saveMembers");
-        saveToCloud("saveCash");
-        closeM('modalM'); 
-    } 
-}
-
-function wa() { 
-    let t = "*DEPPENSOLD DANNENBÜTTEL*\n\n"; 
-    members.forEach(m => { 
-        const s = getMemberFineSum(m); if(s>0) t += `${m.name}: ${s.toFixed(2)}€\n`; 
-    });
-    navigator.clipboard.writeText(t).then(() => alert("Strafenübersicht in Zwischenablage kopiert!"));
-}
-
-checkUserIdentity();
-loadFromCloud();
-</script>
-</body>
-</html>
+function toggleDauer()
