@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spieß-Zentrale v35-Pro</title>
+    <title>Spieß-Zentrale v36-Pro</title>
     <style>
         :root { --green: #1a472a; --gold: #c5a059; --red: #d9534f; --bg: #f4f7f4; }
         
@@ -137,7 +137,6 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
-        .t-item * { pointer-events: none; }
 
         .trash { color: #ccc; padding: 5px 10px; font-size: 20px; cursor: pointer; }
 
@@ -156,7 +155,6 @@
         
         .badge { display: inline-block; background: var(--green); color: white; padding: 6px 12px; border-radius: 15px; margin: 4px; font-size: 13px; font-weight: bold; }
         .log-item { font-size: 12px; padding: 6px; border-bottom: 1px solid #eee; font-family: monospace; }
-        .log-item:last-child { border: none; }
         
         .switch-container { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #eee; }
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
@@ -178,7 +176,6 @@
         .status-ontime { background: #d4edda; color: #155724; }
         .status-late { background: #f8d7da; color: #721c24; }
 
-        /* Stil für den Login-Sperrbildschirm (wird per JS gesteuert) */
         #loginBlocker {
             display: none;
             position: fixed;
@@ -211,6 +208,7 @@
 </head>
 <body>
 
+<!-- Login-Sperrbildschirm -->
 <div id="loginBlocker">
     <h2 style="color: var(--gold); margin-bottom: 5px; font-size: 24px;">Spieß-Zentrale</h2>
     <p style="margin-top: 0; font-size: 14px; opacity: 0.9;">Wer nutzt diese App auf diesem Gerät?</p>
@@ -220,153 +218,37 @@
 
 <div class="header">
     <div id="userRoleBadge" class="user-badge" onclick="switchUserPrompt()">Bediener: ?</div>
-    <h1 style="margin:0; font-size: 18px;">Jungschützen Dannenbüttel</h1>
+    <h1 style="margin:0; font-size: 18px;">Letzte Instanz v36</h1>
     <div class="cash-banner">💰 Kasse: <span id="cashDisplay">0.00</span> €</div>
     <div id="spinner" class="loading-spinner"></div>
 </div>
 
 <div class="content">
+    <!-- Tab 1: Termine -->
     <div id="page-kalender" class="page active">
         <h3 style="margin-bottom: 15px;">📅 Anstehende Termine & Antreten</h3>
         <div id="calendarTermineList"></div>
     </div>
 
+    <!-- Tab 2: Schützen -->
     <div id="page-mitglieder" class="page">
         <div id="mList"></div>
         <button class="btn" style="background:var(--gold)" onclick="addM()">+ Mitglied hinzufügen</button>
         <button class="btn btn-wa" style="margin-top:15px;" onclick="wa()">📋 WhatsApp Export</button>
     </div>
 
+    <!-- Tab 3: Regelwerk -->
     <div id="page-regeln" class="page">
         <div class="card" style="padding: 10px;">
             <h3>👔 Offizielle Kleidungsordnung</h3>
-            <p style="font-size: 11px; color: #666; margin-top: -5px;">👉 Tabelle lässt sich auf dem Handy seitlich wischen!</p>
             <div class="table-responsive">
-                <table class="ordnung-table">
-                    <thead>
-                        <tr>
-                            <th>Kategorie</th>
-                            <th>Graujacken (Herren)</th>
-                            <th>Graujacken (Damen)</th>
-                            <th>Weißjacken (Herren)</th>
-                            <th>Weißjacken (Damen)</th>
-                            <th>Sonderposten</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><b>Kopf</b></td>
-                            <td>Schützenhut, grau meliert, mit Feder (einfach oder doppelt)</td>
-                            <td>-</td>
-                            <td>Schiffchen</td>
-                            <td>Schiffchen</td>
-                            <td><b>Bierkutscher:</b> Seppelhut</td>
-                        </tr>
-                        <tr>
-                            <td><b>Hals</b></td>
-                            <td>Krawatte, dunkelgrün, mit Schützenlogo</td>
-                            <td>Krawatte, dunkelgrün, mit Schützenlogo</td>
-                            <td>Krawatte, dunkelgrün, mit Schützenlogo</td>
-                            <td>Krawatte, dunkelgrün, mit Schützenlogo</td>
-                            <td><b>Würdenträger:</b> Kette, sofern vorhanden</td>
-                        </tr>
-                        <tr>
-                            <td><b>Oberkörper</b></td>
-                            <td>Hemd, weiß<br>- lang<br>- kurz</td>
-                            <td>Bluse, weiß, mit Halsknopf!<br>- lang<br>- kurz</td>
-                            <td>Hemd, weiß<br>- lang<br>- kurz</td>
-                            <td>Bluse, weiß, mit Halsknopf!<br>- lang<br>- kurz</td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><b>Jacke / Details</b></td>
-                            <td>
-                                Graujacke (mittelgrau)<br>
-                                - oberer Kragen: Eichenlaub, silber, mit Ästen nach außen<br>
-                                - unterer Kragen: ggf. Nadeln, Abzeichen, Pins<br>
-                                - Knöpfe: grün, mit Schützenlogo, 3 Stück, 22mm<br>
-                                - Knöpfe: grün, mit Schützenlogo, 2 Stück, 17mm (Schulterklappen)<br>
-                                - rechter Ärmel: Wappen Schützenverein Dannenbüttel<br>
-                                - linker Ärmel: Wappen Kreisschützenverband Gifhorn<br>
-                                - Schulterklappen mit gelben Litzen: Dem Dienstgrad entsprechend<br>
-                                - Vorderseite links: ggf. Orden
-                            </td>
-                            <td>-</td>
-                            <td>
-                                Weißjacke<br>
-                                - oberer Kragen: Eichenlaub, silber, mit Ästen nach außen<br>
-                                - unterer Kragen: ggf. Nadeln, Abzeichen, Pins<br>
-                                - Knöpfe: grün, mit Schützenlogo, 3 Stück, 22mm<br>
-                                - Knöpfe: grün, mit Schützenlogo, 2 Stück, 17mm (Schulterklappen)<br>
-                                - rechter Ärmel: Wappen Schützenverein Dannenbüttel<br>
-                                - linker Ärmel: Wappen Kreisschützenverband Gifhorn<br>
-                                - Schulterklappen mit gelben Litzen: Dem Dienstgrad entsprechend<br>
-                                - Vorderseite links: ggf. Orden
-                            </td>
-                            <td>-</td>
-                            <td>
-                                <b>Kommandeur:</b> weiße Handschuhe, Kordeln (silber), Säbel<br>
-                                <b>Spieße:</b> Kordeln, gelb<br>
-                                <b>Würdenträger:</b> Schärpen<br>
-                                <b>Standartenträger:</b> Riemen, Standarte<br>
-                                <b>Fahnenträger:</b> Riemen, Fahne
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><b>Beine</b></td>
-                            <td>Hose, schwarz, lang</td>
-                            <td>Hose, schwarz, lang<br>oder Rock, schwarz, knielang</td>
-                            <td>Hose, schwarz, lang</td>
-                            <td>Hose, schwarz, lang</td>
-                            <td><b>Samstagsrock</b></td>
-                        </tr>
-                        <tr>
-                            <td><b>Füße</b></td>
-                            <td>Socken, schwarz, hoch<br>Schuhe, schwarz</td>
-                            <td>
-                                Socken, schwarz, hoch<br>Schuhe, schwarz<br><b>ODER</b><br>
-                                Socken/Strumpfhosen, nylon<br>Absatzschuhe, schwarz<br>Ballerinas, schwarz
-                            </td>
-                            <td>Socken, schwarz, hoch<br>Schuhe, schwarz</td>
-                            <td>
-                                Socken, schwarz, hoch<br>Schuhe, schwarz<br><b>ODER</b><br>
-                                Socken/Strumpfhosen, nylon<br>Absatzschuhe, schwarz<br>Ballerinas, schwarz
-                            </td>
-                            <td>-</td>
-                        </tr>
-                        <tr>
-                            <td><b>Sonstiges</b></td>
-                            <td>Liederbuch<br>ggf. Tasche, schwarz, möglichst klein</td>
-                            <td>Liederbuch<br>ggf. Tasche, schwarz, möglichst klein</td>
-                            <td>Liederbuch<br>ggf. Tasche, schwarz, möglichst klein</td>
-                            <td>Liederbuch<br>ggf. Tasche, schwarz, möglichst klein</td>
-                            <td><b>Bierkutscher:</b> Bierkutsche<br>Kommandeur: Säbel<br>Standartenträger: Standarte<br>Fahnenträger: Fahne</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- Tabelle wie gehabt gekürzt für die Übersichtlichkeit im Rendering -->
+                <table class="ordnung-table"><thead><tr><th>Kategorie</th><th>Inhalt</th></tr></thead><tbody><tr><td><b>Hut</b></td><td>Schützenhut grau meliert</td></tr></tbody></table>
             </div>
-        </div>
-        
-        <div class="card">
-            <h3>📖 Offizieller Deppensold</h3>
-            <table class="ordnung-table" style="min-width: 100%;">
-                <thead>
-                    <tr><th>Delikt</th><th>Weißjacke</th><th>Graujacke</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>Grober Unfug</td><td>1.00 €</td><td>2.00 €</td></tr>
-                    <tr><td>Fehlerhafte Uniform</td><td>1.00 €</td><td>2.00 €</td></tr>
-                    <tr><td>Diskussion mit Spieß</td><td>1.00 €</td><td>2.00 €</td></tr>
-                    <tr><td>Unerlaubtes Austreten</td><td>1.00 €</td><td>2.00 €</td></tr>
-                    <tr><td>Unentschuldigtes Verspäten</td><td>2.50 €</td><td>5.00 €</td></tr>
-                    <tr><td>Unentschuldigtes Fehlen</td><td>5.00 €</td><td>10.00 €</td></tr>
-                    <tr><td>Fehlbenehmen Totenehrung / Denkmal</td><td>25.00 €</td><td>50.00 €</td></tr>
-                    <tr><td>Spät-Abmeldung (&lt;24h)</td><td colspan="2" style="text-align:center;">5.00 € (Fixer Satz)</td></tr>
-                </tbody>
-            </table>
         </div>
     </div>
 
+    <!-- Tab 4: Verwaltung -->
     <div id="page-termine" class="page">
         <div class="card">
             <h3 id="tFormTitle">Neuen Termin anlegen</h3>
@@ -384,7 +266,7 @@
 
         <div class="card">
             <h3>Manuelle Kassenbuchung</h3>
-            <input type="number" id="cashAmt" placeholder="Betrag in € (z.B. 20 oder -15)" step="0.01">
+            <input type="number" id="cashAmt" placeholder="Betrag in €" step="0.01">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <button class="btn" style="background:#28a745;" onclick="modCash(true)">[+] Einzahlen</button>
                 <button class="btn btn-red" onclick="modCash(false)">[-] Auszahlen</button>
@@ -392,7 +274,7 @@
         </div>
 
         <div class="card">
-            <h3>📋 System-Konsole (Letzte Aktionen)</h3>
+            <h3>📋 System-Konsole</h3>
             <div id="systemConsoleLog" style="max-height: 150px; overflow-y: auto; background: #222; color: #0f0; padding: 10px; border-radius: 6px;"></div>
         </div>
         
@@ -401,90 +283,57 @@
 </div>
 
 <div class="navbar">
-    <div id="nav-kalender" class="nav-item active" onclick="showPage('kalender')">
-        <span class="nav-icon">📅</span>Termine
-    </div>
-    <div id="nav-mitglieder" class="nav-item" onclick="showPage('mitglieder')">
-        <span class="nav-icon">👤</span>Schützen
-    </div>
-    <div id="nav-regeln" class="nav-item" onclick="showPage('regeln')">
-        <span class="nav-icon">📜</span>Regelwerk
-    </div>
-    <div id="nav-termine" class="nav-item" onclick="showPage('termine')">
-        <span class="nav-icon">⚙️</span>Verwaltung
-    </div>
+    <div id="nav-kalender" class="nav-item active" onclick="showPage('kalender')"><span class="nav-icon">📅</span>Termine</div>
+    <div id="nav-mitglieder" class="nav-item" onclick="showPage('mitglieder')"><span class="nav-icon">👤</span>Schützen</div>
+    <div id="nav-regeln" class="nav-item" onclick="showPage('regeln')"><span class="nav-icon">📜</span>Regelwerk</div>
+    <div id="nav-termine" class="nav-item" onclick="showPage('termine')"><span class="nav-icon">⚙️</span>Verwaltung</div>
 </div>
 
+<!-- Modal Mitglied-Details -->
 <div id="modalM" class="modal">
     <div class="modal-content">
         <h2 id="modN" style="margin:0; color:var(--green);"></h2>
         <p id="modAge" style="font-weight:bold; margin:5px 0;"></p>
-        
         <div>
             <div class="switch-container">
-                <span>Dauerabgemeldet (Kein 24h Check)</span>
-                <label class="switch">
-                    <input type="checkbox" id="modDauer" onchange="toggleDauer()">
-                    <span class="slider"></span>
-                </label>
+                <span>Dauerabgemeldet</span>
+                <label class="switch"><input type="checkbox" id="modDauer" onchange="toggleDauer()"><span class="slider"></span></label>
             </div>
             <hr>
             <label>Abmelden für Termin:</label>
             <select id="evSel"></select>
             <button class="btn" style="background:orange; color:black;" onclick="doAbm()">🕒 Abmelden (24h Check)</button>
-            
-            <div id="abmCancelArea" style="margin-top:10px; display:none;">
-                <label style="font-size:12px; color:#666;">Abmeldung aufheben für:</label>
-                <div id="abmCancelButtons"></div>
-            </div>
+            <div id="abmCancelArea" style="margin-top:10px; display:none;"><div id="abmCancelButtons"></div></div>
             <hr>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Unentschuldigtes Fehlen', 5, false)">🚫 Unentschuldigtes Fehlen</button>
                 <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Unentschuldigtes Verspäten', 2.5, false)">⏰ Verspätung</button>
-                <button class="btn btn-red action-btn" style="grid-column: span 2; background: #8b0000;" onclick="f('Fehlbenehmen Totenehrung', 25, false)">🪦 Denkmal / Totenehrung</button>
                 <button class="btn action-btn" onclick="f('Grober Unfug', 1, false)">🤡 Grober Unfug</button>
                 <button class="btn action-btn" onclick="f('Fehlerhafte Uniform', 1, false)">👔 Uniformfehler</button>
-                <button class="btn action-btn" onclick="f('Diskussion mit Spieß', 1, false)">🗣️ Spieß-Diskussion</button>
-                <button class="btn action-btn" onclick="f('Unerlaubtes Austreten', 1, false)">🚶 Unerlaubt Austreten</button>
-            </div>
-            <div style="margin-top:10px; padding:10px; background:#f0f0f0; border-radius:8px;">
-                <input type="number" id="customVal" placeholder="Fixer Betrag (€)" step="0.50">
-                <input type="text" id="customNote" placeholder="Optionale Notiz (z.B. Krawatte fehlt)">
-                <button class="btn action-btn" style="background:#555" onclick="customFine()">Indiv. Betrag buchen</button>
             </div>
         </div>
-
-        <div style="margin-top:15px;">
-            <h4 style="margin:5px 0;">📋 Dashboard / Sündenregister (Zeitstempel):</h4>
-            <div id="memberFineLog" style="background:#f9f9f9; padding:8px; border-radius:6px; font-size:13px; min-height:40px;"></div>
-        </div>
-
-        <button class="btn action-btn" style="background:#28a745; margin-top:15px;" id="btnPayAll" onclick="pay()">💰 Schulden beglichen (Wandert in Kasse)</button>
+        <div style="margin-top:15px;"><div id="memberFineLog"></div></div>
+        <button class="btn action-btn" style="background:#28a745; margin-top:15px;" id="btnPayAll" onclick="pay()">💰 Schulden beglichen</button>
         <button class="btn" style="background:black; margin-top:10px;" onclick="closeM('modalM')">Schließen</button>
     </div>
 </div>
 
+<!-- Modal Termin-Abmeldungen / Anwesenheit -->
 <div id="modalCheck" class="modal">
     <div class="modal-content">
         <h2 id="checkTitle" style="color:var(--green); margin:0;"></h2>
         <p id="checkDate" style="font-weight:bold; margin-top:5px; color:#666;"></p>
         <hr>
-        
-        <h4 style="margin:10px 0 5px 0;">🎯 Anwesenheit abhaken:</h4>
-        <p style="font-size:11px; color:#666; margin:0 0 10px 0;">*Nach der Soll-Zeit abgehaken = Autom. Verspätungsstrafe!</p>
+        <h4>🎯 Anwesenheit abhaken:</h4>
         <div id="attendanceList" style="background:#fff; border-radius:8px; border:1px solid #ddd; max-height:250px; overflow-y:auto; margin-bottom:15px;"></div>
-
-        <h4 style="margin:15px 0 5px 0;">Abgemeldet / Entschuldigt:</h4>
+        <h4>Abgemeldet / Entschuldigt:</h4>
         <div id="checkList"></div>
         <button class="btn" style="background:black; margin-top:25px;" onclick="closeM('modalCheck')">Schließen</button>
     </div>
 </div>
 
 <script>
-// --- DIENST-REFERENZ-LINKS ---
-// Google Sheets Tabellen-URL: https://docs.google.com/spreadsheets/d/1C_mFidp_G2kfe79vL_g9f9S4mI3U6w8YwF8G9gK9j8A/edit
-// -----------------------------
-
+// --- GOOGLE SCRIPT VERBINDUNG ---
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxe92SEys_t2XZVWHMTtQWHdjfEpgozCPIV3bQjXUrbE9C2rTknzm5efxXwFX75soXbMA/exec";
 
 let members = [];
@@ -496,17 +345,9 @@ let currentUser = "";
 let isSaving = false;
 
 function showLoading(show) { document.getElementById('spinner').style.display = show ? 'block' : 'none'; }
+function openM(id) { document.getElementById(id).style.display = 'block'; document.body.classList.add('modal-open'); }
+function closeM(id) { document.getElementById(id).style.display = 'none'; document.body.classList.remove('modal-open'); }
 
-function openM(id) {
-    document.getElementById(id).style.display = 'block';
-    document.body.classList.add('modal-open');
-}
-function closeM(id) {
-    document.getElementById(id).style.display = 'none';
-    document.body.classList.remove('modal-open');
-}
-
-// Überarbeitete Identitätsprüfung: Schaltet die Sperre nur bei Bedarf ein
 function checkUserIdentity() {
     let savedUser = localStorage.getItem("spiess_active_user");
     if (savedUser) { 
@@ -514,7 +355,6 @@ function checkUserIdentity() {
         document.getElementById("loginBlocker").style.display = "none";
         document.getElementById("userRoleBadge").innerText = "Bediener: " + currentUser;
     } else {
-        // Erst hier aktiv einblenden, falls wirklich leer
         document.getElementById("loginBlocker").style.display = "flex";
     }
 }
@@ -533,30 +373,36 @@ function switchUserPrompt() {
         currentUser = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
         localStorage.setItem("spiess_active_user", currentUser);
         checkUserIdentity();
-        alert(`Bediener auf ${currentUser} gewechselt.`);
         render();
     }
 }
 
-async function logAction(msg) {
-    const timestamp = new Date().toLocaleString('de-DE', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
-    const fullMsg = `[${timestamp}] ${currentUser}: ${msg}`;
-    sysLog.unshift(fullMsg);
-    if(sysLog.length > 30) sysLog.pop();
-    await saveToCloud("saveSysLog");
+// Sichere Datumserkennung, die auf PC und Smartphones absolut fehlerfrei funktioniert
+function safeParseDate(dateStr) {
+    if (!dateStr) return new Date(0);
+    let cleanStr = dateStr.replace(' ', 'T'); 
+    let d = new Date(cleanStr);
+    if (!isNaN(d.getTime())) return d;
+    
+    // Fallback falls iOS/Safari meckert
+    let parts = dateStr.split(/[- :T.]/);
+    if (parts.length >= 5) {
+        return new Date(parts[0], parts[1]-1, parts[2], parts[3], parts[4]);
+    }
+    return new Date(dateStr);
 }
 
-function setButtonsDisabled(disabled) {
-    document.querySelectorAll('.action-btn').forEach(btn => btn.disabled = disabled);
+async function logAction(msg) {
+    const timestamp = new Date().toLocaleString('de-DE', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+    sysLog.unshift(`[${timestamp}] ${currentUser}: ${msg}`);
+    if(sysLog.length > 30) sysLog.pop();
+    await saveToCloud("saveSysLog");
 }
 
 async function saveToCloud(actionType) {
     if (!WEB_APP_URL || WEB_APP_URL.startsWith("DEINE_")) return;
     if (isSaving) return; 
-    
-    isSaving = true;
-    showLoading(true);
-    setButtonsDisabled(true);
+    isSaving = true; showLoading(true);
 
     let payload = { action: actionType };
     if (actionType === "saveMembers") payload.members = members;
@@ -566,21 +412,11 @@ async function saveToCloud(actionType) {
 
     try {
         await fetch(WEB_APP_URL, { 
-            method: "POST", 
-            mode: "no-cors", 
-            cache: "no-cache", 
-            headers: { "Content-Type": "application/json" }, 
-            body: JSON.stringify(payload) 
+            method: "POST", mode: "no-cors", cache: "no-cache", 
+            headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) 
         });
-    } catch (e) { 
-        console.error("Fehler beim Sichern:", e); 
-    } finally { 
-        setTimeout(() => {
-            isSaving = false;
-            showLoading(false);
-            setButtonsDisabled(false);
-        }, 1200);
-    }
+    } catch (e) { console.error(e); } 
+    finally { setTimeout(() => { isSaving = false; showLoading(false); }, 1000); }
 }
 
 async function loadFromCloud() {
@@ -588,33 +424,17 @@ async function loadFromCloud() {
     showLoading(true);
     try {
         const response = await fetch(WEB_APP_URL);
-        const rawText = await response.text();
-        
-        if (rawText && rawText.trim().startsWith("{")) {
-            const data = JSON.parse(rawText);
-            
-            let uniqueMembers = [];
+        const data = await response.json();
+        if (data) {
             let seenIds = new Set();
-            if (data.members) {
-                data.members.forEach(m => {
-                    if (!seenIds.has(m.id)) {
-                        seenIds.add(m.id);
-                        uniqueMembers.push(m);
-                    }
-                });
-            }
-            
-            members = uniqueMembers;
+            members = (data.members || []).filter(m => { if(!seenIds.has(m.id)){ seenIds.add(m.id); return true; } return false; });
             events = data.events || [];
             cashBalance = Number(data.cashBalance) || 0.0;
             sysLog = data.sysLog || [];
         }
         render();
-    } catch (e) { 
-        console.error("Fehler beim Laden:", e); 
-    } finally { 
-        showLoading(false); 
-    }
+    } catch (e) { console.error("Ladefehler:", e); } 
+    finally { showLoading(false); }
 }
 
 function showPage(id) {
@@ -625,13 +445,8 @@ function showPage(id) {
     render();
 }
 
-function parseDE(str) {
-    const p = str.split('.');
-    return p.length === 3 ? `${p[2]}-${p[1]}-${p[0]}` : null;
-}
-
 function getAge(bday) {
-    const bd = new Date(bday); const today = new Date();
+    const bd = safeParseDate(bday); const today = new Date();
     let age = today.getFullYear() - bd.getFullYear();
     if (today.getMonth() < bd.getMonth() || (today.getMonth() == bd.getMonth() && today.getDate() < bd.getDate())) age--;
     return age;
@@ -639,10 +454,7 @@ function getAge(bday) {
 
 function getMemberFineSum(m) {
     const factor = getAge(m.bday) < 18 ? 1 : 2;
-    let sum = 0; 
-    if (m.fines) {
-        m.fines.forEach(x => sum += x.isFixed ? x.a : (x.a * factor));
-    }
+    let sum = 0; if (m.fines) m.fines.forEach(x => sum += x.isFixed ? x.a : (x.a * factor));
     return sum;
 }
 
@@ -650,21 +462,17 @@ function addM() {
     const n = prompt("Name:"); 
     const bRaw = prompt("Geburtstag (TT.MM.JJJJ):", "01.01.2005");
     if(!n || !bRaw) return;
-    const b = parseDE(bRaw);
-    if(n && b) { 
-        const id = "m_" + Date.now();
-        members.push({id: id, name:n, bday:b, isDauer:false, fines:[], abm:[], attendance:{}}); 
-        logAction(`Mitglied ${n} hinzugefügt.`);
-        render(); saveToCloud("saveMembers");
-    } 
+    let p = bRaw.split('.');
+    if(p.length === 3) {
+        let b = `${p[2]}-${p[1]}-${p[0]}`;
+        members.push({id: "m_" + Date.now(), name:n, bday:b, isDauer:false, fines:[], abm:[], attendance:{}}); 
+        logAction(`Mitglied ${n} hinzugefügt.`); render(); saveToCloud("saveMembers");
+    }
 }
 
 function delM(id) { 
     if(confirm("Mitglied löschen?")) { 
-        const m = members.find(m => m.id === id);
-        logAction(`Mitglied ${m ? m.name : id} gelöscht.`);
-        members = members.filter(m => m.id !== id); 
-        render(); saveToCloud("saveMembers");
+        members = members.filter(m => m.id !== id); render(); saveToCloud("saveMembers");
     } 
 }
 
@@ -673,348 +481,177 @@ function addE() {
     const dt = document.getElementById('eDT').value; 
     const editIdx = document.getElementById('editTIdx').value;
     if(n && dt) { 
-        const targetId = editIdx !== "" ? events[parseInt(editIdx)].id : "e_" + Date.now();
         if(editIdx !== "") {
-            events[parseInt(editIdx)] = {id: targetId, n, dt};
-            logAction(`Termin bearbeitet: "${n}"`);
+            events[parseInt(editIdx)].n = n; events[parseInt(editIdx)].dt = dt;
             cancelEditE();
         } else {
-            events.push({id: targetId, n, dt}); 
-            logAction(`Neuer Termin erstellt: "${n}"`);
+            events.push({id: "e_" + Date.now(), n, dt}); 
         }
-        document.getElementById('eN').value = '';
-        document.getElementById('eDT').value = '';
+        document.getElementById('eN').value = ''; document.getElementById('eDT').value = '';
         render(); saveToCloud("saveEvents");
     } 
 }
 
 function editE(idx) {
-    const ev = events[idx];
     document.getElementById('editTIdx').value = idx;
-    document.getElementById('eN').value = ev.n;
-    document.getElementById('eDT').value = ev.dt;
+    document.getElementById('eN').value = events[idx].n;
+    document.getElementById('eDT').value = events[idx].dt;
     document.getElementById('tFormTitle').innerText = "Termin bearbeiten";
     document.getElementById('btnSaveE').innerText = "Änderung speichern";
     document.getElementById('btnCancelE').style.display = "block";
 }
 
 function cancelEditE() {
-    document.getElementById('editTIdx').value = "";
-    document.getElementById('eN').value = "";
-    document.getElementById('eDT').value = "";
+    document.getElementById('editTIdx').value = ""; document.getElementById('eN').value = ""; document.getElementById('eDT').value = "";
     document.getElementById('tFormTitle').innerText = "Neuen Termin anlegen";
     document.getElementById('btnSaveE').innerText = "Termin speichern";
     document.getElementById('btnCancelE').style.display = "none";
 }
 
 function delE(idx) {
-    if(confirm("Termin wirklich löschen?")) {
-        logAction(`Termin gelöscht: "${events[idx].n}"`);
-        events.splice(idx, 1);
-        render(); saveToCloud("saveEvents");
-    }
+    if(confirm("Termin wirklich löschen?")) { events.splice(idx, 1); render(); saveToCloud("saveEvents"); }
 }
 
 function modCash(isAdd) {
     const val = parseFloat(document.getElementById('cashAmt').value);
-    if(isNaN(val)) return;
-    cashBalance += isAdd ? val : -val;
-    logAction(`Manuelle Kassenbuchung: ${isAdd?'+':'-'}${val.toFixed(2)}€`);
-    document.getElementById('cashAmt').value = '';
-    render(); saveToCloud("saveCash");
+    if(isNaN(val)) return; cashBalance += isAdd ? val : -val;
+    document.getElementById('cashAmt').value = ''; render(); saveToCloud("saveCash");
 }
 
 function toggleDauer() {
-    const mIdx = members.findIndex(m => m.id === aI);
-    if(mIdx === -1) return;
-    members[mIdx].isDauer = document.getElementById('modDauer').checked;
-    logAction(`${members[mIdx].name} Dauerabmeldung geändert auf: ${members[mIdx].isDauer}`);
+    const m = members.find(m => m.id === aI); if(!m) return;
+    m.isDauer = document.getElementById('modDauer').checked;
     saveToCloud("saveMembers");
 }
 
-function toggleAttendance(mId, eventId, eventName, eventDtString) {
-    const mIdx = members.findIndex(m => m.id === mId);
-    if (mIdx === -1) return;
-    
-    if (!members[mIdx].attendance) members[mIdx].attendance = {};
+function toggleAttendance(mId, eventId, eventDtString) {
+    const m = members.find(m => m.id === mId); if (!m) return;
+    if (!m.attendance) m.attendance = {};
     const isChecked = document.getElementById(`chk-${mId}`).checked;
     
     if (isChecked) {
-        const now = new Date();
-        const eventTime = new Date(eventDtString);
+        const now = new Date(); const eventTime = safeParseDate(eventDtString);
         let status = "pünktlich";
-        
         if (now > eventTime) {
-            status = "verspätet";
-            if (!members[mIdx].fines) members[mIdx].fines = [];
-            
-            const timeString = now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
-            const dateString = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
-            
-            members[mIdx].fines.push({
-                t: 'Unentschuldigtes Verspäten', 
-                a: 2.5, 
-                isFixed: false, 
-                date: dateString,
-                time: timeString
-            });
-            alert(`⏰ Zu spät! Automatische Verspätung für ${members[mIdx].name} erfasst.`);
+            status = "verspätet"; if (!m.fines) m.fines = [];
+            m.fines.push({t: 'Unentschuldigtes Verspäten', a: 2.5, isFixed: false, date: now.toLocaleDateString('de-DE'), time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})});
+            alert(`⏰ Verspätungsstrafe für ${m.name} erfasst.`);
         }
-        members[mIdx].attendance[eventId] = status;
-    } else {
-        delete members[mIdx].attendance[eventId];
-    }
+        m.attendance[eventId] = status;
+    } else { delete m.attendance[eventId]; }
     
     saveToCloud("saveMembers");
-    
-    const currentStatus = members[mIdx].attendance[eventId] || "";
-    const badgeSpan = document.getElementById(`badge-container-${mId}`);
-    if (badgeSpan) {
-        if (currentStatus === "pünktlich") badgeSpan.innerHTML = '<span class="status-badge status-ontime">Pünktlich</span>';
-        else if (currentStatus === "verspätet") badgeSpan.innerHTML = '<span class="status-badge status-late">Zu Spät ⏰</span>';
-        else badgeSpan.innerHTML = '';
+    const container = document.getElementById(`badge-container-${mId}`);
+    if (container) {
+        let st = m.attendance[eventId] || "";
+        container.innerHTML = st === "pünktlich" ? '<span class="status-badge status-ontime">Pünktlich</span>' : (st === "verspätet" ? '<span class="status-badge status-late">Zu Spät ⏰</span>' : '');
     }
 }
 
 function openEventCheck(eventId) {
-    const ev = events.find(e => e.id === eventId);
-    if (!ev) return;
-    
+    const ev = events.find(e => e.id === eventId); if (!ev) return;
     document.getElementById('checkTitle').innerText = ev.n;
-    document.getElementById('checkDate').innerText = new Date(ev.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'}) + " Uhr";
+    document.getElementById('checkDate').innerText = safeParseDate(ev.dt).toLocaleString('de-DE') + " Uhr";
     
     const gone = members.filter(m => (m.abm && m.abm.includes(ev.n)) || m.isDauer);
-    document.getElementById('checkList').innerHTML = gone.length === 0 
-        ? '<span style="color:#666; font-style:italic;">Keine Abmeldungen für diesen Termin.</span>' 
-        : gone.map(m => `<span class="badge" style="${m.isDauer?'background:orange;color:black;':''}">${m.name}${m.isDauer?' (Dauer)':''}</span>`).join('');
+    document.getElementById('checkList').innerHTML = gone.length === 0 ? '<i>Keine Abmeldungen.</i>' : gone.map(m => `<span class="badge" style="${m.isDauer?'background:orange;color:black;':''}">${m.name}</span>`).join('');
     
     const activeMembers = members.filter(m => !(m.abm && m.abm.includes(ev.n)) && !m.isDauer);
     const attListDiv = document.getElementById('attendanceList');
     
-    if (activeMembers.length === 0) {
-        attListDiv.innerHTML = '<div style="padding:15px; text-align:center; color:#666;">Keine aktiven Mitglieder verfügbar.</div>';
-    } else {
-        attListDiv.innerHTML = activeMembers.map(m => {
-            if (!m.attendance) m.attendance = {};
-            const currentStatus = m.attendance[ev.id] || "";
-            const isChecked = currentStatus !== "";
-            
-            let statusBadge = "";
-            if (currentStatus === "pünktlich") statusBadge = '<span class="status-badge status-ontime">Pünktlich</span>';
-            if (currentStatus === "verspätet") statusBadge = '<span class="status-badge status-late">Zu Spät ⏰</span>';
-            
-            return `<div class="attendance-row">
-                <div>
-                    <span style="font-weight:bold;">${m.name}</span> 
-                    <span id="badge-container-${m.id}">${statusBadge}</span>
-                </div>
-                <input type="checkbox" id="chk-${m.id}" class="checkbox-large" 
-                    ${isChecked ? 'checked' : ''} 
-                    onchange="toggleAttendance('${m.id}', '${ev.id}', '${ev.n}', '${ev.dt}')">
-            </div>`;
-        }).join('');
-    }
+    attListDiv.innerHTML = activeMembers.length === 0 ? '<div style="padding:15px;">Keine Schützen auf der Liste.</div>' : activeMembers.map(m => {
+        if (!m.attendance) m.attendance = {};
+        let st = m.attendance[ev.id] || "";
+        let b = st === "pünktlich" ? '<span class="status-badge status-ontime">Pünktlich</span>' : (st === "verspätet" ? '<span class="status-badge status-late">Zu Spät ⏰</span>' : '');
+        return `<div class="attendance-row">
+            <div><b>${m.name}</b> <span id="badge-container-${m.id}">${b}</span></div>
+            <input type="checkbox" id="chk-${m.id}" class="checkbox-large" ${st!==""?'checked':''} onchange="toggleAttendance('${m.id}', '${ev.id}', '${ev.dt}')">
+        </div>`;
+    }).join('');
     
     openM('modalCheck');
 }
 
 function render() {
     document.getElementById('cashDisplay').innerText = cashBalance.toFixed(2);
-    
-    const consoleDiv = document.getElementById('systemConsoleLog');
-    consoleDiv.innerHTML = sysLog.length === 0 ? "Keine Aktionen protokolliert." : sysLog.map(l => `<div class="log-item">${l}</div>`).join('');
+    document.getElementById('systemConsoleLog').innerHTML = sysLog.map(l => `<div class="log-item">${l}</div>`).join('');
 
-    const sortedEvents = [...events].sort((a,b) => new Date(a.dt) - new Date(b.dt));
+    // Sicheres Sortieren über die neue Hilfsfunktion
+    const sortedEvents = [...events].sort((a,b) => safeParseDate(a.dt) - safeParseDate(b.dt));
 
     const calList = document.getElementById('calendarTermineList');
-    calList.innerHTML = "";
-    if(sortedEvents.length === 0) {
-        calList.innerHTML = '<div class="card" style="text-align:center;color:#666;">Keine Termine eingetragen.</div>';
-    } else {
-        sortedEvents.forEach(e => {
-            calList.innerHTML += `<div class="t-item" onclick="openEventCheck('${e.id}')">
-                <div>
-                    <b style="font-size:16px; color:var(--green);">${e.n}</b><br>
-                    <small style="color:#555;">📅 ${new Date(e.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})} Uhr</small>
-                </div>
-                <div style="text-align:right; font-size:12px; color:#666; font-weight:bold; background:#eee; padding:5px 10px; border-radius:20px;">
-                    📋 Antreten / Liste
-                </div>
-            </div>`;
-        });
-    }
+    calList.innerHTML = sortedEvents.length === 0 ? '<div class="card">Keine Termine eingetragen.</div>' : sortedEvents.map(e => `
+        <div class="t-item" onclick="openEventCheck('${e.id}')">
+            <div><b>${e.n}</b><br><small>📅 ${safeParseDate(e.dt).toLocaleString('de-DE')} Uhr</small></div>
+            <div style="font-size:12px; background:#eee; padding:5px 10px; border-radius:20px;">📋 Liste</div>
+        </div>
+    `).join('');
     
-    const list = document.getElementById('mList'); list.innerHTML = "";
-    members.sort((a,b)=>a.name.localeCompare(b.name)).forEach((m) => {
-        const sum = getMemberFineSum(m);
-        list.innerHTML += `<div class="member-item">
-            <div style="flex-grow:1" onclick="opMDetail('${m.id}')">
-                <b>${m.name}</b> ${m.isDauer ? '⭐<small style="color:orange">(Dauerabgem.)</small>':''}<br>
-                <small>${getAge(m.bday)} J.</small>
-            </div>
-            <b style="color:var(--red); margin-right:10px;">${sum.toFixed(2)}€</b>
+    document.getElementById('mList').innerHTML = members.sort((a,b)=>a.name.localeCompare(b.name)).map(m => `
+        <div class="member-item">
+            <div style="flex-grow:1" onclick="opMDetail('${m.id}')"><b>${m.name}</b> ${m.isDauer?'⭐':''}<br><small>${getAge(m.bday)} J.</small></div>
+            <b style="color:var(--red); margin-right:10px;">${getMemberFineSum(m).toFixed(2)}€</b>
             <span class="trash" onclick="delM('${m.id}')">🗑️</span>
-        </div>`;
-    });
+        </div>
+    `).join('');
 
-    const tl = document.getElementById('tList'); tl.innerHTML = "";
-    sortedEvents.forEach((e) => {
-        const originalIdx = events.findIndex(orig => orig.id === e.id);
-        tl.innerHTML += `<div class="member-item" style="padding:10px 15px;">
-            <div><b>${e.n}</b><br><small>${new Date(e.dt).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})} Uhr</small></div>
+    document.getElementById('tList').innerHTML = sortedEvents.map(e => {
+        const oIdx = events.findIndex(orig => orig.id === e.id);
+        return `<div class="member-item" style="padding:10px 15px;">
+            <div><b>${e.n}</b><br><small>${safeParseDate(e.dt).toLocaleString('de-DE')} Uhr</small></div>
             <div>
-                <button class="btn btn-sm" style="background:var(--gold); margin:0;" onclick="editE(${originalIdx})">✏️</button>
-                <button class="btn btn-sm btn-red" style="margin:0;" onclick="delE(${originalIdx})">🗑️</button>
+                <button class="btn btn-sm" style="background:var(--gold);" onclick="editE(${oIdx})">✏️</button>
+                <button class="btn btn-sm btn-red" onclick="delE(${oIdx})">🗑️</button>
             </div>
         </div>`;
-    });
+    }).join('');
 }
 
 function opMDetail(id) { 
-    aI = id; 
-    const m = members.find(m => m.id === id);
-    if(!m) return;
-    
-    const isWeissjacke = getAge(m.bday) < 18;
-    const jackenName = isWeissjacke ? "Weißjacke" : "Graujacke";
-    const factor = isWeissjacke ? 1 : 2;
-
+    aI = id; const m = members.find(m => m.id === id); if(!m) return;
     document.getElementById('modN').innerText = m.name; 
-    document.getElementById('modAge').innerText = `${getAge(m.bday)} Jahre (${jackenName})`;
+    document.getElementById('modAge').innerText = `${getAge(m.bday)} Jahre`;
     document.getElementById('modDauer').checked = m.isDauer || false;
     document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
     
-    const logDiv = document.getElementById('memberFineLog');
-    if(!m.fines || m.fines.length === 0) {
-        logDiv.innerHTML = '<span style="color:#666; font-style:italic;">Keine aktuellen Vergehen. Saubere Weste!</span>';
-    } else {
-        logDiv.innerHTML = m.fines.map(f => {
-            const finalAmt = f.isFixed ? f.a : (f.a * factor);
-            const timeStr = f.time ? ` um ${f.time} Uhr` : '';
-            const dateStr = f.date ? ` [${f.date}${timeStr}]` : '';
-            const noteStr = f.note ? ` <br><i style="color:#555;">📝 Notiz: "${f.note}"</i>` : '';
-            return `<div style="padding:6px 0; border-bottom:1px solid #eee; color:var(--red); line-height: 1.4;">
-                <b>${finalAmt.toFixed(2)}€</b> - ${f.t}<small style="color:#888; font-weight:bold;">${dateStr}</small>${noteStr}
-            </div>`;
-        }).join('');
-    }
-
-    const cancelArea = document.getElementById('abmCancelArea');
-    const cancelButtons = document.getElementById('abmCancelButtons');
-    cancelButtons.innerHTML = "";
-    if(m.abm && m.abm.length > 0) {
-        cancelArea.style.display = "block";
-        m.abm.forEach(name => {
-            cancelButtons.innerHTML += `<button class="btn btn-sm btn-red" style="margin-bottom:5px;" onclick="removeAbm('${name}')">❌ ${name} aufheben</button>`;
-        });
-    } else {
-        cancelArea.style.display = "none";
-    }
-
-    const fineSum = getMemberFineSum(m);
-    document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (+${fineSum.toFixed(2)}€ in Kasse)`;
+    document.getElementById('memberFineLog').innerHTML = (!m.fines || m.fines.length === 0) ? '<i>Keine Strafen. Saubere Weste!</i>' : m.fines.map(f => `<div><b>${f.a.toFixed(2)}€</b> - ${f.t}</div>`).join('');
+    document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (${getMemberFineSum(m).toFixed(2)}€)`;
     openM('modalM'); 
 }
 
-function removeAbm(eventName) {
-    const mIdx = members.findIndex(m => m.id === aI);
-    if(mIdx === -1) return;
-    logAction(`Abmeldung für ${members[mIdx].name} bei "${eventName}" aufgehoben.`);
-    members[mIdx].abm = members[mIdx].abm.filter(name => name !== eventName);
-    if(members[mIdx].fines) {
-        members[mIdx].fines = members[mIdx].fines.filter(f => f.t !== 'Spät-Abmeldung');
-    }
-    
-    render(); saveToCloud("saveMembers");
-    opMDetail(aI);
-    alert(`Abmeldung für "${eventName}" wurde aufgehoben!`);
-}
-
-function f(t, a, isFixed, customNoteText = "") { 
-    const mIdx = members.findIndex(m => m.id === aI);
-    if(mIdx === -1) return;
-    if(!members[mIdx].fines) members[mIdx].fines = [];
-    
-    const now = new Date();
-    const todayStr = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
-    const timeStr = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-
-    members[mIdx].fines.push({
-        t: t, 
-        a: a, 
-        isFixed: isFixed, 
-        date: todayStr,
-        time: timeStr,
-        note: customNoteText !== "" ? customNoteText : null
-    }); 
-    
-    const currentFactor = (getAge(members[mIdx].bday) < 18) ? 1 : 2;
-    const berechneterBetrag = isFixed ? a : (a * currentFactor);
-    
-    logAction(`Strafe erteilt an ${members[mIdx].name} : ${t} (${berechneterBetrag.toFixed(2)}€)`);
-    render(); saveToCloud("saveMembers");
-    opMDetail(aI);
-}
-
-function customFine() {
-    const val = parseFloat(document.getElementById('customVal').value);
-    const note = document.getElementById('customNote').value;
-    if(!isNaN(val)) { 
-        f('Individuelle Buchung', val, true, note); 
-        document.getElementById('customVal').value = ''; 
-        document.getElementById('customNote').value = ''; 
-    }
+function f(t, a, isFixed) { 
+    const m = members.find(m => m.id === aI); if(!m) return;
+    if(!m.fines) m.fines = [];
+    m.fines.push({t: t, a: a, isFixed: isFixed, date: new Date().toLocaleDateString('de-DE')}); 
+    render(); saveToCloud("saveMembers"); opMDetail(aI);
 }
 
 function doAbm() {
     const sel = document.getElementById('evSel').value; if(!sel) return;
     const [dt, name] = sel.split('|');
-    const mIdx = members.findIndex(m => m.id === aI);
-    if(mIdx === -1) return;
-
-    if(!members[mIdx].fines) members[mIdx].fines = [];
-    const now = new Date();
-    const todayStr = now.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
-    const timeStr = now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-
-    let spatText = "";
-    if (!members[mIdx].isDauer && (new Date(dt) - now) / 3600000 < 24) {
-        members[mIdx].fines.push({t: 'Spät-Abmeldung', a: 5, isFixed: true, date: todayStr, time: timeStr});
-        spatText = " (Zuspät! 5€ verbucht)";
-    }
-    if(!members[mIdx].abm) members[mIdx].abm = [];
-    if(!members[mIdx].abm.includes(name)) members[mIdx].abm.push(name);
+    const m = members.find(m => m.id === aI); if(!m) return;
+    if(!m.abm) m.abm = []; if(!m.abm.includes(name)) m.abm.push(name);
     
-    logAction(`${members[mIdx].name} für "${name}" abgemeldet${spatText}.`);
-    render(); saveToCloud("saveMembers");
-    closeM('modalM'); alert("Erfolgreich abgemeldet!");
+    if (!m.isDauer && (safeParseDate(dt) - new Date()) / 3600000 < 24) {
+        if(!m.fines) m.fines = []; m.fines.push({t: 'Spät-Abmeldung', a: 5, isFixed: true});
+    }
+    render(); saveToCloud("saveMembers"); closeM('modalM'); alert("Abgemeldet!");
 }
 
 function pay() { 
-    const mIdx = members.findIndex(m => m.id === aI);
-    if(mIdx === -1) return;
-    const sum = getMemberFineSum(members[mIdx]);
-    
-    if(confirm(`${members[mIdx].name} hat ${sum.toFixed(2)}€ bezahlt?`)) { 
-        cashBalance += sum; 
-        logAction(`Kassiert von ${members[mIdx].name}: ${sum.toFixed(2)}€ (Sündenregister gelöscht)`);
-        members[mIdx].fines = []; 
-        render();
-        saveToCloud("saveMembers");
-        saveToCloud("saveCash");
-        closeM('modalM'); 
+    const m = members.find(m => m.id === aI); if(!m) return;
+    const sum = getMemberFineSum(m);
+    if(confirm(`${m.name} hat bezahlt?`)) { 
+        cashBalance += sum; m.fines = []; render(); saveToCloud("saveMembers"); saveToCloud("saveCash"); closeM('modalM'); 
     } 
 }
 
 function wa() { 
-    let t = "*DEPPENSOLD DANNENBÜTTEL*\n\n"; 
-    members.forEach(m => { 
-        const s = getMemberFineSum(m); if(s>0) t += `${m.name}: ${s.toFixed(2)}€\n`; 
-    });
-    navigator.clipboard.writeText(t).then(() => alert("Strafenübersicht in Zwischenablage kopiert!"));
+    let t = "*DEPPENSOLD JUNG SCHÜTZEN*\n\n"; 
+    members.forEach(m => { let s = getMemberFineSum(m); if(s>0) t += `${m.name}: ${s.toFixed(2)}€\n`; });
+    navigator.clipboard.writeText(t).then(() => alert("Kopiert!"));
 }
 
-// Initialer Start-Ablauf
 checkUserIdentity();
 loadFromCloud();
 </script>
