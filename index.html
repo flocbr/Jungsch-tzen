@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spieß-Zentrale v37-Pro</title>
+    <title>Spieß-Zentrale v38-Macht</title>
     <style>
         :root { --green: #1a472a; --gold: #c5a059; --red: #d9534f; --bg: #f4f7f4; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: var(--bg); 
-            margin: 0; padding: 0;
+            background: var(--bg); margin: 0; padding: 0;
             height: 100vh; height: 100dvh; 
             display: flex; flex-direction: column;
             touch-action: manipulation;
@@ -75,7 +74,6 @@
         
         .member-item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: white; border-radius: 10px; margin-bottom: 8px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         
-        /* Das gesamte Feld als Kachel */
         .t-card { 
             background: white; border-radius: 12px; margin-bottom: 15px; 
             border-left: 6px solid var(--green); box-shadow: 0 3px 8px rgba(0,0,0,0.08); 
@@ -97,6 +95,11 @@
         .modal-content { background: white; margin: 5% auto; padding: 20px; width: 92%; max-height: 85vh; border-radius: 15px; box-sizing: border-box; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .badge { display: inline-block; background: var(--green); color: white; padding: 4px 8px; border-radius: 12px; margin: 2px; font-size: 12px; }
 
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
+        table.ordnung-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
+        table.ordnung-table th, table.ordnung-table td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: top; }
+        table.ordnung-table th { background: var(--green); color: white; font-size: 14px; }
+
         #loginBlocker {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--green); z-index: 999999;
             color: white; text-align: center; padding: 40px 20px; box-sizing: border-box; flex-direction: column; justify-content: center; align-items: center;
@@ -115,30 +118,47 @@
 
 <div class="header">
     <div id="userRoleBadge" class="user-badge" onclick="switchUserPrompt()">Bediener: ?</div>
-    <h1 style="margin:0; font-size: 18px;">Dannenbüttel v37-Direkt</h1>
+    <h1 style="margin:0; font-size: 18px;">Dannenbüttel v38-Macht</h1>
     <div class="cash-banner">💰 Kasse: <span id="cashDisplay">0.00</span> €</div>
     <div id="spinner" class="loading-spinner"></div>
 </div>
 
 <div class="content">
+    <!-- Tab 1: Termine -->
     <div id="page-kalender" class="page active">
         <h3 style="margin-bottom: 15px;">📅 Anstehende Termine & Antreten</h3>
         <div id="calendarTermineList"></div>
     </div>
 
+    <!-- Tab 2: Schützen -->
     <div id="page-mitglieder" class="page">
         <div id="mList"></div>
         <button class="btn" style="background:var(--gold)" onclick="addM()">+ Mitglied hinzufügen</button>
         <button class="btn btn-wa" style="margin-top:15px;" onclick="wa()">📋 WhatsApp Export</button>
     </div>
 
+    <!-- Tab 3: Regelwerk -->
     <div id="page-regeln" class="page">
-        <div class="card">
-            <h3>👔 Kleidungsordnung & Bußgeld</h3>
-            <p>Siehe Infotafeln in der Verwaltung.</p>
+        <div class="card" style="padding: 10px;">
+            <h3>👔 Offizielle Kleidungsordnung & Strafen</h3>
+            <div class="table-responsive">
+                <table class="ordnung-table">
+                    <thead>
+                        <tr><th>Verstoß / Kleidungsstück</th><th>Strafe (U18)</th><th>Strafe (Ü18)</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><b>Unentschuldigtes Fehlen</b></td><td>5.00 €</td><td>10.00 €</td></tr>
+                        <tr><td><b>Unentschuldigtes Verspäten</b></td><td>2.50 €</td><td>5.00 €</td></tr>
+                        <tr><td><b>Spät-Abmeldung (&lt; 24h vor Termin)</b></td><td colspan="2" style="text-align:center;">5.00 € (Fixbetrag)</td></tr>
+                        <tr><td><b>Grober Unfug / Fehltritt</b></td><td>1.00 €</td><td>2.00 €</td></tr>
+                        <tr><td><b>Fehlende/Falsche Uniformteile</b><br><small>(Hut, Krawatte, weisses Hemd, schwarze Schuhe)</small></td><td>1.00 € je Teil</td><td>2.00 € je Teil</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
+    <!-- Tab 4: Verwaltung -->
     <div id="page-termine" class="page">
         <div class="card">
             <h3 id="tFormTitle">Neuen Termin anlegen</h3>
@@ -174,6 +194,7 @@
     <div id="nav-termine" class="nav-item" onclick="showPage('termine')"><span class="nav-icon">⚙️</span>Verwaltung</div>
 </div>
 
+<!-- Modal Mitglied-Details -->
 <div id="modalM" class="modal">
     <div class="modal-content">
         <h2 id="modN" style="margin:0; color:var(--green);"></h2>
@@ -187,7 +208,6 @@
             <label>Abmelden für Termin:</label>
             <select id="evSel"></select>
             <button class="btn" style="background:orange; color:black;" onclick="doAbm()">🕒 Abmelden (24h Check)</button>
-            <div id="abmCancelArea" style="margin-top:10px; display:none;"><div id="abmCancelButtons"></div></div>
             <hr>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                 <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Unentschuldigtes Fehlen', 5, false)">🚫 Unentschuldigtes Fehlen</button>
@@ -206,7 +226,6 @@
 // --- GOOGLE SCRIPT CONNECTION ---
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxe92SEys_t2XZVWHMTtQWHdjfEpgozCPIV3bQjXUrbE9C2rTknzm5efxXwFX75soXbMA/exec";
 
-// MAGIE: Falls du Alternative 1 nutzt, lädt das Template hier direkt rein. Falls leer, greift das Fallback.
 let members = [];
 let events = [];
 let sysLog = [];
@@ -217,7 +236,7 @@ let isSaving = false;
 
 function showLoading(show) { document.getElementById('spinner').style.display = show ? 'block' : 'none'; }
 function openM(id) { document.getElementById(id).style.display = 'block'; document.body.classList.add('modal-open'); }
-function closeM(id) { document.getElementById(id).style.display = 'none'; document.body.classList.remove('modal-remove'); }
+function closeM(id) { document.getElementById(id).style.display = 'none'; document.body.classList.remove('modal-open'); }
 
 function checkUserIdentity() {
     let savedUser = localStorage.getItem("spiess_active_user");
@@ -262,9 +281,7 @@ async function saveToCloud(actionType) {
     if (!WEB_APP_URL || WEB_APP_URL.startsWith("DEINE_")) return;
     if (isSaving) return; 
     isSaving = true; showLoading(true);
-
     let payload = { action: actionType, members, events, cashBalance, sysLog };
-
     try {
         await fetch(WEB_APP_URL, { 
             method: "POST", mode: "no-cors", cache: "no-cache", 
@@ -311,7 +328,7 @@ function getMemberFineSum(m) {
     return sum;
 }
 
-// Umschalten der Anwesenheit direkt in der Kachel des Termins
+// MACHT-UPDATE: Jetzt komplett revidierbar bei Fehlklicks!
 function toggleAttendanceDirect(mId, eventId, eventDtString) {
     const m = members.find(m => m.id === mId); if (!m) return;
     if (!m.attendance) m.attendance = {};
@@ -319,20 +336,29 @@ function toggleAttendanceDirect(mId, eventId, eventDtString) {
     const isChecked = document.getElementById(`chkDirect-${eventId}-${mId}`).checked;
     
     if (isChecked) {
+        // Schütze wird als anwesend markiert
         const now = new Date(); const eventTime = safeParseDate(eventDtString);
         let status = "pünktlich";
         if (now > eventTime) {
             status = "verspätet"; if (!m.fines) m.fines = [];
-            m.fines.push({t: 'Unentschuldigtes Verspäten', a: 2.5, isFixed: false, date: now.toLocaleDateString('de-DE'), time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})});
-            alert(`⏰ Verspätungsstrafe für ${m.name} erfasst (Sollzeit überschritten!).`);
+            m.fines.push({
+                id: "fine_" + eventId, // Eindeutige ID verpassen für den Rückbau!
+                t: 'Unentschuldigtes Verspäten', a: 2.5, isFixed: false, 
+                date: now.toLocaleDateString('de-DE'), time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
+            });
+            alert(`⏰ Verspätungsstrafe für ${m.name} erfasst.`);
         }
         m.attendance[eventId] = status;
     } else { 
-        delete m.attendance[eventId]; 
+        // ABSOLUTE MACHT: Häkchen entfernt -> Status weg UND automatische Strafe wird sofort gelöscht!
+        delete m.attendance[eventId];
+        if (m.fines) {
+            m.fines = m.fines.filter(f => f.id !== "fine_" + eventId);
+        }
     }
     
     saveToCloud("saveMembers");
-    render(); // Aktualisiert die Abzeichen sofort sauber auf dem Schirm
+    render(); 
 }
 
 function addM() { 
@@ -381,17 +407,14 @@ function render() {
     document.getElementById('cashDisplay').innerText = cashBalance.toFixed(2);
     const sortedEvents = [...events].sort((a,b) => safeParseDate(a.dt) - safeParseDate(b.dt));
 
-    // TERMIN-LISTE RENDERN (Jeder Termin ist jetzt eine vollwertige Kachel mit Checkboxen)
     const calList = document.getElementById('calendarTermineList');
     if(sortedEvents.length === 0) {
         calList.innerHTML = '<div class="card">Keine aktiven Termine vorhanden.</div>';
     } else {
         calList.innerHTML = sortedEvents.map(e => {
-            // Filtere Schützen, die für diesen spezifischen Termin abgemeldet sind
             const activeSchuetzen = members.filter(m => !(m.abm && m.abm.includes(e.n)) && !m.isDauer);
             const abgemeldetSchuetzen = members.filter(m => (m.abm && m.abm.includes(e.n)) || m.isDauer);
 
-            // Generiere die Checkbox-Zeilen für jeden anwesenden Schützen
             const schuetzenRows = activeSchuetzen.map(m => {
                 if (!m.attendance) m.attendance = {};
                 let currentStatus = m.attendance[e.id] || "";
@@ -404,7 +427,6 @@ function render() {
                 </div>`;
             }).join('');
 
-            // Badge-Anzeige für die Entschuldigten am Ende der Kachel
             const abmBadges = abgemeldetSchuetzen.map(m => `<span class="badge" style="background:#888;">${m.name}</span>`).join('');
 
             return `<div class="t-card">
@@ -423,7 +445,6 @@ function render() {
         }).join('');
     }
     
-    // SCHÜTZEN-TAB RENDERN
     document.getElementById('mList').innerHTML = members.sort((a,b)=>a.name.localeCompare(b.name)).map(m => `
         <div class="member-item">
             <div style="flex-grow:1" onclick="opMDetail('${m.id}')"><b>${m.name}</b> ${m.isDauer ? '⭐' : ''}<br><small>${getAge(m.bday)} J.</small></div>
@@ -432,7 +453,6 @@ function render() {
         </div>
     `).join('');
 
-    // VERWALTUNGS-TAB RENDERN
     document.getElementById('tList').innerHTML = sortedEvents.map(e => {
         const oIdx = events.findIndex(orig => orig.id === e.id);
         return `<div class="member-item" style="padding:10px 15px;">
@@ -478,7 +498,7 @@ function pay() {
 }
 
 function wa() { 
-    let t = "*DEPPENSOLD DANNENBÜTTEL*\n\n"; 
+    let t = "*DEPPENSOLD JUNG SCHÜTZEN*\n\n"; 
     members.forEach(m => { let s = getMemberFineSum(m); if(s>0) t += `${m.name}: ${s.toFixed(2)}€\n`; });
     navigator.clipboard.writeText(t).then(() => alert("Kopiert!"));
 }
