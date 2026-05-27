@@ -3,81 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spieß-Zentrale v36-Pro</title>
+    <title>Spieß-Zentrale v37-Pro</title>
     <style>
         :root { --green: #1a472a; --gold: #c5a059; --red: #d9534f; --bg: #f4f7f4; }
         
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
             background: var(--bg); 
-            margin: 0; 
-            padding: 0;
-            height: 100vh;
-            height: 100dvh; 
-            display: flex;
-            flex-direction: column;
+            margin: 0; padding: 0;
+            height: 100vh; height: 100dvh; 
+            display: flex; flex-direction: column;
             touch-action: manipulation;
         }
 
-        body.modal-open {
-            overflow: hidden;
-            position: fixed;
-            width: 100%;
-        }
+        body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 
         .header { 
-            background: var(--green); 
-            color: white; 
-            padding: 12px 10px; 
-            text-align: center; 
-            border-bottom: 4px solid var(--gold);
-            flex-shrink: 0;
-            position: relative;
-            z-index: 10;
+            background: var(--green); color: white; padding: 12px 10px; text-align: center; 
+            border-bottom: 4px solid var(--gold); flex-shrink: 0; position: relative; z-index: 10;
         }
 
         .cash-banner {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 4px 10px;
-            border-radius: 20px;
-            display: inline-block;
-            font-size: 14px;
-            margin-top: 5px;
-            font-weight: bold;
-            border: 1px solid var(--gold);
+            background: rgba(0, 0, 0, 0.2); padding: 4px 10px; border-radius: 20px;
+            display: inline-block; font-size: 14px; margin-top: 5px; font-weight: bold; border: 1px solid var(--gold);
         }
 
         .user-badge {
-            position: absolute;
-            left: 10px;
-            top: 15px;
-            font-size: 12px;
-            background: var(--gold);
-            color: black;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
+            position: absolute; left: 10px; top: 15px; font-size: 12px; background: var(--gold);
+            color: black; padding: 2px 6px; border-radius: 4px; font-weight: bold; cursor: pointer;
         }
 
         .loading-spinner {
-            display: none;
-            position: absolute;
-            right: 15px;
-            top: 18px;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #fff;
-            border-top: 2px solid var(--gold);
-            border-radius: 50%;
+            display: none; position: absolute; right: 15px; top: 18px; width: 16px; height: 16px;
+            border: 2px solid #fff; border-top: 2px solid var(--gold); border-radius: 50%;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .content {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 15px 15px 120px 15px; 
+            flex-grow: 1; overflow-y: auto; padding: 15px 15px 120px 15px; 
             -webkit-overflow-scrolling: touch;
         }
 
@@ -85,28 +49,15 @@
         .page.active { display: block; }
 
         .navbar { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            background: white; 
-            display: flex; 
-            border-top: 2px solid var(--gold); 
-            z-index: 999; 
+            position: fixed; bottom: 0; left: 0; width: 100%; background: white; 
+            display: flex; border-top: 2px solid var(--gold); z-index: 999; 
             padding-bottom: calc(15px + env(safe-area-inset-bottom)); 
             box-shadow: 0 -3px 10px rgba(0,0,0,0.15);
         }
         
         .nav-item { 
-            flex: 1; 
-            text-align: center; 
-            padding: 15px 5px; 
-            color: #666; 
-            font-size: 12px; 
-            cursor: pointer;
-            border: none;
-            background: none;
-            -webkit-tap-highlight-color: transparent;
+            flex: 1; text-align: center; padding: 15px 5px; color: #666; font-size: 12px; cursor: pointer;
+            border: none; background: none; -webkit-tap-highlight-color: transparent;
         }
         
         .nav-item.active { color: var(--green); font-weight: bold; background: #f0f0f0; }
@@ -124,91 +75,37 @@
         
         .member-item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: white; border-radius: 10px; margin-bottom: 8px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         
-        .t-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 15px; 
-            background: white; 
-            border-radius: 12px; 
-            margin-bottom: 10px; 
-            border-left: 4px solid var(--green); 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.08); 
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
+        /* Das gesamte Feld als Kachel */
+        .t-card { 
+            background: white; border-radius: 12px; margin-bottom: 15px; 
+            border-left: 6px solid var(--green); box-shadow: 0 3px 8px rgba(0,0,0,0.08); 
+            padding: 15px;
         }
+        .t-header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
-        .trash { color: #ccc; padding: 5px 10px; font-size: 20px; cursor: pointer; }
-
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; }
-        .modal-content { 
-            background: white; 
-            margin: 5% auto; 
-            padding: 20px; 
-            width: 92%; 
-            max-height: 85vh;
-            border-radius: 15px; 
-            box-sizing: border-box; 
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .badge { display: inline-block; background: var(--green); color: white; padding: 6px 12px; border-radius: 15px; margin: 4px; font-size: 13px; font-weight: bold; }
-        .log-item { font-size: 12px; padding: 6px; border-bottom: 1px solid #eee; font-family: monospace; }
-        
-        .switch-container { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #eee; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--green); }
-        input:checked + .slider:before { transform: translateX(24px); }
-
-        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
-        table.ordnung-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 600px; }
-        table.ordnung-table th, table.ordnung-table td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
-        table.ordnung-table th { background: var(--green); color: white; font-size: 14px; }
-
-        .attendance-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 12px; border-bottom: 1px solid #eee; }
+        .attendance-box { background: #f9f9f9; border-radius: 8px; padding: 5px 10px; border: 1px solid #eee; margin-top: 10px; }
+        .attendance-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
         .attendance-row:last-child { border: none; }
-        .checkbox-large { width: 28px; height: 28px; cursor: pointer; transform: scale(1.2); margin-right: 5px; }
+        .checkbox-large { width: 30px; height: 30px; cursor: pointer; transform: scale(1.3); margin-right: 8px; }
+        
         .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: bold; margin-left: 5px; }
         .status-ontime { background: #d4edda; color: #155724; }
         .status-late { background: #f8d7da; color: #721c24; }
 
+        .trash { color: #ccc; padding: 5px 10px; font-size: 20px; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; }
+        .modal-content { background: white; margin: 5% auto; padding: 20px; width: 92%; max-height: 85vh; border-radius: 15px; box-sizing: border-box; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .badge { display: inline-block; background: var(--green); color: white; padding: 4px 8px; border-radius: 12px; margin: 2px; font-size: 12px; }
+
         #loginBlocker {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--green);
-            z-index: 999999;
-            color: white;
-            text-align: center;
-            padding: 40px 20px;
-            box-sizing: border-box;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--green); z-index: 999999;
+            color: white; text-align: center; padding: 40px 20px; box-sizing: border-box; flex-direction: column; justify-content: center; align-items: center;
         }
-        .login-btn {
-            background: white;
-            color: var(--green);
-            border: 3px solid var(--gold);
-            padding: 20px;
-            width: 80%;
-            max-width: 300px;
-            font-size: 22px;
-            font-weight: bold;
-            border-radius: 15px;
-            margin: 15px 0;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
+        .login-btn { background: white; color: var(--green); border: 3px solid var(--gold); padding: 20px; width: 80%; max-width: 300px; font-size: 22px; font-weight: bold; border-radius: 15px; margin: 15px 0; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
 
-<!-- Login-Sperrbildschirm -->
 <div id="loginBlocker">
     <h2 style="color: var(--gold); margin-bottom: 5px; font-size: 24px;">Spieß-Zentrale</h2>
     <p style="margin-top: 0; font-size: 14px; opacity: 0.9;">Wer nutzt diese App auf diesem Gerät?</p>
@@ -218,42 +115,35 @@
 
 <div class="header">
     <div id="userRoleBadge" class="user-badge" onclick="switchUserPrompt()">Bediener: ?</div>
-    <h1 style="margin:0; font-size: 18px;">Letzte Instanz v36</h1>
+    <h1 style="margin:0; font-size: 18px;">Dannenbüttel v37-Direkt</h1>
     <div class="cash-banner">💰 Kasse: <span id="cashDisplay">0.00</span> €</div>
     <div id="spinner" class="loading-spinner"></div>
 </div>
 
 <div class="content">
-    <!-- Tab 1: Termine -->
     <div id="page-kalender" class="page active">
         <h3 style="margin-bottom: 15px;">📅 Anstehende Termine & Antreten</h3>
         <div id="calendarTermineList"></div>
     </div>
 
-    <!-- Tab 2: Schützen -->
     <div id="page-mitglieder" class="page">
         <div id="mList"></div>
         <button class="btn" style="background:var(--gold)" onclick="addM()">+ Mitglied hinzufügen</button>
         <button class="btn btn-wa" style="margin-top:15px;" onclick="wa()">📋 WhatsApp Export</button>
     </div>
 
-    <!-- Tab 3: Regelwerk -->
     <div id="page-regeln" class="page">
-        <div class="card" style="padding: 10px;">
-            <h3>👔 Offizielle Kleidungsordnung</h3>
-            <div class="table-responsive">
-                <!-- Tabelle wie gehabt gekürzt für die Übersichtlichkeit im Rendering -->
-                <table class="ordnung-table"><thead><tr><th>Kategorie</th><th>Inhalt</th></tr></thead><tbody><tr><td><b>Hut</b></td><td>Schützenhut grau meliert</td></tr></tbody></table>
-            </div>
+        <div class="card">
+            <h3>👔 Kleidungsordnung & Bußgeld</h3>
+            <p>Siehe Infotafeln in der Verwaltung.</p>
         </div>
     </div>
 
-    <!-- Tab 4: Verwaltung -->
     <div id="page-termine" class="page">
         <div class="card">
             <h3 id="tFormTitle">Neuen Termin anlegen</h3>
             <input type="hidden" id="editTIdx" value="">
-            <input type="text" id="eN" placeholder="Name (z.B. Antreten)">
+            <input type="text" id="eN" placeholder="Name (z.B. Antreten Schützenplatz)">
             <input type="datetime-local" id="eDT">
             <button class="btn" id="btnSaveE" onclick="addE()">Termin speichern</button>
             <button class="btn" id="btnCancelE" style="background:#888; display:none; margin-top:5px;" onclick="cancelEditE()">Abbrechen</button>
@@ -272,11 +162,6 @@
                 <button class="btn btn-red" onclick="modCash(false)">[-] Auszahlen</button>
             </div>
         </div>
-
-        <div class="card">
-            <h3>📋 System-Konsole</h3>
-            <div id="systemConsoleLog" style="max-height: 150px; overflow-y: auto; background: #222; color: #0f0; padding: 10px; border-radius: 6px;"></div>
-        </div>
         
         <button class="btn" style="background:#555; margin-top:20px;" onclick="loadFromCloud()">🔄 Cloud-Daten manuell laden</button>
     </div>
@@ -289,7 +174,6 @@
     <div id="nav-termine" class="nav-item" onclick="showPage('termine')"><span class="nav-icon">⚙️</span>Verwaltung</div>
 </div>
 
-<!-- Modal Mitglied-Details -->
 <div id="modalM" class="modal">
     <div class="modal-content">
         <h2 id="modN" style="margin:0; color:var(--green);"></h2>
@@ -318,24 +202,11 @@
     </div>
 </div>
 
-<!-- Modal Termin-Abmeldungen / Anwesenheit -->
-<div id="modalCheck" class="modal">
-    <div class="modal-content">
-        <h2 id="checkTitle" style="color:var(--green); margin:0;"></h2>
-        <p id="checkDate" style="font-weight:bold; margin-top:5px; color:#666;"></p>
-        <hr>
-        <h4>🎯 Anwesenheit abhaken:</h4>
-        <div id="attendanceList" style="background:#fff; border-radius:8px; border:1px solid #ddd; max-height:250px; overflow-y:auto; margin-bottom:15px;"></div>
-        <h4>Abgemeldet / Entschuldigt:</h4>
-        <div id="checkList"></div>
-        <button class="btn" style="background:black; margin-top:25px;" onclick="closeM('modalCheck')">Schließen</button>
-    </div>
-</div>
-
 <script>
-// --- GOOGLE SCRIPT VERBINDUNG ---
+// --- GOOGLE SCRIPT CONNECTION ---
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxe92SEys_t2XZVWHMTtQWHdjfEpgozCPIV3bQjXUrbE9C2rTknzm5efxXwFX75soXbMA/exec";
 
+// MAGIE: Falls du Alternative 1 nutzt, lädt das Template hier direkt rein. Falls leer, greift das Fallback.
 let members = [];
 let events = [];
 let sysLog = [];
@@ -346,7 +217,7 @@ let isSaving = false;
 
 function showLoading(show) { document.getElementById('spinner').style.display = show ? 'block' : 'none'; }
 function openM(id) { document.getElementById(id).style.display = 'block'; document.body.classList.add('modal-open'); }
-function closeM(id) { document.getElementById(id).style.display = 'none'; document.body.classList.remove('modal-open'); }
+function closeM(id) { document.getElementById(id).style.display = 'none'; document.body.classList.remove('modal-remove'); }
 
 function checkUserIdentity() {
     let savedUser = localStorage.getItem("spiess_active_user");
@@ -377,26 +248,14 @@ function switchUserPrompt() {
     }
 }
 
-// Sichere Datumserkennung, die auf PC und Smartphones absolut fehlerfrei funktioniert
 function safeParseDate(dateStr) {
     if (!dateStr) return new Date(0);
     let cleanStr = dateStr.replace(' ', 'T'); 
     let d = new Date(cleanStr);
     if (!isNaN(d.getTime())) return d;
-    
-    // Fallback falls iOS/Safari meckert
     let parts = dateStr.split(/[- :T.]/);
-    if (parts.length >= 5) {
-        return new Date(parts[0], parts[1]-1, parts[2], parts[3], parts[4]);
-    }
+    if (parts.length >= 5) return new Date(parts[0], parts[1]-1, parts[2], parts[3], parts[4]);
     return new Date(dateStr);
-}
-
-async function logAction(msg) {
-    const timestamp = new Date().toLocaleString('de-DE', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
-    sysLog.unshift(`[${timestamp}] ${currentUser}: ${msg}`);
-    if(sysLog.length > 30) sysLog.pop();
-    await saveToCloud("saveSysLog");
 }
 
 async function saveToCloud(actionType) {
@@ -404,11 +263,7 @@ async function saveToCloud(actionType) {
     if (isSaving) return; 
     isSaving = true; showLoading(true);
 
-    let payload = { action: actionType };
-    if (actionType === "saveMembers") payload.members = members;
-    if (actionType === "saveEvents") payload.events = events;
-    if (actionType === "saveCash") payload.cashBalance = cashBalance;
-    if (actionType === "saveSysLog") payload.sysLog = sysLog;
+    let payload = { action: actionType, members, events, cashBalance, sysLog };
 
     try {
         await fetch(WEB_APP_URL, { 
@@ -416,24 +271,22 @@ async function saveToCloud(actionType) {
             headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) 
         });
     } catch (e) { console.error(e); } 
-    finally { setTimeout(() => { isSaving = false; showLoading(false); }, 1000); }
+    finally { setTimeout(() => { isSaving = false; showLoading(false); }, 800); }
 }
 
 async function loadFromCloud() {
-    if (!WEB_APP_URL || WEB_APP_URL.startsWith("DEINE_")) return;
     showLoading(true);
     try {
         const response = await fetch(WEB_APP_URL);
         const data = await response.json();
         if (data) {
-            let seenIds = new Set();
-            members = (data.members || []).filter(m => { if(!seenIds.has(m.id)){ seenIds.add(m.id); return true; } return false; });
+            members = data.members || [];
             events = data.events || [];
             cashBalance = Number(data.cashBalance) || 0.0;
             sysLog = data.sysLog || [];
         }
         render();
-    } catch (e) { console.error("Ladefehler:", e); } 
+    } catch (e) { console.error("Fehler beim Abruf:", e); } 
     finally { showLoading(false); }
 }
 
@@ -458,35 +311,48 @@ function getMemberFineSum(m) {
     return sum;
 }
 
+// Umschalten der Anwesenheit direkt in der Kachel des Termins
+function toggleAttendanceDirect(mId, eventId, eventDtString) {
+    const m = members.find(m => m.id === mId); if (!m) return;
+    if (!m.attendance) m.attendance = {};
+    
+    const isChecked = document.getElementById(`chkDirect-${eventId}-${mId}`).checked;
+    
+    if (isChecked) {
+        const now = new Date(); const eventTime = safeParseDate(eventDtString);
+        let status = "pünktlich";
+        if (now > eventTime) {
+            status = "verspätet"; if (!m.fines) m.fines = [];
+            m.fines.push({t: 'Unentschuldigtes Verspäten', a: 2.5, isFixed: false, date: now.toLocaleDateString('de-DE'), time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})});
+            alert(`⏰ Verspätungsstrafe für ${m.name} erfasst (Sollzeit überschritten!).`);
+        }
+        m.attendance[eventId] = status;
+    } else { 
+        delete m.attendance[eventId]; 
+    }
+    
+    saveToCloud("saveMembers");
+    render(); // Aktualisiert die Abzeichen sofort sauber auf dem Schirm
+}
+
 function addM() { 
-    const n = prompt("Name:"); 
-    const bRaw = prompt("Geburtstag (TT.MM.JJJJ):", "01.01.2005");
+    const n = prompt("Name:"); const bRaw = prompt("Geburtstag (TT.MM.JJJJ):", "01.01.2005");
     if(!n || !bRaw) return;
     let p = bRaw.split('.');
     if(p.length === 3) {
-        let b = `${p[2]}-${p[1]}-${p[0]}`;
-        members.push({id: "m_" + Date.now(), name:n, bday:b, isDauer:false, fines:[], abm:[], attendance:{}}); 
-        logAction(`Mitglied ${n} hinzugefügt.`); render(); saveToCloud("saveMembers");
+        members.push({id: "m_" + Date.now(), name:n, bday:`${p[2]}-${p[1]}-${p[0]}`, isDauer:false, fines:[], abm:[], attendance:{}}); 
+        render(); saveToCloud("saveMembers");
     }
 }
 
-function delM(id) { 
-    if(confirm("Mitglied löschen?")) { 
-        members = members.filter(m => m.id !== id); render(); saveToCloud("saveMembers");
-    } 
-}
+function delM(id) { if(confirm("Mitglied löschen?")) { members = members.filter(m => m.id !== id); render(); saveToCloud("saveMembers"); } }
 
 function addE() { 
-    const n = document.getElementById('eN').value; 
-    const dt = document.getElementById('eDT').value; 
+    const n = document.getElementById('eN').value; const dt = document.getElementById('eDT').value; 
     const editIdx = document.getElementById('editTIdx').value;
     if(n && dt) { 
-        if(editIdx !== "") {
-            events[parseInt(editIdx)].n = n; events[parseInt(editIdx)].dt = dt;
-            cancelEditE();
-        } else {
-            events.push({id: "e_" + Date.now(), n, dt}); 
-        }
+        if(editIdx !== "") { events[parseInt(editIdx)].n = n; events[parseInt(editIdx)].dt = dt; cancelEditE(); } 
+        else { events.push({id: "e_" + Date.now(), n, dt}); }
         document.getElementById('eN').value = ''; document.getElementById('eDT').value = '';
         render(); saveToCloud("saveEvents");
     } 
@@ -494,8 +360,7 @@ function addE() {
 
 function editE(idx) {
     document.getElementById('editTIdx').value = idx;
-    document.getElementById('eN').value = events[idx].n;
-    document.getElementById('eDT').value = events[idx].dt;
+    document.getElementById('eN').value = events[idx].n;   document.getElementById('eDT').value = events[idx].dt;
     document.getElementById('tFormTitle').innerText = "Termin bearbeiten";
     document.getElementById('btnSaveE').innerText = "Änderung speichern";
     document.getElementById('btnCancelE').style.display = "block";
@@ -508,93 +373,66 @@ function cancelEditE() {
     document.getElementById('btnCancelE').style.display = "none";
 }
 
-function delE(idx) {
-    if(confirm("Termin wirklich löschen?")) { events.splice(idx, 1); render(); saveToCloud("saveEvents"); }
-}
-
-function modCash(isAdd) {
-    const val = parseFloat(document.getElementById('cashAmt').value);
-    if(isNaN(val)) return; cashBalance += isAdd ? val : -val;
-    document.getElementById('cashAmt').value = ''; render(); saveToCloud("saveCash");
-}
-
-function toggleDauer() {
-    const m = members.find(m => m.id === aI); if(!m) return;
-    m.isDauer = document.getElementById('modDauer').checked;
-    saveToCloud("saveMembers");
-}
-
-function toggleAttendance(mId, eventId, eventDtString) {
-    const m = members.find(m => m.id === mId); if (!m) return;
-    if (!m.attendance) m.attendance = {};
-    const isChecked = document.getElementById(`chk-${mId}`).checked;
-    
-    if (isChecked) {
-        const now = new Date(); const eventTime = safeParseDate(eventDtString);
-        let status = "pünktlich";
-        if (now > eventTime) {
-            status = "verspätet"; if (!m.fines) m.fines = [];
-            m.fines.push({t: 'Unentschuldigtes Verspäten', a: 2.5, isFixed: false, date: now.toLocaleDateString('de-DE'), time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})});
-            alert(`⏰ Verspätungsstrafe für ${m.name} erfasst.`);
-        }
-        m.attendance[eventId] = status;
-    } else { delete m.attendance[eventId]; }
-    
-    saveToCloud("saveMembers");
-    const container = document.getElementById(`badge-container-${mId}`);
-    if (container) {
-        let st = m.attendance[eventId] || "";
-        container.innerHTML = st === "pünktlich" ? '<span class="status-badge status-ontime">Pünktlich</span>' : (st === "verspätet" ? '<span class="status-badge status-late">Zu Spät ⏰</span>' : '');
-    }
-}
-
-function openEventCheck(eventId) {
-    const ev = events.find(e => e.id === eventId); if (!ev) return;
-    document.getElementById('checkTitle').innerText = ev.n;
-    document.getElementById('checkDate').innerText = safeParseDate(ev.dt).toLocaleString('de-DE') + " Uhr";
-    
-    const gone = members.filter(m => (m.abm && m.abm.includes(ev.n)) || m.isDauer);
-    document.getElementById('checkList').innerHTML = gone.length === 0 ? '<i>Keine Abmeldungen.</i>' : gone.map(m => `<span class="badge" style="${m.isDauer?'background:orange;color:black;':''}">${m.name}</span>`).join('');
-    
-    const activeMembers = members.filter(m => !(m.abm && m.abm.includes(ev.n)) && !m.isDauer);
-    const attListDiv = document.getElementById('attendanceList');
-    
-    attListDiv.innerHTML = activeMembers.length === 0 ? '<div style="padding:15px;">Keine Schützen auf der Liste.</div>' : activeMembers.map(m => {
-        if (!m.attendance) m.attendance = {};
-        let st = m.attendance[ev.id] || "";
-        let b = st === "pünktlich" ? '<span class="status-badge status-ontime">Pünktlich</span>' : (st === "verspätet" ? '<span class="status-badge status-late">Zu Spät ⏰</span>' : '');
-        return `<div class="attendance-row">
-            <div><b>${m.name}</b> <span id="badge-container-${m.id}">${b}</span></div>
-            <input type="checkbox" id="chk-${m.id}" class="checkbox-large" ${st!==""?'checked':''} onchange="toggleAttendance('${m.id}', '${ev.id}', '${ev.dt}')">
-        </div>`;
-    }).join('');
-    
-    openM('modalCheck');
-}
+function delE(idx) { if(confirm("Termin wirklich löschen?")) { events.splice(idx, 1); render(); saveToCloud("saveEvents"); } }
+function modCash(isAdd) { const val = parseFloat(document.getElementById('cashAmt').value); if(isNaN(val)) return; cashBalance += isAdd ? val : -val; document.getElementById('cashAmt').value = ''; render(); saveToCloud("saveCash"); }
+function toggleDauer() { const m = members.find(m => m.id === aI); if(!m) return; m.isDauer = document.getElementById('modDauer').checked; saveToCloud("saveMembers"); render(); }
 
 function render() {
     document.getElementById('cashDisplay').innerText = cashBalance.toFixed(2);
-    document.getElementById('systemConsoleLog').innerHTML = sysLog.map(l => `<div class="log-item">${l}</div>`).join('');
-
-    // Sicheres Sortieren über die neue Hilfsfunktion
     const sortedEvents = [...events].sort((a,b) => safeParseDate(a.dt) - safeParseDate(b.dt));
 
+    // TERMIN-LISTE RENDERN (Jeder Termin ist jetzt eine vollwertige Kachel mit Checkboxen)
     const calList = document.getElementById('calendarTermineList');
-    calList.innerHTML = sortedEvents.length === 0 ? '<div class="card">Keine Termine eingetragen.</div>' : sortedEvents.map(e => `
-        <div class="t-item" onclick="openEventCheck('${e.id}')">
-            <div><b>${e.n}</b><br><small>📅 ${safeParseDate(e.dt).toLocaleString('de-DE')} Uhr</small></div>
-            <div style="font-size:12px; background:#eee; padding:5px 10px; border-radius:20px;">📋 Liste</div>
-        </div>
-    `).join('');
+    if(sortedEvents.length === 0) {
+        calList.innerHTML = '<div class="card">Keine aktiven Termine vorhanden.</div>';
+    } else {
+        calList.innerHTML = sortedEvents.map(e => {
+            // Filtere Schützen, die für diesen spezifischen Termin abgemeldet sind
+            const activeSchuetzen = members.filter(m => !(m.abm && m.abm.includes(e.n)) && !m.isDauer);
+            const abgemeldetSchuetzen = members.filter(m => (m.abm && m.abm.includes(e.n)) || m.isDauer);
+
+            // Generiere die Checkbox-Zeilen für jeden anwesenden Schützen
+            const schuetzenRows = activeSchuetzen.map(m => {
+                if (!m.attendance) m.attendance = {};
+                let currentStatus = m.attendance[e.id] || "";
+                let badgeHtml = currentStatus === "pünktlich" ? '<span class="status-badge status-ontime">Pünktlich</span>' : (currentStatus === "verspätet" ? '<span class="status-badge status-late">Zu Spät ⏰</span>' : '');
+                let isChecked = currentStatus !== "";
+
+                return `<div class="attendance-row">
+                    <div><b>${m.name}</b> ${badgeHtml}</div>
+                    <input type="checkbox" id="chkDirect-${e.id}-${m.id}" class="checkbox-large" ${isChecked ? 'checked' : ''} onchange="toggleAttendanceDirect('${m.id}', '${e.id}', '${e.dt}')">
+                </div>`;
+            }).join('');
+
+            // Badge-Anzeige für die Entschuldigten am Ende der Kachel
+            const abmBadges = abgemeldetSchuetzen.map(m => `<span class="badge" style="background:#888;">${m.name}</span>`).join('');
+
+            return `<div class="t-card">
+                <div class="t-header-info">
+                    <div>
+                        <strong style="font-size:17px; color:var(--green);">${e.n}</strong><br>
+                        <small style="color:#666;">📅 ${safeParseDate(e.dt).toLocaleString('de-DE')} Uhr</small>
+                    </div>
+                </div>
+                <div class="attendance-box">
+                    <div style="font-size:12px; font-weight:bold; color:var(--green); margin-bottom:5px; border-bottom:1px solid #ddd; padding-bottom:3px;">🎯 ANWESENHEIT ABHAKEN:</div>
+                    ${schuetzenRows === "" ? '<div style="color:#666; font-size:13px; padding:5px 0;">Keine Schützen aktiv.</div>' : schuetzenRows}
+                </div>
+                ${abmBadges !== "" ? `<div style="margin-top:10px;"><small style="display:block;color:#777;font-weight:bold;">Abgemeldet:</small>${abmBadges}</div>` : ''}
+            </div>`;
+        }).join('');
+    }
     
+    // SCHÜTZEN-TAB RENDERN
     document.getElementById('mList').innerHTML = members.sort((a,b)=>a.name.localeCompare(b.name)).map(m => `
         <div class="member-item">
-            <div style="flex-grow:1" onclick="opMDetail('${m.id}')"><b>${m.name}</b> ${m.isDauer?'⭐':''}<br><small>${getAge(m.bday)} J.</small></div>
+            <div style="flex-grow:1" onclick="opMDetail('${m.id}')"><b>${m.name}</b> ${m.isDauer ? '⭐' : ''}<br><small>${getAge(m.bday)} J.</small></div>
             <b style="color:var(--red); margin-right:10px;">${getMemberFineSum(m).toFixed(2)}€</b>
             <span class="trash" onclick="delM('${m.id}')">🗑️</span>
         </div>
     `).join('');
 
+    // VERWALTUNGS-TAB RENDERN
     document.getElementById('tList').innerHTML = sortedEvents.map(e => {
         const oIdx = events.findIndex(orig => orig.id === e.id);
         return `<div class="member-item" style="padding:10px 15px;">
@@ -609,11 +447,9 @@ function render() {
 
 function opMDetail(id) { 
     aI = id; const m = members.find(m => m.id === id); if(!m) return;
-    document.getElementById('modN').innerText = m.name; 
-    document.getElementById('modAge').innerText = `${getAge(m.bday)} Jahre`;
+    document.getElementById('modN').innerText = m.name; document.getElementById('modAge').innerText = `${getAge(m.bday)} Jahre`;
     document.getElementById('modDauer').checked = m.isDauer || false;
     document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
-    
     document.getElementById('memberFineLog').innerHTML = (!m.fines || m.fines.length === 0) ? '<i>Keine Strafen. Saubere Weste!</i>' : m.fines.map(f => `<div><b>${f.a.toFixed(2)}€</b> - ${f.t}</div>`).join('');
     document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (${getMemberFineSum(m).toFixed(2)}€)`;
     openM('modalM'); 
@@ -621,17 +457,14 @@ function opMDetail(id) {
 
 function f(t, a, isFixed) { 
     const m = members.find(m => m.id === aI); if(!m) return;
-    if(!m.fines) m.fines = [];
-    m.fines.push({t: t, a: a, isFixed: isFixed, date: new Date().toLocaleDateString('de-DE')}); 
+    if(!m.fines) m.fines = []; m.fines.push({t: t, a: a, isFixed: isFixed, date: new Date().toLocaleDateString('de-DE')}); 
     render(); saveToCloud("saveMembers"); opMDetail(aI);
 }
 
 function doAbm() {
     const sel = document.getElementById('evSel').value; if(!sel) return;
-    const [dt, name] = sel.split('|');
-    const m = members.find(m => m.id === aI); if(!m) return;
+    const [dt, name] = sel.split('|'); const m = members.find(m => m.id === aI); if(!m) return;
     if(!m.abm) m.abm = []; if(!m.abm.includes(name)) m.abm.push(name);
-    
     if (!m.isDauer && (safeParseDate(dt) - new Date()) / 3600000 < 24) {
         if(!m.fines) m.fines = []; m.fines.push({t: 'Spät-Abmeldung', a: 5, isFixed: true});
     }
@@ -641,13 +474,11 @@ function doAbm() {
 function pay() { 
     const m = members.find(m => m.id === aI); if(!m) return;
     const sum = getMemberFineSum(m);
-    if(confirm(`${m.name} hat bezahlt?`)) { 
-        cashBalance += sum; m.fines = []; render(); saveToCloud("saveMembers"); saveToCloud("saveCash"); closeM('modalM'); 
-    } 
+    if(confirm(`${m.name} hat bezahlt?`)) { cashBalance += sum; m.fines = []; render(); saveToCloud("saveMembers"); saveToCloud("saveCash"); closeM('modalM'); } 
 }
 
 function wa() { 
-    let t = "*DEPPENSOLD JUNG SCHÜTZEN*\n\n"; 
+    let t = "*DEPPENSOLD DANNENBÜTTEL*\n\n"; 
     members.forEach(m => { let s = getMemberFineSum(m); if(s>0) t += `${m.name}: ${s.toFixed(2)}€\n`; });
     navigator.clipboard.writeText(t).then(() => alert("Kopiert!"));
 }
