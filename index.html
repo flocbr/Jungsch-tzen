@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spieß-Zentrale v40-Bereinigt</title>
+    <title>Spieß-Zentrale v41</title>
     <style>
         :root { --green: #1a472a; --gold: #c5a059; --red: #d9534f; --bg: #f4f7f4; }
         
@@ -66,7 +66,7 @@
         h3 { color: var(--green); margin: 0 0 10px 0; border-bottom: 2px solid var(--gold); padding-bottom: 5px; font-size: 16px; }
 
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
-        textarea { resize: none; height: 70px; }
+        textarea { resize: none; height: 80px; }
         
         .btn { background: var(--green); color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; -webkit-appearance: none; }
         .btn:disabled { background: #ccc !important; cursor: not-allowed; }
@@ -120,7 +120,7 @@
 
 <div class="header">
     <div id="userRoleBadge" class="user-badge" onclick="switchUserPrompt()">Bediener: ?</div>
-    <h1 style="margin:0; font-size: 18px;">Dannenbüttel v40</h1>
+    <h1 style="margin:0; font-size: 18px;">Dannenbüttel v41</h1>
     <div class="cash-banner">💰 Kasse: <span id="cashDisplay">0.00</span> €</div>
     <div id="spinner" class="loading-spinner"></div>
 </div>
@@ -203,7 +203,7 @@
         <p id="modAge" style="font-weight:bold; margin:5px 0;"></p>
         
         <label style="font-size: 13px; font-weight: bold; color: var(--green);">📝 Interne Spieß-Notizen:</label>
-        <textarea id="modNotes" placeholder="Hier Verfehlungen oder Notizen eintragen..." onchange="saveNotes()"></textarea>
+        <textarea id="modNotes" placeholder="Hier Verfehlungen oder Notizen eintragen..." oninput="saveNotesLocal()" onchange="saveNotesCloud()"></textarea>
         <hr>
         
         <div>
@@ -213,6 +213,14 @@
             <hr>
             
             <label style="font-size: 13px; font-weight: bold; color: var(--red);">⚡ Strafe verhängen:</label>
+            
+            <!-- Individuelle Strafe -->
+            <div style="background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 10px;">
+                <label style="font-size: 12px; font-weight: bold;">Individueller Betrag (€):</label>
+                <input type="number" id="customFineAmount" placeholder="z.B. 3.50" step="0.01" style="padding: 8px; margin: 4px 0;">
+                <button class="btn" style="background: var(--red); padding: 10px; font-size: 14px;" onclick="addCustomFine()">Freie Strafe buchen</button>
+            </div>
+
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
                 <button class="btn btn-red action-btn" style="grid-column: span 2; padding: 12px;" onclick="f('Unentschuldigtes Fehlen', 5, false)">🚫 Unentschuldigtes Fehlen</button>
                 <button class="btn btn-red action-btn" style="grid-column: span 2; padding: 12px;" onclick="f('Unentschuldigtes Verspäten', 2.5, false)">⏰ Verspätung</button>
@@ -280,11 +288,9 @@ function safeParseDate(dateStr) {
     return new Date(dateStr);
 }
 
-// DOPPELTE ENTFERNEN: Bereinigt die Liste radikal nach Namen
 function deduplicateMembers(rawList) {
     if (!rawList || !Array.isArray(rawList)) return [];
     let uniqueMap = {};
-    // Sortierung nach ID, damit bei gleichen Namen die neueren Daten erhalten bleiben
     rawList.forEach(m => {
         if (m && m.name) {
             let cleanName = m.name.trim();
@@ -299,7 +305,6 @@ async function saveToCloud(actionType) {
     if (isSaving) return; 
     isSaving = true; showLoading(true);
     
-    // Vor dem Abspeichern nochmals lokal absichern
     members = deduplicateMembers(members);
     
     let payload = { action: actionType, members, events, cashBalance, sysLog };
@@ -318,7 +323,6 @@ async function loadFromCloud() {
         const response = await fetch(WEB_APP_URL);
         const data = await response.json();
         if (data) {
-            // Beim Laden sofort alle Dubletten vernichten
             members = deduplicateMembers(data.members || []);
             events = data.events || [];
             cashBalance = Number(data.cashBalance) || 0.0;
@@ -383,15 +387,11 @@ function addM() {
     if(!n || !bRaw) return;
     let p = bRaw.split('.');
     if(p.length === 3) {
-        // Generiert eine ID basierend auf dem Namen, um Dubletten direkt im Keim zu ersticken
         let cleanId = "m_" + n.trim().replace(/\s+/g, '_').toLowerCase();
-        
-        // Prüfen ob es den Namen lokal schon gibt
         if (members.some(m => m.name.toLowerCase() === n.trim().toLowerCase())) {
             alert("Dieser Schütze existiert bereits!");
             return;
         }
-
         members.push({id: cleanId, name: n.trim(), bday:`${p[2]}-${p[1]}-${p[0]}`, notes:"", fines:[], abm:[], attendance:{}}); 
         members = deduplicateMembers(members);
         render(); 
@@ -401,12 +401,16 @@ function addM() {
 
 function delM(id) { if(confirm("Mitglied löschen?")) { members = members.filter(m => m.id !== id); render(); saveToCloud("saveMembers"); } }
 
-function saveNotes() {
+// NOTIZEN: Direkt lokal im Objekt sichern
+function saveNotesLocal() {
     const m = members.find(m => m.id === aI);
-    if(m) {
-        m.notes = document.getElementById('modNotes').value;
-        saveToCloud("saveMembers");
-    }
+    if(m) { m.notes = document.getElementById('modNotes').value; }
+}
+
+// NOTIZEN: Beim Verlassen oder Wechseln in die Cloud pushen
+function saveNotesCloud() {
+    saveNotesLocal();
+    saveToCloud("saveMembers");
 }
 
 function promptUnfug() {
@@ -417,6 +421,31 @@ function promptUnfug() {
 function promptUniform() {
     const fehler = prompt("Welches Teil fehlt/ist falsch? (z.B. Keine Krawatte / Falsche Socken):");
     if (fehler) { f(`Uniformfehler: ${fehler}`, 1, false); }
+}
+
+// INDIVIDUELLE STRAFE: Holt den eingegebenen Betrag und setzt ihn als FIXEN Wert ein
+function addCustomFine() {
+    const m = members.find(m => m.id === aI); if(!m) return;
+    const amtInput = document.getElementById('customFineAmount');
+    const amt = parseFloat(amtInput.value);
+    
+    if (isNaN(amt) || amt <= 0) { alert("Bitte einen gültigen Betrag eingeben!"); return; }
+    
+    const grund = prompt("Grund für die individuelle Strafe:", "Manuelle Buchung");
+    if (!grund) return;
+    
+    if(!m.fines) m.fines = [];
+    m.fines.push({
+        t: grund, 
+        a: amt, 
+        isFixed: true, // Fixbetrag, damit das Alter (U18/Ü18) den Wert nicht verdoppelt!
+        date: new Date().toLocaleDateString('de-DE')
+    });
+    
+    amtInput.value = "";
+    render(); 
+    saveToCloud("saveMembers"); 
+    opMDetail(aI);
 }
 
 function addE() { 
@@ -514,6 +543,7 @@ function opMDetail(id) {
     aI = id; const m = members.find(m => m.id === id); if(!m) return;
     document.getElementById('modN').innerText = m.name; document.getElementById('modAge').innerText = `${getAge(m.bday)} Jahre`;
     document.getElementById('modNotes').value = m.notes || "";
+    document.getElementById('customFineAmount').value = ""; // Feld leeren beim Öffnen
     document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
     document.getElementById('memberFineLog').innerHTML = (!m.fines || m.fines.length === 0) ? '<i>Keine Strafen. Saubere Weste!</i>' : m.fines.map(f => `<div><b>${f.a.toFixed(2)}€</b> - ${f.t}</div>`).join('');
     document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (${getMemberFineSum(m).toFixed(2)}€)`;
