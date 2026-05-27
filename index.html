@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spieß-Zentrale v38-Macht</title>
+    <title>Spieß-Zentrale v40-Bereinigt</title>
     <style>
         :root { --green: #1a472a; --gold: #c5a059; --red: #d9534f; --bg: #f4f7f4; }
         
@@ -65,7 +65,9 @@
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
         h3 { color: var(--green); margin: 0 0 10px 0; border-bottom: 2px solid var(--gold); padding-bottom: 5px; font-size: 16px; }
 
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
+        textarea { resize: none; height: 70px; }
+        
         .btn { background: var(--green); color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; -webkit-appearance: none; }
         .btn:disabled { background: #ccc !important; cursor: not-allowed; }
         .btn-red { background: var(--red); }
@@ -118,7 +120,7 @@
 
 <div class="header">
     <div id="userRoleBadge" class="user-badge" onclick="switchUserPrompt()">Bediener: ?</div>
-    <h1 style="margin:0; font-size: 18px;">Dannenbüttel v38-Macht</h1>
+    <h1 style="margin:0; font-size: 18px;">Dannenbüttel v40</h1>
     <div class="cash-banner">💰 Kasse: <span id="cashDisplay">0.00</span> €</div>
     <div id="spinner" class="loading-spinner"></div>
 </div>
@@ -151,7 +153,7 @@
                         <tr><td><b>Unentschuldigtes Verspäten</b></td><td>2.50 €</td><td>5.00 €</td></tr>
                         <tr><td><b>Spät-Abmeldung (&lt; 24h vor Termin)</b></td><td colspan="2" style="text-align:center;">5.00 € (Fixbetrag)</td></tr>
                         <tr><td><b>Grober Unfug / Fehltritt</b></td><td>1.00 €</td><td>2.00 €</td></tr>
-                        <tr><td><b>Fehlende/Falsche Uniformteile</b><br><small>(Hut, Krawatte, weisses Hemd, schwarze Schuhe)</small></td><td>1.00 € je Teil</td><td>2.00 € je Teil</td></tr>
+                        <tr><td><b>Fehlende/Falsche Uniformteile</b><br><small>• Schützenhut<br>• Vereins-Krawatte<br>• Weißes Hemd (Langarm)<br>• Schwarze Hose<br>• Schwarze Socken & Schuhe</small></td><td>1.00 € je Teil</td><td>2.00 € je Teil</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -199,21 +201,23 @@
     <div class="modal-content">
         <h2 id="modN" style="margin:0; color:var(--green);"></h2>
         <p id="modAge" style="font-weight:bold; margin:5px 0;"></p>
+        
+        <label style="font-size: 13px; font-weight: bold; color: var(--green);">📝 Interne Spieß-Notizen:</label>
+        <textarea id="modNotes" placeholder="Hier Verfehlungen oder Notizen eintragen..." onchange="saveNotes()"></textarea>
+        <hr>
+        
         <div>
-            <div class="switch-container">
-                <span>Dauerabgemeldet</span>
-                <label class="switch"><input type="checkbox" id="modDauer" onchange="toggleDauer()"><span class="slider"></span></label>
-            </div>
-            <hr>
             <label>Abmelden für Termin:</label>
             <select id="evSel"></select>
-            <button class="btn" style="background:orange; color:black;" onclick="doAbm()">🕒 Abmelden (24h Check)</button>
+            <button class="btn" style="background:orange; color:black; padding: 10px;" onclick="doAbm()">🕒 Abmelden (24h Check)</button>
             <hr>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Unentschuldigtes Fehlen', 5, false)">🚫 Unentschuldigtes Fehlen</button>
-                <button class="btn btn-red action-btn" style="grid-column: span 2;" onclick="f('Unentschuldigtes Verspäten', 2.5, false)">⏰ Verspätung</button>
-                <button class="btn action-btn" onclick="f('Grober Unfug', 1, false)">🤡 Grober Unfug</button>
-                <button class="btn action-btn" onclick="f('Fehlerhafte Uniform', 1, false)">👔 Uniformfehler</button>
+            
+            <label style="font-size: 13px; font-weight: bold; color: var(--red);">⚡ Strafe verhängen:</label>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
+                <button class="btn btn-red action-btn" style="grid-column: span 2; padding: 12px;" onclick="f('Unentschuldigtes Fehlen', 5, false)">🚫 Unentschuldigtes Fehlen</button>
+                <button class="btn btn-red action-btn" style="grid-column: span 2; padding: 12px;" onclick="f('Unentschuldigtes Verspäten', 2.5, false)">⏰ Verspätung</button>
+                <button class="btn action-btn" style="padding: 12px;" onclick="promptUnfug()">🤡 Grober Unfug</button>
+                <button class="btn action-btn" style="padding: 12px;" onclick="promptUniform()">👔 Uniformfehler</button>
             </div>
         </div>
         <div style="margin-top:15px;"><div id="memberFineLog"></div></div>
@@ -223,7 +227,6 @@
 </div>
 
 <script>
-// --- GOOGLE SCRIPT CONNECTION ---
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxe92SEys_t2XZVWHMTtQWHdjfEpgozCPIV3bQjXUrbE9C2rTknzm5efxXwFX75soXbMA/exec";
 
 let members = [];
@@ -277,10 +280,28 @@ function safeParseDate(dateStr) {
     return new Date(dateStr);
 }
 
+// DOPPELTE ENTFERNEN: Bereinigt die Liste radikal nach Namen
+function deduplicateMembers(rawList) {
+    if (!rawList || !Array.isArray(rawList)) return [];
+    let uniqueMap = {};
+    // Sortierung nach ID, damit bei gleichen Namen die neueren Daten erhalten bleiben
+    rawList.forEach(m => {
+        if (m && m.name) {
+            let cleanName = m.name.trim();
+            uniqueMap[cleanName] = m; 
+        }
+    });
+    return Object.values(uniqueMap);
+}
+
 async function saveToCloud(actionType) {
     if (!WEB_APP_URL || WEB_APP_URL.startsWith("DEINE_")) return;
     if (isSaving) return; 
     isSaving = true; showLoading(true);
+    
+    // Vor dem Abspeichern nochmals lokal absichern
+    members = deduplicateMembers(members);
+    
     let payload = { action: actionType, members, events, cashBalance, sysLog };
     try {
         await fetch(WEB_APP_URL, { 
@@ -297,7 +318,8 @@ async function loadFromCloud() {
         const response = await fetch(WEB_APP_URL);
         const data = await response.json();
         if (data) {
-            members = data.members || [];
+            // Beim Laden sofort alle Dubletten vernichten
+            members = deduplicateMembers(data.members || []);
             events = data.events || [];
             cashBalance = Number(data.cashBalance) || 0.0;
             sysLog = data.sysLog || [];
@@ -328,7 +350,6 @@ function getMemberFineSum(m) {
     return sum;
 }
 
-// MACHT-UPDATE: Jetzt komplett revidierbar bei Fehlklicks!
 function toggleAttendanceDirect(mId, eventId, eventDtString) {
     const m = members.find(m => m.id === mId); if (!m) return;
     if (!m.attendance) m.attendance = {};
@@ -336,13 +357,12 @@ function toggleAttendanceDirect(mId, eventId, eventDtString) {
     const isChecked = document.getElementById(`chkDirect-${eventId}-${mId}`).checked;
     
     if (isChecked) {
-        // Schütze wird als anwesend markiert
         const now = new Date(); const eventTime = safeParseDate(eventDtString);
         let status = "pünktlich";
         if (now > eventTime) {
             status = "verspätet"; if (!m.fines) m.fines = [];
             m.fines.push({
-                id: "fine_" + eventId, // Eindeutige ID verpassen für den Rückbau!
+                id: "fine_" + eventId,
                 t: 'Unentschuldigtes Verspäten', a: 2.5, isFixed: false, 
                 date: now.toLocaleDateString('de-DE'), time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
             });
@@ -350,11 +370,8 @@ function toggleAttendanceDirect(mId, eventId, eventDtString) {
         }
         m.attendance[eventId] = status;
     } else { 
-        // ABSOLUTE MACHT: Häkchen entfernt -> Status weg UND automatische Strafe wird sofort gelöscht!
         delete m.attendance[eventId];
-        if (m.fines) {
-            m.fines = m.fines.filter(f => f.id !== "fine_" + eventId);
-        }
+        if (m.fines) { m.fines = m.fines.filter(f => f.id !== "fine_" + eventId); }
     }
     
     saveToCloud("saveMembers");
@@ -366,12 +383,41 @@ function addM() {
     if(!n || !bRaw) return;
     let p = bRaw.split('.');
     if(p.length === 3) {
-        members.push({id: "m_" + Date.now(), name:n, bday:`${p[2]}-${p[1]}-${p[0]}`, isDauer:false, fines:[], abm:[], attendance:{}}); 
-        render(); saveToCloud("saveMembers");
+        // Generiert eine ID basierend auf dem Namen, um Dubletten direkt im Keim zu ersticken
+        let cleanId = "m_" + n.trim().replace(/\s+/g, '_').toLowerCase();
+        
+        // Prüfen ob es den Namen lokal schon gibt
+        if (members.some(m => m.name.toLowerCase() === n.trim().toLowerCase())) {
+            alert("Dieser Schütze existiert bereits!");
+            return;
+        }
+
+        members.push({id: cleanId, name: n.trim(), bday:`${p[2]}-${p[1]}-${p[0]}`, notes:"", fines:[], abm:[], attendance:{}}); 
+        members = deduplicateMembers(members);
+        render(); 
+        saveToCloud("saveMembers");
     }
 }
 
 function delM(id) { if(confirm("Mitglied löschen?")) { members = members.filter(m => m.id !== id); render(); saveToCloud("saveMembers"); } }
+
+function saveNotes() {
+    const m = members.find(m => m.id === aI);
+    if(m) {
+        m.notes = document.getElementById('modNotes').value;
+        saveToCloud("saveMembers");
+    }
+}
+
+function promptUnfug() {
+    const beschreibung = prompt("Was für ein Unfug wurde getrieben? (z.B. Marschordnung gestört):");
+    if (beschreibung) { f(`Grober Unfug: ${beschreibung}`, 1, false); }
+}
+
+function promptUniform() {
+    const fehler = prompt("Welches Teil fehlt/ist falsch? (z.B. Keine Krawatte / Falsche Socken):");
+    if (fehler) { f(`Uniformfehler: ${fehler}`, 1, false); }
+}
 
 function addE() { 
     const n = document.getElementById('eN').value; const dt = document.getElementById('eDT').value; 
@@ -401,7 +447,6 @@ function cancelEditE() {
 
 function delE(idx) { if(confirm("Termin wirklich löschen?")) { events.splice(idx, 1); render(); saveToCloud("saveEvents"); } }
 function modCash(isAdd) { const val = parseFloat(document.getElementById('cashAmt').value); if(isNaN(val)) return; cashBalance += isAdd ? val : -val; document.getElementById('cashAmt').value = ''; render(); saveToCloud("saveCash"); }
-function toggleDauer() { const m = members.find(m => m.id === aI); if(!m) return; m.isDauer = document.getElementById('modDauer').checked; saveToCloud("saveMembers"); render(); }
 
 function render() {
     document.getElementById('cashDisplay').innerText = cashBalance.toFixed(2);
@@ -412,8 +457,8 @@ function render() {
         calList.innerHTML = '<div class="card">Keine aktiven Termine vorhanden.</div>';
     } else {
         calList.innerHTML = sortedEvents.map(e => {
-            const activeSchuetzen = members.filter(m => !(m.abm && m.abm.includes(e.n)) && !m.isDauer);
-            const abgemeldetSchuetzen = members.filter(m => (m.abm && m.abm.includes(e.n)) || m.isDauer);
+            const activeSchuetzen = members.filter(m => !(m.abm && m.abm.includes(e.n)));
+            const abgemeldetSchuetzen = members.filter(m => (m.abm && m.abm.includes(e.n)));
 
             const schuetzenRows = activeSchuetzen.map(m => {
                 if (!m.attendance) m.attendance = {};
@@ -447,7 +492,7 @@ function render() {
     
     document.getElementById('mList').innerHTML = members.sort((a,b)=>a.name.localeCompare(b.name)).map(m => `
         <div class="member-item">
-            <div style="flex-grow:1" onclick="opMDetail('${m.id}')"><b>${m.name}</b> ${m.isDauer ? '⭐' : ''}<br><small>${getAge(m.bday)} J.</small></div>
+            <div style="flex-grow:1" onclick="opMDetail('${m.id}')"><b>${m.name}</b> ${m.notes ? '📝' : ''}<br><small>${getAge(m.bday)} J.</small></div>
             <b style="color:var(--red); margin-right:10px;">${getMemberFineSum(m).toFixed(2)}€</b>
             <span class="trash" onclick="delM('${m.id}')">🗑️</span>
         </div>
@@ -468,7 +513,7 @@ function render() {
 function opMDetail(id) { 
     aI = id; const m = members.find(m => m.id === id); if(!m) return;
     document.getElementById('modN').innerText = m.name; document.getElementById('modAge').innerText = `${getAge(m.bday)} Jahre`;
-    document.getElementById('modDauer').checked = m.isDauer || false;
+    document.getElementById('modNotes').value = m.notes || "";
     document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
     document.getElementById('memberFineLog').innerHTML = (!m.fines || m.fines.length === 0) ? '<i>Keine Strafen. Saubere Weste!</i>' : m.fines.map(f => `<div><b>${f.a.toFixed(2)}€</b> - ${f.t}</div>`).join('');
     document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (${getMemberFineSum(m).toFixed(2)}€)`;
@@ -485,7 +530,7 @@ function doAbm() {
     const sel = document.getElementById('evSel').value; if(!sel) return;
     const [dt, name] = sel.split('|'); const m = members.find(m => m.id === aI); if(!m) return;
     if(!m.abm) m.abm = []; if(!m.abm.includes(name)) m.abm.push(name);
-    if (!m.isDauer && (safeParseDate(dt) - new Date()) / 3600000 < 24) {
+    if ((safeParseDate(dt) - new Date()) / 3600000 < 24) {
         if(!m.fines) m.fines = []; m.fines.push({t: 'Spät-Abmeldung', a: 5, isFixed: true});
     }
     render(); saveToCloud("saveMembers"); closeM('modalM'); alert("Abgemeldet!");
