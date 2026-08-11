@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Spieß-Zentrale v41</title>
+    <title>Jungschützen Dannenbüttel v44</title>
     <style>
         :root { --green: #1a472a; --gold: #c5a059; --red: #d9534f; --bg: #f4f7f4; }
         
@@ -107,12 +107,13 @@
             color: white; text-align: center; padding: 40px 20px; box-sizing: border-box; flex-direction: column; justify-content: center; align-items: center;
         }
         .login-btn { background: white; color: var(--green); border: 3px solid var(--gold); padding: 20px; width: 80%; max-width: 300px; font-size: 22px; font-weight: bold; border-radius: 15px; margin: 15px 0; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .fine-entry { padding: 4px 0; border-bottom: 1px dotted #ccc; font-size: 13px; }
     </style>
 </head>
 <body>
 
 <div id="loginBlocker">
-    <h2 style="color: var(--gold); margin-bottom: 5px; font-size: 24px;">Spieß-Zentrale</h2>
+    <h2 style="color: var(--gold); margin-bottom: 5px; font-size: 24px;">Jungschützen Dannenbüttel</h2>
     <p style="margin-top: 0; font-size: 14px; opacity: 0.9;">Wer nutzt diese App auf diesem Gerät?</p>
     <button class="login-btn" onclick="selectUser('Florian')">🤠 Florian</button>
     <button class="login-btn" onclick="selectUser('Jill')">👩‍💻 Jill</button>
@@ -120,7 +121,7 @@
 
 <div class="header">
     <div id="userRoleBadge" class="user-badge" onclick="switchUserPrompt()">Bediener: ?</div>
-    <h1 style="margin:0; font-size: 18px;">Dannenbüttel v41</h1>
+    <h1 style="margin:0; font-size: 18px;">Jungschützen Dannenbüttel</h1>
     <div class="cash-banner">💰 Kasse: <span id="cashDisplay">0.00</span> €</div>
     <div id="spinner" class="loading-spinner"></div>
 </div>
@@ -200,21 +201,25 @@
 <div id="modalM" class="modal">
     <div class="modal-content">
         <h2 id="modN" style="margin:0; color:var(--green);"></h2>
-        <p id="modAge" style="font-weight:bold; margin:5px 0;"></p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 5px 0;">
+            <p id="modAge" style="font-weight:bold; margin:0;"></p>
+            <label style="font-size: 14px; font-weight: bold; color: var(--red); cursor: pointer;">
+                <input type="checkbox" id="modIsDauerAbm" onchange="toggleDauerAbm()" style="width: auto; margin-right: 5px;"> Dauerabgemeldet 💤
+            </label>
+        </div>
         
         <label style="font-size: 13px; font-weight: bold; color: var(--green);">📝 Interne Spieß-Notizen:</label>
         <textarea id="modNotes" placeholder="Hier Verfehlungen oder Notizen eintragen..." oninput="saveNotesLocal()" onchange="saveNotesCloud()"></textarea>
         <hr>
         
         <div>
-            <label>Abmelden für Termin:</label>
+            <label>Abmelden für Einzel-Termin:</label>
             <select id="evSel"></select>
             <button class="btn" style="background:orange; color:black; padding: 10px;" onclick="doAbm()">🕒 Abmelden (24h Check)</button>
             <hr>
             
             <label style="font-size: 13px; font-weight: bold; color: var(--red);">⚡ Strafe verhängen:</label>
             
-            <!-- Individuelle Strafe -->
             <div style="background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 10px;">
                 <label style="font-size: 12px; font-weight: bold;">Individueller Betrag (€):</label>
                 <input type="number" id="customFineAmount" placeholder="z.B. 3.50" step="0.01" style="padding: 8px; margin: 4px 0;">
@@ -368,7 +373,8 @@ function toggleAttendanceDirect(mId, eventId, eventDtString) {
             m.fines.push({
                 id: "fine_" + eventId,
                 t: 'Unentschuldigtes Verspäten', a: 2.5, isFixed: false, 
-                date: now.toLocaleDateString('de-DE'), time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
+                date: now.toLocaleDateString('de-DE'), 
+                time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
             });
             alert(`⏰ Verspätungsstrafe für ${m.name} erfasst.`);
         }
@@ -392,7 +398,7 @@ function addM() {
             alert("Dieser Schütze existiert bereits!");
             return;
         }
-        members.push({id: cleanId, name: n.trim(), bday:`${p[2]}-${p[1]}-${p[0]}`, notes:"", fines:[], abm:[], attendance:{}}); 
+        members.push({id: cleanId, name: n.trim(), bday:`${p[2]}-${p[1]}-${p[0]}`, notes:"", fines:[], abm:[], attendance:{}, isDauerAbm: false}); 
         members = deduplicateMembers(members);
         render(); 
         saveToCloud("saveMembers");
@@ -401,16 +407,23 @@ function addM() {
 
 function delM(id) { if(confirm("Mitglied löschen?")) { members = members.filter(m => m.id !== id); render(); saveToCloud("saveMembers"); } }
 
-// NOTIZEN: Direkt lokal im Objekt sichern
 function saveNotesLocal() {
     const m = members.find(m => m.id === aI);
     if(m) { m.notes = document.getElementById('modNotes').value; }
 }
 
-// NOTIZEN: Beim Verlassen oder Wechseln in die Cloud pushen
 function saveNotesCloud() {
     saveNotesLocal();
     saveToCloud("saveMembers");
+}
+
+function toggleDauerAbm() {
+    const m = members.find(m => m.id === aI);
+    if(m) {
+        m.isDauerAbm = document.getElementById('modIsDauerAbm').checked;
+        saveToCloud("saveMembers");
+        render();
+    }
 }
 
 function promptUnfug() {
@@ -423,7 +436,6 @@ function promptUniform() {
     if (fehler) { f(`Uniformfehler: ${fehler}`, 1, false); }
 }
 
-// INDIVIDUELLE STRAFE: Holt den eingegebenen Betrag und setzt ihn als FIXEN Wert ein
 function addCustomFine() {
     const m = members.find(m => m.id === aI); if(!m) return;
     const amtInput = document.getElementById('customFineAmount');
@@ -435,11 +447,13 @@ function addCustomFine() {
     if (!grund) return;
     
     if(!m.fines) m.fines = [];
-    m.fines.push({
+    const now = new Date();
+    m.fines.push({ 
         t: grund, 
         a: amt, 
-        isFixed: true, // Fixbetrag, damit das Alter (U18/Ü18) den Wert nicht verdoppelt!
-        date: new Date().toLocaleDateString('de-DE')
+        isFixed: true, 
+        date: now.toLocaleDateString('de-DE'),
+        time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
     });
     
     amtInput.value = "";
@@ -486,8 +500,9 @@ function render() {
         calList.innerHTML = '<div class="card">Keine aktiven Termine vorhanden.</div>';
     } else {
         calList.innerHTML = sortedEvents.map(e => {
-            const activeSchuetzen = members.filter(m => !(m.abm && m.abm.includes(e.n)));
-            const abgemeldetSchuetzen = members.filter(m => (m.abm && m.abm.includes(e.n)));
+            const activeSchuetzen = members.filter(m => !m.isDauerAbm && !(m.abm && m.abm.includes(e.n)));
+            const abgemeldetSchuetzen = members.filter(m => !m.isDauerAbm && (m.abm && m.abm.includes(e.n)));
+            const dauerAbgemeldetSchuetzen = members.filter(m => m.isDauerAbm);
 
             const schuetzenRows = activeSchuetzen.map(m => {
                 if (!m.attendance) m.attendance = {};
@@ -502,6 +517,7 @@ function render() {
             }).join('');
 
             const abmBadges = abgemeldetSchuetzen.map(m => `<span class="badge" style="background:#888;">${m.name}</span>`).join('');
+            const dauerAbmBadges = dauerAbgemeldetSchuetzen.map(m => `<span class="badge" style="background:#d9534f;">💤 ${m.name}</span>`).join('');
 
             return `<div class="t-card">
                 <div class="t-header-info">
@@ -512,16 +528,17 @@ function render() {
                 </div>
                 <div class="attendance-box">
                     <div style="font-size:12px; font-weight:bold; color:var(--green); margin-bottom:5px; border-bottom:1px solid #ddd; padding-bottom:3px;">🎯 ANWESENHEIT ABHAKEN:</div>
-                    ${schuetzenRows === "" ? '<div style="color:#666; font-size:13px; padding:5px 0;">Keine Schützen aktiv.</div>' : schuetzenRows}
+                    ${schuetzenRows === "" ? '<div style="color:#666; font-size:13px; padding:5px 0;">Keine aktiven Schützen vorhanden.</div>' : schuetzenRows}
                 </div>
                 ${abmBadges !== "" ? `<div style="margin-top:10px;"><small style="display:block;color:#777;font-weight:bold;">Abgemeldet:</small>${abmBadges}</div>` : ''}
+                ${dauerAbmBadges !== "" ? `<div style="margin-top:5px;"><small style="display:block;color:#777;font-weight:bold;">Dauerhaft abgemeldet:</small>${dauerAbmBadges}</div>` : ''}
             </div>`;
         }).join('');
     }
     
     document.getElementById('mList').innerHTML = members.sort((a,b)=>a.name.localeCompare(b.name)).map(m => `
         <div class="member-item">
-            <div style="flex-grow:1" onclick="opMDetail('${m.id}')"><b>${m.name}</b> ${m.notes ? '📝' : ''}<br><small>${getAge(m.bday)} J.</small></div>
+            <div style="flex-grow:1" onclick="opMDetail('${m.id}')"><b>${m.name}</b> ${m.isDauerAbm ? '💤' : ''} ${m.notes ? '📝' : ''}<br><small>${getAge(m.bday)} J.</small></div>
             <b style="color:var(--red); margin-right:10px;">${getMemberFineSum(m).toFixed(2)}€</b>
             <span class="trash" onclick="delM('${m.id}')">🗑️</span>
         </div>
@@ -543,16 +560,34 @@ function opMDetail(id) {
     aI = id; const m = members.find(m => m.id === id); if(!m) return;
     document.getElementById('modN').innerText = m.name; document.getElementById('modAge').innerText = `${getAge(m.bday)} Jahre`;
     document.getElementById('modNotes').value = m.notes || "";
-    document.getElementById('customFineAmount').value = ""; // Feld leeren beim Öffnen
+    document.getElementById('modIsDauerAbm').checked = m.isDauerAbm || false;
+    document.getElementById('customFineAmount').value = ""; 
     document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
-    document.getElementById('memberFineLog').innerHTML = (!m.fines || m.fines.length === 0) ? '<i>Keine Strafen. Saubere Weste!</i>' : m.fines.map(f => `<div><b>${f.a.toFixed(2)}€</b> - ${f.t}</div>`).join('');
+    
+    document.getElementById('memberFineLog').innerHTML = (!m.fines || m.fines.length === 0) 
+        ? '<i>Keine Strafen. Saubere Weste!</i>' 
+        : m.fines.map(f => {
+            let stamp = f.date ? f.date : '';
+            if (f.time) stamp += (stamp ? ' ' : '') + f.time;
+            let timeHtml = stamp ? `<br><small style="color:#888;">📅 Erfasst: ${stamp} Uhr</small>` : '';
+            return `<div class="fine-entry"><b>${f.a.toFixed(2)}€</b> - ${f.t}${timeHtml}</div>`;
+        }).join('');
+
     document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (${getMemberFineSum(m).toFixed(2)}€)`;
     openM('modalM'); 
 }
 
 function f(t, a, isFixed) { 
     const m = members.find(m => m.id === aI); if(!m) return;
-    if(!m.fines) m.fines = []; m.fines.push({t: t, a: a, isFixed: isFixed, date: new Date().toLocaleDateString('de-DE')}); 
+    if(!m.fines) m.fines = []; 
+    const now = new Date();
+    m.fines.push({
+        t: t, 
+        a: a, 
+        isFixed: isFixed, 
+        date: now.toLocaleDateString('de-DE'),
+        time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
+    }); 
     render(); saveToCloud("saveMembers"); opMDetail(aI);
 }
 
@@ -561,7 +596,15 @@ function doAbm() {
     const [dt, name] = sel.split('|'); const m = members.find(m => m.id === aI); if(!m) return;
     if(!m.abm) m.abm = []; if(!m.abm.includes(name)) m.abm.push(name);
     if ((safeParseDate(dt) - new Date()) / 3600000 < 24) {
-        if(!m.fines) m.fines = []; m.fines.push({t: 'Spät-Abmeldung', a: 5, isFixed: true});
+        if(!m.fines) m.fines = []; 
+        const now = new Date();
+        m.fines.push({
+            t: 'Spät-Abmeldung', 
+            a: 5, 
+            isFixed: true,
+            date: now.toLocaleDateString('de-DE'),
+            time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
+        });
     }
     render(); saveToCloud("saveMembers"); closeM('modalM'); alert("Abgemeldet!");
 }
