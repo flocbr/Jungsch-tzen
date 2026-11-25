@@ -50,20 +50,20 @@
     /* Top Kassen-Leiste auf Hauptseite */
     .top-kasse-bar {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
       margin-bottom: 16px;
     }
     .mini-kasse {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 10px 8px;
+      padding: 12px 10px;
       text-align: center;
       box-shadow: 0 2px 6px rgba(0,0,0,0.25);
     }
-    .mini-kasse .lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px; }
-    .mini-kasse .val { font-size: 1.05rem; font-weight: 800; margin-top: 3px; }
+    .mini-kasse .lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px; }
+    .mini-kasse .val { font-size: 1.15rem; font-weight: 800; margin-top: 4px; }
 
     /* Cards & Forms */
     .card {
@@ -206,16 +206,12 @@
     <section id="tab-termine" class="tab-page active">
       <div class="top-kasse-bar">
         <div class="mini-kasse">
-          <div class="lbl" style="color:#7cc0ff;">U18 Kasse</div>
-          <div class="val" id="top-kasse-u18">0,00 €</div>
+          <div class="lbl" style="color:var(--accent);">Gesamtkasse (Bar)</div>
+          <div class="val" id="top-kasse-gesamt" style="color:#74f2ab;">0,00 €</div>
         </div>
         <div class="mini-kasse">
-          <div class="lbl" style="color:#74f2ab;">Ü18 Kasse</div>
-          <div class="val" id="top-kasse-ue18">0,00 €</div>
-        </div>
-        <div class="mini-kasse">
-          <div class="lbl" style="color:var(--accent);">Gesamt Bar</div>
-          <div class="val" id="top-kasse-gesamt">0,00 €</div>
+          <div class="lbl" style="color:var(--warning);">Offene Strafen</div>
+          <div class="val" id="top-kasse-offen" style="color:#ff8f8f;">0,00 €</div>
         </div>
       </div>
 
@@ -300,7 +296,8 @@
             <tr>
               <th>Verstoß</th>
               <th>Info</th>
-              <th style="text-align:right;">Strafe</th>
+              <th style="text-align:right; color:#7cc0ff;">U18</th>
+              <th style="text-align:right; color:#74f2ab;">Ü18</th>
             </tr>
           </thead>
           <tbody id="katalog-tabelle"></tbody>
@@ -339,33 +336,26 @@
 
       <div class="card">
         <div class="card-title">
-          <span>💰 Kassenstände (Getrennt nach Alter)</span>
+          <span>💰 Gesamtkasse</span>
           <button type="button" class="btn btn-whatsapp btn-sm" onclick="exportWhatsAppStrafen()">📲 Strafen für WhatsApp kopieren</button>
         </div>
         <div class="grid-2">
           <div class="kassen-box">
-            <span class="badge badge-u18">U18 KASSE</span>
-            <div class="kassen-wert" id="kasse-u18-bar">0,00 €</div>
-            <div style="font-size: 0.8rem; color: var(--muted);">Offene Strafen U18: <strong id="kasse-u18-offen" style="color: var(--warning);">0,00 €</strong></div>
+            <div class="lbl" style="color:var(--accent); font-size:0.8rem; font-weight:700;">AKTUELLER KASSENSTAND</div>
+            <div class="kassen-wert" id="kasse-gesamt-bar" style="color:#74f2ab;">0,00 €</div>
+            <div style="font-size:0.8rem; color:var(--muted);">Alle Ein- & Ausgaben verrechnet</div>
           </div>
           <div class="kassen-box">
-            <span class="badge badge-ue18">Ü18 KASSE</span>
-            <div class="kassen-wert" id="kasse-ue18-bar">0,00 €</div>
-            <div style="font-size: 0.8rem; color: var(--muted);">Offene Strafen Ü18: <strong id="kasse-ue18-offen" style="color: var(--warning);">0,00 €</strong></div>
+            <div class="lbl" style="color:var(--warning); font-size:0.8rem; font-weight:700;">OFFENE STRAFERLÖSE</div>
+            <div class="kassen-wert" id="kasse-gesamt-offen" style="color:#ff8f8f;">0,00 €</div>
+            <div style="font-size:0.8rem; color:var(--muted);">Noch nicht beglichene Strafen</div>
           </div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-title">🧾 Manuelle Kassenbuchung</div>
-        <div class="grid-3">
-          <div>
-            <label>Kasse</label>
-            <select id="kb-kasse">
-              <option value="Ü18">Ü18 Kasse</option>
-              <option value="U18">U18 Kasse</option>
-            </select>
-          </div>
+        <div class="grid-2">
           <div>
             <label>Buchungsart</label>
             <select id="kb-typ">
@@ -384,7 +374,7 @@
             <input type="text" id="kb-grund" placeholder="z. B. Getränke gekauft / Spende" />
           </div>
           <div>
-            <label>Eingetragen von (Spieß)</label>
+            <label>Eingetragen / Ausgegeben von (Spieß)</label>
             <input type="text" id="kb-spiess" placeholder="Name des Spießes" />
           </div>
         </div>
@@ -398,7 +388,6 @@
             <thead>
               <tr>
                 <th>Datum</th>
-                <th>Kasse</th>
                 <th>Grund</th>
                 <th>Spieß</th>
                 <th style="text-align:right;">Betrag</th>
@@ -457,12 +446,12 @@
       </div>
 
       <div class="card" style="background: var(--surface-2);">
-        <div class="card-title" style="font-size: 0.9rem;">⚡ Schnell-Strafe eintragen</div>
+        <div class="card-title" style="font-size: 0.9rem;">⚡ Schnell-Strafe eintragen (passt sich automatisch an U18/Ü18 an)</div>
         <div class="grid-2" style="margin-bottom: 12px;">
-          <button type="button" class="btn btn-danger btn-sm" onclick="quickStrafe('Unentschuldigtes Fehlen')">Unentschuldigtes Fehlen</button>
-          <button type="button" class="btn btn-warning btn-sm" onclick="quickStrafe('Verspätung')">Verspätung</button>
-          <button type="button" class="btn btn-warning btn-sm" onclick="quickStrafe('Grober Unfug')">Grober Unfug</button>
-          <button type="button" class="btn btn-info btn-sm" onclick="quickStrafe('Fehlerhafte Uniform')">Fehlerhafte Uniform</button>
+          <button type="button" class="btn btn-danger btn-sm" id="btn-qs-fehlen" onclick="quickStrafe('Unentschuldigtes Fehlen')">Unentschuldigtes Fehlen</button>
+          <button type="button" class="btn btn-warning btn-sm" id="btn-qs-spaet" onclick="quickStrafe('Verspätung')">Verspätung</button>
+          <button type="button" class="btn btn-warning btn-sm" id="btn-qs-unfug" onclick="quickStrafe('Grober Unfug')">Grober Unfug</button>
+          <button type="button" class="btn btn-info btn-sm" id="btn-qs-uniform" onclick="quickStrafe('Fehlerhafte Uniform')">Fehlerhafte Uniform</button>
         </div>
 
         <div class="card-title" style="font-size: 0.9rem; margin-top: 8px;">✍️ Individuelle Strafe</div>
@@ -489,7 +478,7 @@
           <strong id="mk-offen-summe" style="color: var(--danger);">0,00 €</strong>
         </div>
         <div id="mk-strafen-liste" style="margin-bottom: 12px; font-size: 0.85rem;"></div>
-        <button type="button" class="btn btn-primary btn-block" onclick="schuldenBegleichen()">✅ Schulden beglichen (in Kasse buchen)</button>
+        <button type="button" class="btn btn-primary btn-block" onclick="schuldenBegleichen()">✅ Schulden beglichen (in Gesamtkasse buchen)</button>
       </div>
     </div>
   </div>
@@ -527,7 +516,6 @@
   let currentMitgliedId = null;
   let isSyncing = false;
 
-  // Navigation sofort aktivieren (unabhängig vom Cloud-Ladevorgang)
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const target = btn.getAttribute('data-tab');
@@ -556,7 +544,6 @@
 
     loadFromCloud(false);
 
-    // Smarter Auto-Sync alle 30 Sekunden
     setInterval(() => {
       if (document.hidden || isSyncing) return;
       const modalOpen = document.querySelector('.modal-backdrop.open');
@@ -666,8 +653,13 @@
     return age >= 18;
   }
 
+  function parseAmount(val) {
+    if (typeof val === 'number') return val;
+    return parseFloat(String(val || '0').replace(',', '.')) || 0;
+  }
+
   function formatEuro(num) {
-    return Number(num || 0).toFixed(2).replace('.', ',') + ' €';
+    return parseAmount(num).toFixed(2).replace('.', ',') + ' €';
   }
 
   function formatDateDE(iso) {
@@ -814,12 +806,14 @@
         return st === 'Zu spät' || st === 'Unentschuldigt';
       });
 
-      if (betroffene.length > 0 && confirm(`Pflichttermin: Für ${betroffene.length} Schützen (Zu spät / Unentschuldigt) direkt die Strafe aus dem Katalog buchen?`)) {
+      if (betroffene.length > 0 && confirm(`Pflichttermin: Für ${betroffene.length} Schützen (Zu spät / Unentschuldigt) direkt die Strafe aus dem Katalog buchen (inkl. U18/Ü18-Staffelung)?`)) {
         const today = new Date().toISOString().split('T')[0];
         for (const m of betroffene) {
           const st = currentTerminStatus[m.ID];
+          const ue18 = isUe18(m.Geburtsdatum);
           const katName = st === 'Zu spät' ? 'Verspätung' : 'Unentschuldigtes Fehlen';
-          const betrag = getKatalogBetrag(katName, st === 'Zu spät' ? 2.0 : 5.0);
+          const fallback = st === 'Zu spät' ? (ue18 ? 4.0 : 2.0) : (ue18 ? 10.0 : 5.0);
+          const betrag = getKatalogBetrag(katName, ue18, fallback);
           await apiPost({
             action: 'addStrafe',
             mitgliedId: m.ID,
@@ -838,7 +832,7 @@
   function getOffeneStrafenSumme(mitgliedId) {
     return appData.strafen
       .filter(s => s.MitgliedID === mitgliedId && s.Status === 'Offen')
-      .reduce((sum, s) => sum + Number(s.Betrag || 0), 0);
+      .reduce((sum, s) => sum + parseAmount(s.Betrag), 0);
   }
 
   function renderSchuetzen() {
@@ -911,6 +905,12 @@
     altBadge.textContent = ue18 ? 'Ü18' : 'U18';
     altBadge.className = 'badge ' + (ue18 ? 'badge-ue18' : 'badge-u18');
 
+    // Live-Preise für das jeweilige Alter direkt auf den Schnell-Buttons anzeigen
+    document.getElementById('btn-qs-fehlen').textContent = `Unentschuldigtes Fehlen (${formatEuro(getKatalogBetrag('Unentschuldigtes Fehlen', ue18, ue18 ? 10 : 5))})`;
+    document.getElementById('btn-qs-spaet').textContent = `Verspätung (${formatEuro(getKatalogBetrag('Verspätung', ue18, ue18 ? 4 : 2))})`;
+    document.getElementById('btn-qs-unfug').textContent = `Grober Unfug (${formatEuro(getKatalogBetrag('Grober Unfug', ue18, 3))})`;
+    document.getElementById('btn-qs-uniform').textContent = `Fehlerhafte Uniform (${formatEuro(getKatalogBetrag('Fehlerhafte Uniform', ue18, 2.5))})`;
+
     document.getElementById('mk-dauer').checked = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
     document.getElementById('mk-notizen').value = m.Notizen || '';
     document.getElementById('mk-straf-spiess').value = document.getElementById('active-spiess').value || '';
@@ -940,7 +940,7 @@
 
   function renderKarteiStrafen(mitgliedId) {
     const offene = appData.strafen.filter(s => s.MitgliedID === mitgliedId && s.Status === 'Offen');
-    const summe = offene.reduce((acc, s) => acc + Number(s.Betrag || 0), 0);
+    const summe = offene.reduce((acc, s) => acc + parseAmount(s.Betrag), 0);
     document.getElementById('mk-offen-summe').textContent = formatEuro(summe);
 
     const listEl = document.getElementById('mk-strafen-liste');
@@ -989,21 +989,33 @@
     alert(`Schütze wurde für "${termin.Titel}" abgemeldet!`);
   }
 
-  function getKatalogBetrag(kategorie, fallback) {
+  function getKatalogBetrag(kategorie, ue18, fallback) {
     const item = appData.strafenkatalog.find(k =>
-      String(k.Kategorie || '').toLowerCase() === kategorie.toLowerCase()
+      String(k.Kategorie || '').trim().toLowerCase() === kategorie.toLowerCase()
     );
-    return item ? Number(item.Betrag) : fallback;
+    if (!item) return fallback;
+    if (ue18 && item.BetragUE18 !== undefined && item.BetragUE18 !== '') {
+      return parseAmount(item.BetragUE18);
+    }
+    if (!ue18 && item.BetragU18 !== undefined && item.BetragU18 !== '') {
+      return parseAmount(item.BetragU18);
+    }
+    if (item.Betrag !== undefined && item.Betrag !== '') {
+      return parseAmount(item.Betrag);
+    }
+    return fallback;
   }
 
   async function quickStrafe(kategorie) {
+    const m = appData.mitglieder.find(x => x.ID === currentMitgliedId);
+    const ue18 = m ? isUe18(m.Geburtsdatum) : true;
     const fallbacks = {
-      'Unentschuldigtes Fehlen': 5.0,
-      'Verspätung': 2.0,
+      'Unentschuldigtes Fehlen': ue18 ? 10.0 : 5.0,
+      'Verspätung': ue18 ? 4.0 : 2.0,
       'Grober Unfug': 3.0,
       'Fehlerhafte Uniform': 2.5
     };
-    const betrag = getKatalogBetrag(kategorie, fallbacks[kategorie] || 2.0);
+    const betrag = getKatalogBetrag(kategorie, ue18, fallbacks[kategorie] || 2.0);
     const spiess = document.getElementById('mk-straf-spiess').value.trim() || document.getElementById('active-spiess').value.trim() || 'Spieß';
     const today = new Date().toISOString().split('T')[0];
 
@@ -1020,7 +1032,7 @@
 
   async function addIndividuelleStrafe() {
     const grund = document.getElementById('mk-straf-grund').value.trim();
-    const betrag = parseFloat(document.getElementById('mk-straf-betrag').value);
+    const betrag = parseAmount(document.getElementById('mk-straf-betrag').value);
     const spiess = document.getElementById('mk-straf-spiess').value.trim() || 'Spieß';
 
     if (!grund || isNaN(betrag) || betrag <= 0) return alert('Bitte Grund und gültigen Betrag eingeben!');
@@ -1045,17 +1057,16 @@
     const offeneSumme = getOffeneStrafenSumme(currentMitgliedId);
     if (offeneSumme <= 0) return alert('Dieser Schütze hat keine offenen Strafen.');
 
-    const kasse = isUe18(m.Geburtsdatum) ? 'Ü18' : 'U18';
     const spiess = document.getElementById('mk-straf-spiess').value.trim() || document.getElementById('active-spiess').value.trim() || 'Spieß';
     const today = new Date().toISOString().split('T')[0];
 
-    if (!confirm(`${formatEuro(offeneSumme)} als bezahlt markieren und direkt in die ${kasse}-Kasse buchen?`)) return;
+    if (!confirm(`${formatEuro(offeneSumme)} als bezahlt markieren und in die Gesamtkasse buchen?`)) return;
 
     await apiPost({
       action: 'payStrafen',
       mitgliedId: currentMitgliedId,
       mitgliedName: `${m.Vorname} ${m.Nachname}`,
-      kasse: kasse,
+      kasse: 'Gesamt',
       datum: today,
       spiess: spiess
     });
@@ -1065,13 +1076,18 @@
   // ==================== REITER 3: REGELWERK ====================
   function renderRegeln() {
     const katBody = document.getElementById('katalog-tabelle');
-    katBody.innerHTML = appData.strafenkatalog.map(k => `
-      <tr>
-        <td><strong>${k.Kategorie || ''}</strong></td>
-        <td style="color:var(--muted);">${k.Bezeichnung || ''} ${k.Beschreibung ? '(' + k.Beschreibung + ')' : ''}</td>
-        <td style="text-align:right; font-weight:700; color:var(--accent);">${formatEuro(k.Betrag)}</td>
-      </tr>
-    `).join('') || '<tr><td colspan="3" style="color:var(--muted);">Keine Einträge im Sheet "Strafenkatalog".</td></tr>';
+    katBody.innerHTML = appData.strafenkatalog.map(k => {
+      const u18Val = k.BetragU18 !== undefined && k.BetragU18 !== '' ? k.BetragU18 : k.Betrag;
+      const ue18Val = k.BetragUE18 !== undefined && k.BetragUE18 !== '' ? k.BetragUE18 : k.Betrag;
+      return `
+        <tr>
+          <td><strong>${k.Kategorie || ''}</strong></td>
+          <td style="color:var(--muted);">${k.Bezeichnung || ''} ${k.Beschreibung ? '(' + k.Beschreibung + ')' : ''}</td>
+          <td style="text-align:right; font-weight:700; color:#7cc0ff;">${formatEuro(u18Val)}</td>
+          <td style="text-align:right; font-weight:700; color:#74f2ab;">${formatEuro(ue18Val)}</td>
+        </tr>
+      `;
+    }).join('') || '<tr><td colspan="4" style="color:var(--muted);">Keine Einträge im Sheet "Strafenkatalog".</td></tr>';
 
     const uniBody = document.getElementById('uniform-tabelle');
     uniBody.innerHTML = appData.uniform.map(u => `
@@ -1085,9 +1101,8 @@
 
   // ==================== REITER 4: VERWALTUNG & KASSE ====================
   async function addKassenbuchung() {
-    const kasse = document.getElementById('kb-kasse').value;
     const typ = document.getElementById('kb-typ').value;
-    const betrag = parseFloat(document.getElementById('kb-betrag').value);
+    const betrag = parseAmount(document.getElementById('kb-betrag').value);
     const grund = document.getElementById('kb-grund').value.trim();
     const spiess = document.getElementById('kb-spiess').value.trim() || 'Spieß';
 
@@ -1097,7 +1112,7 @@
     const res = await apiPost({
       action: 'addKassenbuchung',
       datum: today,
-      kasse,
+      kasse: 'Gesamt',
       typ,
       betrag,
       grund,
@@ -1110,32 +1125,22 @@
   }
 
   function renderVerwaltung() {
-    let u18Bar = 0;
-    let ue18Bar = 0;
-
+    let gesamtBar = 0;
     appData.kassenbuch.forEach(b => {
-      const val = Number(b.Betrag || 0) * (b.Typ === 'Ausgabe' ? -1 : 1);
-      if (b.Kasse === 'U18') u18Bar += val;
-      else ue18Bar += val;
+      const val = parseAmount(b.Betrag) * (b.Typ === 'Ausgabe' ? -1 : 1);
+      gesamtBar += val;
     });
 
-    let u18Offen = 0;
-    let ue18Offen = 0;
+    let gesamtOffen = 0;
     appData.strafen.filter(s => s.Status === 'Offen').forEach(s => {
-      const m = appData.mitglieder.find(x => x.ID === s.MitgliedID);
-      const betrag = Number(s.Betrag || 0);
-      if (m && !isUe18(m.Geburtsdatum)) u18Offen += betrag;
-      else ue18Offen += betrag;
+      gesamtOffen += parseAmount(s.Betrag);
     });
 
-    document.getElementById('top-kasse-u18').textContent = formatEuro(u18Bar);
-    document.getElementById('top-kasse-ue18').textContent = formatEuro(ue18Bar);
-    document.getElementById('top-kasse-gesamt').textContent = formatEuro(u18Bar + ue18Bar);
+    document.getElementById('top-kasse-gesamt').textContent = formatEuro(gesamtBar);
+    document.getElementById('top-kasse-offen').textContent = formatEuro(gesamtOffen);
 
-    document.getElementById('kasse-u18-bar').textContent = formatEuro(u18Bar);
-    document.getElementById('kasse-u18-offen').textContent = formatEuro(u18Offen);
-    document.getElementById('kasse-ue18-bar').textContent = formatEuro(ue18Bar);
-    document.getElementById('kasse-ue18-offen').textContent = formatEuro(ue18Offen);
+    document.getElementById('kasse-gesamt-bar').textContent = formatEuro(gesamtBar);
+    document.getElementById('kasse-gesamt-offen').textContent = formatEuro(gesamtOffen);
 
     const kbBody = document.getElementById('kassenbuch-tabelle');
     const rev = [...appData.kassenbuch].reverse();
@@ -1144,7 +1149,6 @@
       return `
         <tr>
           <td>${formatDateDE(b.Datum)}</td>
-          <td><span class="badge ${b.Kasse === 'U18' ? 'badge-u18' : 'badge-ue18'}">${b.Kasse}</span></td>
           <td>${b.Grund}</td>
           <td style="color:var(--muted);">${b.Spiess || '-'}</td>
           <td style="text-align:right; font-weight:700; color:${isAusgabe ? 'var(--danger)' : '#74f2ab'};">
@@ -1152,7 +1156,7 @@
           </td>
         </tr>
       `;
-    }).join('') || '<tr><td colspan="5" style="color:var(--muted);">Noch keine Kassenbuchungen vorhanden.</td></tr>';
+    }).join('') || '<tr><td colspan="4" style="color:var(--muted);">Noch keine Kassenbuchungen vorhanden.</td></tr>';
   }
 </script>
 </body>
