@@ -164,6 +164,24 @@
     .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
     .btn-block { width: 100%; }
 
+    /* Icon-Buttons (Stift / Papierkorb) */
+    .icon-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.15s;
+    }
+    .icon-btn:hover { border-color: var(--accent); background: #224d35; }
+    .icon-btn.danger:hover { border-color: var(--danger); background: var(--danger); }
+
     /* Badges */
     .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
     .badge-u18 { background: rgba(61, 139, 217, 0.22); color: #7cc0ff; border: 1px solid #3d8bd9; }
@@ -245,6 +263,15 @@
       border-radius: 10px; padding: 14px; text-align: center;
     }
     .kassen-wert { font-size: 1.5rem; font-weight: 800; margin: 6px 0; }
+
+    /* Edit-Panel im Modal */
+    .edit-drawer {
+      background: var(--bg);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
   </style>
 </head>
 <body>
@@ -482,12 +509,46 @@
 
   </div>
 
-  <!-- ==================== MODAL: TERMIN ANWESENHEIT ==================== -->
+  <!-- ==================== MODAL: TERMIN ANWESENHEIT & BEARBEITEN ==================== -->
   <div id="modal-termin" class="modal-backdrop">
     <div class="modal-box">
       <button type="button" class="modal-close" onclick="closeModal('modal-termin')">✕</button>
-      <h2 id="mt-titel" style="margin-bottom: 4px;">Termin</h2>
+      
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom: 4px; padding-right: 42px; flex-wrap:wrap;">
+        <h2 id="mt-titel">Termin</h2>
+        <button type="button" class="icon-btn admin-only" title="Termin bearbeiten" onclick="toggleTerminEdit()">✏️</button>
+        <button type="button" class="icon-btn danger admin-only" title="Termin löschen" onclick="deleteCurrentTermin()">🗑️</button>
+      </div>
       <p id="mt-meta" style="color: var(--muted); font-size: 0.85rem; margin-bottom: 14px;"></p>
+
+      <!-- Aufklappbares Bearbeitungsfeld für den Termin -->
+      <div id="mt-edit-box" class="edit-drawer admin-only" style="display:none;">
+        <div style="font-weight:700; color:var(--accent); margin-bottom:10px; font-size:0.9rem;">✏️ Termin-Daten bearbeiten</div>
+        <div class="grid-2">
+          <div>
+            <label>Titel</label>
+            <input type="text" id="mt-edit-titel" />
+          </div>
+          <div>
+            <label>Termin-Art</label>
+            <select id="mt-edit-typ">
+              <option value="Pflichttermin">🔴 Pflichttermin (mit Strafen)</option>
+              <option value="Normal">⚪ Normaler Termin</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Datum</label>
+            <input type="date" id="mt-edit-datum" />
+          </div>
+          <div>
+            <label>Uhrzeit</label>
+            <input type="time" id="mt-edit-uhrzeit" />
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm btn-block" onclick="saveTerminEdit()">Änderungen am Termin speichern</button>
+      </div>
       
       <div id="mt-mitglieder-liste"></div>
 
@@ -502,10 +563,31 @@
     <div class="modal-box">
       <button type="button" class="modal-close" onclick="closeModal('modal-kartei')">✕</button>
       
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom: 14px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom: 14px; padding-right: 42px; flex-wrap:wrap;">
         <h2 id="mk-name">Max Mustermann</h2>
         <span id="mk-id" class="badge badge-normal">JS-001</span>
         <span id="mk-alter-badge" class="badge badge-ue18">Ü18</span>
+        <button type="button" class="icon-btn admin-only" title="Name & Geburtsdatum bearbeiten" onclick="toggleKarteiEdit()">✏️</button>
+      </div>
+
+      <!-- Aufklappbares Bearbeitungsfeld für Schützen-Stammdaten -->
+      <div id="mk-edit-box" class="edit-drawer admin-only" style="display:none;">
+        <div style="font-weight:700; color:var(--accent); margin-bottom:10px; font-size:0.9rem;">✏️ Schützen-Daten bearbeiten</div>
+        <div class="grid-3">
+          <div>
+            <label>Vorname</label>
+            <input type="text" id="mk-edit-vorname" />
+          </div>
+          <div>
+            <label>Nachname</label>
+            <input type="text" id="mk-edit-nachname" />
+          </div>
+          <div>
+            <label>Geburtsdatum</label>
+            <input type="date" id="mk-edit-geb" />
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm btn-block" onclick="saveKarteiProfileEdit()">Name & Geburtsdatum speichern</button>
       </div>
 
       <div class="card" style="background: var(--surface-2);">
@@ -638,7 +720,6 @@
   });
 
   window.addEventListener('DOMContentLoaded', () => {
-    // Prüfen, ob in dieser Sitzung schon ein Nutzer gewählt wurde
     try {
       const savedSessionUser = sessionStorage.getItem('js_active_user');
       if (savedSessionUser) {
@@ -859,8 +940,15 @@
       currentTerminStatus = {};
     }
 
+    document.getElementById('mt-edit-box').style.display = 'none';
     document.getElementById('mt-titel').textContent = termin.Titel;
     document.getElementById('mt-meta').textContent = `${formatDateDE(termin.Datum)} um ${termin.Uhrzeit} Uhr • ${termin.Typ}`;
+
+    // Bearbeitungsfelder vorbefüllen
+    document.getElementById('mt-edit-titel').value = termin.Titel || '';
+    document.getElementById('mt-edit-typ').value = termin.Typ || 'Normal';
+    document.getElementById('mt-edit-datum').value = String(termin.Datum || '').substring(0, 10);
+    document.getElementById('mt-edit-uhrzeit').value = termin.Uhrzeit || '19:00';
 
     const listEl = document.getElementById('mt-mitglieder-liste');
     listEl.innerHTML = appData.mitglieder.map(m => {
@@ -887,6 +975,47 @@
     }).join('');
 
     document.getElementById('modal-termin').classList.add('open');
+  }
+
+  function toggleTerminEdit() {
+    const box = document.getElementById('mt-edit-box');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function saveTerminEdit() {
+    const titel = document.getElementById('mt-edit-titel').value.trim();
+    const typ = document.getElementById('mt-edit-typ').value;
+    const datum = document.getElementById('mt-edit-datum').value;
+    const uhrzeit = document.getElementById('mt-edit-uhrzeit').value;
+
+    if (!titel || !datum) return alert('Bitte Titel und Datum angeben!');
+    const res = await apiPost({
+      action: 'editTermin',
+      terminId: currentTerminId,
+      titel,
+      typ,
+      datum,
+      uhrzeit
+    });
+    if (res) {
+      document.getElementById('mt-edit-box').style.display = 'none';
+      openTerminModal(currentTerminId);
+      alert('Termin wurde aktualisiert!');
+    }
+  }
+
+  async function deleteCurrentTermin() {
+    const termin = appData.termine.find(t => t.TerminID === currentTerminId);
+    if (!termin) return;
+    if (!confirm(`⚠️ Möchtest du den Termin "${termin.Titel}" (${formatDateDE(termin.Datum)}) wirklich löschen?`)) return;
+
+    const res = await apiPost({
+      action: 'deleteTermin',
+      terminId: currentTerminId
+    });
+    if (res) {
+      closeModal('modal-termin');
+    }
   }
 
   function setMemberTerminStatus(mitgliedId, status) {
@@ -1012,12 +1141,18 @@
     if (!m) return;
     currentMitgliedId = mitgliedId;
 
+    document.getElementById('mk-edit-box').style.display = 'none';
     const ue18 = isUe18(m.Geburtsdatum);
     document.getElementById('mk-name').textContent = `${m.Vorname} ${m.Nachname}`;
     document.getElementById('mk-id').textContent = m.ID;
     const altBadge = document.getElementById('mk-alter-badge');
     altBadge.textContent = ue18 ? 'Ü18' : 'U18';
     altBadge.className = 'badge ' + (ue18 ? 'badge-ue18' : 'badge-u18');
+
+    // Bearbeitungsfelder vorbefüllen
+    document.getElementById('mk-edit-vorname').value = m.Vorname || '';
+    document.getElementById('mk-edit-nachname').value = m.Nachname || '';
+    document.getElementById('mk-edit-geb').value = String(m.Geburtsdatum || '').substring(0, 10);
 
     document.getElementById('btn-qs-fehlen').textContent = `Unentschuldigtes Fehlen (${formatEuro(getKatalogBetrag('Unentschuldigtes Fehlen', ue18, ue18 ? 10 : 5))})`;
     document.getElementById('btn-qs-spaet').textContent = `Verspätung (${formatEuro(getKatalogBetrag('Verspätung', ue18, ue18 ? 4 : 2))})`;
@@ -1054,6 +1189,31 @@
 
     renderKarteiStrafen(mitgliedId);
     document.getElementById('modal-kartei').classList.add('open');
+  }
+
+  function toggleKarteiEdit() {
+    const box = document.getElementById('mk-edit-box');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function saveKarteiProfileEdit() {
+    const vorname = document.getElementById('mk-edit-vorname').value.trim();
+    const nachname = document.getElementById('mk-edit-nachname').value.trim();
+    const geburtsdatum = document.getElementById('mk-edit-geb').value;
+
+    if (!vorname || !nachname || !geburtsdatum) return alert('Bitte Vorname, Nachname und Geburtsdatum angeben!');
+    const res = await apiPost({
+      action: 'updateMitglied',
+      id: currentMitgliedId,
+      vorname,
+      nachname,
+      geburtsdatum
+    });
+    if (res) {
+      document.getElementById('mk-edit-box').style.display = 'none';
+      openKartei(currentMitgliedId);
+      alert('Schützen-Daten aktualisiert!');
+    }
   }
 
   function renderKarteiStrafen(mitgliedId) {
