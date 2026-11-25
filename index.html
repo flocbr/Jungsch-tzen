@@ -697,7 +697,7 @@
   </nav>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2z4mSIybDUQ_4j7lYe6vbzCoLH5Imf7D15hAZ0Dx0CVYeU0S0df945Q4cphvOw3RR/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxszOxkTq26JXonLAAth29sPb_OhiQnO0tEX_HRBAK0JnJbMWDiTXI8Y51dwF2jwy8R/exec";
 
   let appData = {
     mitglieder: [],
@@ -919,12 +919,20 @@
     return `${p[2]}.${p[1]}.${p[0]}`;
   }
 
-  function formatTimeLabel(uhrzeit) {
+  // Entfernt Google-Sheets "1899-12-30T..." und gibt sauberes HH:MM oder Ganztägig zurück
+  function cleanTimeRaw(uhrzeit) {
     const u = String(uhrzeit || '').trim();
-    if (!u || u.toLowerCase() === 'ganztägig' || u.toLowerCase() === 'ganztaegig') {
-      return 'Ganztägig';
-    }
-    return `${u} Uhr`;
+    if (!u) return '';
+    if (u.toLowerCase() === 'ganztägig' || u.toLowerCase() === 'ganztaegig') return 'Ganztägig';
+    const match = u.match(/(\d{2}:\d{2})/);
+    if (match) return match[1];
+    return u;
+  }
+
+  function formatTimeLabel(uhrzeit) {
+    const clean = cleanTimeRaw(uhrzeit);
+    if (!clean || clean === 'Ganztägig') return 'Ganztägig';
+    return `${clean} Uhr`;
   }
 
   function renderAll() {
@@ -1013,8 +1021,9 @@
     document.getElementById('mt-titel').textContent = termin.Titel;
     document.getElementById('mt-meta').textContent = `${formatDayWithDate(termin.Datum)} • ${formatTimeLabel(termin.Uhrzeit)} • ${termin.Typ}`;
 
-    // Bearbeitungsfelder vorbefüllen
-    const isAllDay = String(termin.Uhrzeit || '').trim().toLowerCase() === 'ganztägig' || String(termin.Uhrzeit || '').trim().toLowerCase() === 'ganztaegig';
+    // Bearbeitungsfelder vorbefüllen (mit bereinigter Uhrzeit ohne 1899!)
+    const rawTime = cleanTimeRaw(termin.Uhrzeit);
+    const isAllDay = rawTime === 'Ganztägig';
     document.getElementById('mt-edit-titel').value = termin.Titel || '';
     document.getElementById('mt-edit-typ').value = termin.Typ || 'Normal';
     document.getElementById('mt-edit-datum').value = String(termin.Datum || '').substring(0, 10);
@@ -1022,7 +1031,7 @@
     const editTime = document.getElementById('mt-edit-uhrzeit');
     editChk.checked = isAllDay;
     editTime.disabled = isAllDay;
-    editTime.value = isAllDay ? '' : (termin.Uhrzeit || '19:00');
+    editTime.value = isAllDay ? '' : (rawTime || '19:00');
 
     const listEl = document.getElementById('mt-mitglieder-liste');
     listEl.innerHTML = appData.mitglieder.map(m => {
