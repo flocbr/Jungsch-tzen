@@ -145,7 +145,24 @@
       font-size: 0.95rem;
       margin-bottom: 10px;
     }
+    input:disabled { opacity: 0.45; cursor: not-allowed; }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: var(--accent);
+    }
 
     /* Buttons */
     .btn {
@@ -164,7 +181,7 @@
     .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
     .btn-block { width: 100%; }
 
-    /* Icon-Buttons (Stift / Papierkorb) */
+    /* Icon-Buttons */
     .icon-btn {
       background: var(--surface-2);
       border: 1px solid var(--border);
@@ -183,14 +200,14 @@
     .icon-btn.danger:hover { border-color: var(--danger); background: var(--danger); }
 
     /* Badges */
-    .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
     .badge-u18 { background: rgba(61, 139, 217, 0.22); color: #7cc0ff; border: 1px solid #3d8bd9; }
     .badge-ue18 { background: rgba(30, 130, 76, 0.28); color: #74f2ab; border: 1px solid #26a15e; }
     .badge-pflicht { background: rgba(217, 67, 67, 0.25); color: #ff8f8f; border: 1px solid #d94343; }
     .badge-normal { background: rgba(166, 191, 176, 0.18); color: #d5e3db; border: 1px solid #4d735c; }
     .badge-dauer { background: rgba(229, 184, 75, 0.22); color: #ffd978; border: 1px solid #e5b84b; }
 
-    /* Lists */
+    /* Lists & Kompakte Termin-Zeile */
     .list-item {
       background: var(--surface-2);
       border: 1px solid var(--border);
@@ -200,10 +217,20 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
       cursor: pointer;
       transition: 0.15s;
     }
     .list-item:hover { border-color: var(--accent); background: #1f4530; }
+
+    .termin-row-main {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .termin-titel { font-weight: 700; font-size: 0.98rem; }
+    .termin-zeit-tag { font-size: 0.84rem; color: var(--muted); font-weight: 600; }
 
     /* Bottom Navigation */
     nav.bottom-nav {
@@ -276,7 +303,7 @@
 </head>
 <body>
 
-  <!-- ==================== START-AUSWAHL (WER NUTZT DIE APP?) ==================== -->
+  <!-- ==================== START-AUSWAHL ==================== -->
   <div id="login-screen" class="login-overlay">
     <div class="login-card">
       <h2>🎯 Jungschützen Spieß</h2>
@@ -326,7 +353,7 @@
         <div class="card-title">➕ Neuen Termin anlegen</div>
         <div class="grid-2">
           <div>
-            <label>Titel / Anlass</label>
+            <label>Name des Termins</label>
             <input type="text" id="t-titel" placeholder="z. B. Übungsschießen / Versammlung" />
           </div>
           <div>
@@ -339,19 +366,23 @@
         </div>
         <div class="grid-2">
           <div>
-            <label>Datum (Tag / Monat / Jahr)</label>
+            <label>Tag / Datum</label>
             <input type="date" id="t-datum" />
           </div>
           <div>
             <label>Uhrzeit</label>
             <input type="time" id="t-uhrzeit" value="19:00" />
+            <label class="checkbox-row">
+              <input type="checkbox" id="t-ganztaegig" onchange="toggleGanztägig('t-ganztaegig', 't-uhrzeit')" />
+              <span>Ganztägig</span>
+            </label>
           </div>
         </div>
         <button type="button" class="btn btn-primary btn-block" onclick="createTermin()">Termin speichern</button>
       </div>
 
       <div class="card">
-        <div class="card-title">📅 Anstehende & Vergangene Termine</div>
+        <div class="card-title">📅 Termine</div>
         <div id="termine-liste">Lade Termine...</div>
       </div>
     </section>
@@ -521,12 +552,12 @@
       </div>
       <p id="mt-meta" style="color: var(--muted); font-size: 0.85rem; margin-bottom: 14px;"></p>
 
-      <!-- Aufklappbares Bearbeitungsfeld für den Termin -->
+      <!-- Bearbeitungsfeld für den Termin -->
       <div id="mt-edit-box" class="edit-drawer admin-only" style="display:none;">
         <div style="font-weight:700; color:var(--accent); margin-bottom:10px; font-size:0.9rem;">✏️ Termin-Daten bearbeiten</div>
         <div class="grid-2">
           <div>
-            <label>Titel</label>
+            <label>Name des Termins</label>
             <input type="text" id="mt-edit-titel" />
           </div>
           <div>
@@ -539,12 +570,16 @@
         </div>
         <div class="grid-2">
           <div>
-            <label>Datum</label>
+            <label>Tag / Datum</label>
             <input type="date" id="mt-edit-datum" />
           </div>
           <div>
             <label>Uhrzeit</label>
             <input type="time" id="mt-edit-uhrzeit" />
+            <label class="checkbox-row">
+              <input type="checkbox" id="mt-edit-ganztaegig" onchange="toggleGanztägig('mt-edit-ganztaegig', 'mt-edit-uhrzeit')" />
+              <span>Ganztägig</span>
+            </label>
           </div>
         </div>
         <button type="button" class="btn btn-primary btn-sm btn-block" onclick="saveTerminEdit()">Änderungen am Termin speichern</button>
@@ -570,7 +605,6 @@
         <button type="button" class="icon-btn admin-only" title="Name & Geburtsdatum bearbeiten" onclick="toggleKarteiEdit()">✏️</button>
       </div>
 
-      <!-- Aufklappbares Bearbeitungsfeld für Schützen-Stammdaten -->
       <div id="mk-edit-box" class="edit-drawer admin-only" style="display:none;">
         <div style="font-weight:700; color:var(--accent); margin-bottom:10px; font-size:0.9rem;">✏️ Schützen-Daten bearbeiten</div>
         <div class="grid-3">
@@ -680,7 +714,6 @@
   let currentMitgliedId = null;
   let isSyncing = false;
 
-  // Nutzer-Auswahl beim Start
   function selectUser(name, isGuest) {
     currentUser = { name, isGuest };
     sessionStorage.setItem('js_active_user', JSON.stringify(currentUser));
@@ -833,6 +866,18 @@
     arrow.textContent = isHidden ? '▲ Einklappen' : '▼ Aufklappen';
   }
 
+  function toggleGanztägig(checkboxId, timeInputId) {
+    const checked = document.getElementById(checkboxId).checked;
+    const timeInput = document.getElementById(timeInputId);
+    timeInput.disabled = checked;
+    if (checked) {
+      timeInput.dataset.prevTime = timeInput.value || '19:00';
+      timeInput.value = '';
+    } else if (!timeInput.value) {
+      timeInput.value = timeInput.dataset.prevTime || '19:00';
+    }
+  }
+
   function isUe18(geburtsdatum) {
     if (!geburtsdatum) return true;
     const dob = new Date(geburtsdatum);
@@ -856,11 +901,30 @@
     return parseAmount(num).toFixed(2).replace('.', ',') + ' €';
   }
 
+  function formatDayWithDate(iso) {
+    if (!iso) return '';
+    const clean = String(iso).substring(0, 10);
+    const p = clean.split('-');
+    if (p.length !== 3) return String(iso);
+    const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    const dayName = isNaN(d.getTime()) ? '' : days[d.getDay()] + ', ';
+    return `${dayName}${p[2]}.${p[1]}.${p[0]}`;
+  }
+
   function formatDateDE(iso) {
     if (!iso) return '';
-    const p = String(iso).split('-');
+    const p = String(iso).substring(0, 10).split('-');
     if (p.length !== 3) return String(iso);
     return `${p[2]}.${p[1]}.${p[0]}`;
+  }
+
+  function formatTimeLabel(uhrzeit) {
+    const u = String(uhrzeit || '').trim();
+    if (!u || u.toLowerCase() === 'ganztägig' || u.toLowerCase() === 'ganztaegig') {
+      return 'Ganztägig';
+    }
+    return `${u} Uhr`;
   }
 
   function renderAll() {
@@ -900,12 +964,16 @@
     const titel = document.getElementById('t-titel').value.trim();
     const typ = document.getElementById('t-typ').value;
     const datum = document.getElementById('t-datum').value;
-    const uhrzeit = document.getElementById('t-uhrzeit').value;
+    const isAllDay = document.getElementById('t-ganztaegig').checked;
+    const uhrzeit = isAllDay ? 'Ganztägig' : (document.getElementById('t-uhrzeit').value || '19:00');
 
-    if (!titel || !datum) return alert('Bitte Titel und Datum angeben!');
+    if (!titel || !datum) return alert('Bitte Name des Termins und Tag angeben!');
     const res = await apiPost({ action: 'addTermin', titel, typ, datum, uhrzeit });
     if (res) {
       document.getElementById('t-titel').value = '';
+      document.getElementById('t-ganztaegig').checked = false;
+      document.getElementById('t-uhrzeit').disabled = false;
+      document.getElementById('t-uhrzeit').value = '19:00';
     }
   }
 
@@ -918,11 +986,12 @@
     const sorted = [...appData.termine].sort((a, b) => String(a.Datum).localeCompare(String(b.Datum)));
     container.innerHTML = sorted.map(t => {
       const badgeCls = t.Typ === 'Pflichttermin' ? 'badge-pflicht' : 'badge-normal';
+      const tagUndZeit = `${formatDayWithDate(t.Datum)} • ${formatTimeLabel(t.Uhrzeit)}`;
       return `
         <div class="list-item" onclick="openTerminModal('${t.TerminID}')">
-          <div>
-            <div style="font-weight:700; margin-bottom:4px;">${t.Titel}</div>
-            <div style="font-size:0.82rem; color:var(--muted);">📅 ${formatDateDE(t.Datum)} • 🕒 ${t.Uhrzeit || ''} Uhr</div>
+          <div class="termin-row-main">
+            <span class="termin-titel">${t.Titel}</span>
+            <span class="termin-zeit-tag">${tagUndZeit}</span>
           </div>
           <span class="badge ${badgeCls}">${t.Typ}</span>
         </div>
@@ -931,9 +1000,9 @@
   }
 
   function openTerminModal(terminId) {
-    const termin = appData.termine.find(t => t.TerminID === terminId);
+    const termin = appData.termine.find(t => String(t.TerminID).trim() === String(terminId).trim());
     if (!termin) return;
-    currentTerminId = terminId;
+    currentTerminId = String(termin.TerminID).trim();
     try {
       currentTerminStatus = termin.StatusJSON ? JSON.parse(termin.StatusJSON) : {};
     } catch (e) {
@@ -942,13 +1011,18 @@
 
     document.getElementById('mt-edit-box').style.display = 'none';
     document.getElementById('mt-titel').textContent = termin.Titel;
-    document.getElementById('mt-meta').textContent = `${formatDateDE(termin.Datum)} um ${termin.Uhrzeit} Uhr • ${termin.Typ}`;
+    document.getElementById('mt-meta').textContent = `${formatDayWithDate(termin.Datum)} • ${formatTimeLabel(termin.Uhrzeit)} • ${termin.Typ}`;
 
     // Bearbeitungsfelder vorbefüllen
+    const isAllDay = String(termin.Uhrzeit || '').trim().toLowerCase() === 'ganztägig' || String(termin.Uhrzeit || '').trim().toLowerCase() === 'ganztaegig';
     document.getElementById('mt-edit-titel').value = termin.Titel || '';
     document.getElementById('mt-edit-typ').value = termin.Typ || 'Normal';
     document.getElementById('mt-edit-datum').value = String(termin.Datum || '').substring(0, 10);
-    document.getElementById('mt-edit-uhrzeit').value = termin.Uhrzeit || '19:00';
+    const editChk = document.getElementById('mt-edit-ganztaegig');
+    const editTime = document.getElementById('mt-edit-uhrzeit');
+    editChk.checked = isAllDay;
+    editTime.disabled = isAllDay;
+    editTime.value = isAllDay ? '' : (termin.Uhrzeit || '19:00');
 
     const listEl = document.getElementById('mt-mitglieder-liste');
     listEl.innerHTML = appData.mitglieder.map(m => {
@@ -986,9 +1060,10 @@
     const titel = document.getElementById('mt-edit-titel').value.trim();
     const typ = document.getElementById('mt-edit-typ').value;
     const datum = document.getElementById('mt-edit-datum').value;
-    const uhrzeit = document.getElementById('mt-edit-uhrzeit').value;
+    const isAllDay = document.getElementById('mt-edit-ganztaegig').checked;
+    const uhrzeit = isAllDay ? 'Ganztägig' : (document.getElementById('mt-edit-uhrzeit').value || '19:00');
 
-    if (!titel || !datum) return alert('Bitte Titel und Datum angeben!');
+    if (!titel || !datum) return alert('Bitte Name des Termins und Tag angeben!');
     const res = await apiPost({
       action: 'editTermin',
       terminId: currentTerminId,
@@ -1000,12 +1075,11 @@
     if (res) {
       document.getElementById('mt-edit-box').style.display = 'none';
       openTerminModal(currentTerminId);
-      alert('Termin wurde aktualisiert!');
     }
   }
 
   async function deleteCurrentTermin() {
-    const termin = appData.termine.find(t => t.TerminID === currentTerminId);
+    const termin = appData.termine.find(t => String(t.TerminID).trim() === String(currentTerminId).trim());
     if (!termin) return;
     if (!confirm(`⚠️ Möchtest du den Termin "${termin.Titel}" (${formatDateDE(termin.Datum)}) wirklich löschen?`)) return;
 
@@ -1031,7 +1105,7 @@
   }
 
   async function saveTerminAnwesenheit() {
-    const termin = appData.termine.find(t => t.TerminID === currentTerminId);
+    const termin = appData.termine.find(t => String(t.TerminID).trim() === String(currentTerminId).trim());
     if (!termin) return;
 
     await apiPost({
@@ -1149,7 +1223,6 @@
     altBadge.textContent = ue18 ? 'Ü18' : 'U18';
     altBadge.className = 'badge ' + (ue18 ? 'badge-ue18' : 'badge-u18');
 
-    // Bearbeitungsfelder vorbefüllen
     document.getElementById('mk-edit-vorname').value = m.Vorname || '';
     document.getElementById('mk-edit-nachname').value = m.Nachname || '';
     document.getElementById('mk-edit-geb').value = String(m.Geburtsdatum || '').substring(0, 10);
