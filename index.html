@@ -24,20 +24,74 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: var(--bg); color: var(--text); padding-bottom: 85px; }
 
+    /* Gast / Read-Only Schutz */
+    body.guest-mode .admin-only { display: none !important; }
+
+    /* Start-Login-Screen */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, #173625 0%, #09140e 100%);
+      z-index: 200;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .login-overlay.hidden { display: none; }
+    .login-card {
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      border-radius: 16px;
+      padding: 28px 22px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+    }
+    .login-card h2 { color: var(--accent); font-size: 1.4rem; margin-bottom: 6px; }
+    .login-card p { color: var(--muted); font-size: 0.9rem; margin-bottom: 22px; }
+    .role-btn {
+      width: 100%;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: 0.15s;
+    }
+    .role-btn:hover { border-color: var(--accent); background: #214a34; transform: translateY(-1px); }
+    .role-btn.guest { background: rgba(61, 139, 217, 0.15); border-color: #3d8bd9; }
+    .role-btn.guest:hover { background: rgba(61, 139, 217, 0.28); }
+
     /* Header */
     header {
       background: linear-gradient(135deg, #10261a 0%, #173625 100%);
       border-bottom: 2px solid var(--accent);
-      padding: 14px 18px;
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: sticky;
       top: 0;
       z-index: 50;
+      gap: 8px;
     }
-    header h1 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.4px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-    .sync-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); font-weight: 600; }
+    header h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.3px; color: var(--accent); display: flex; align-items: center; gap: 6px; }
+    .header-right { display: flex; align-items: center; gap: 6px; }
+    .user-pill {
+      font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;
+      background: rgba(229, 184, 75, 0.18); color: var(--accent);
+      border: 1px solid var(--accent); font-weight: 700; cursor: pointer;
+    }
+    .sync-badge { font-size: 0.72rem; padding: 4px 9px; border-radius: 20px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); font-weight: 600; }
     .sync-badge.online { color: #6ef0a3; border-color: #26a15e; background: rgba(30, 130, 76, 0.2); }
     .sync-badge.loading { color: var(--accent); border-color: var(--accent); }
 
@@ -195,9 +249,35 @@
 </head>
 <body>
 
+  <!-- ==================== START-AUSWAHL (WER NUTZT DIE APP?) ==================== -->
+  <div id="login-screen" class="login-overlay">
+    <div class="login-card">
+      <h2>🎯 Jungschützen Spieß</h2>
+      <p>Bitte wähle aus, wer die App gerade nutzt:</p>
+      
+      <button type="button" class="role-btn" onclick="selectUser('Florian', false)">
+        <span>🎖️ Florian</span>
+        <span style="font-size:0.8rem; color:var(--accent);">Spieß →</span>
+      </button>
+
+      <button type="button" class="role-btn" onclick="selectUser('Jill', false)">
+        <span>🎖️ Jill</span>
+        <span style="font-size:0.8rem; color:var(--accent);">Spieß →</span>
+      </button>
+
+      <button type="button" class="role-btn guest" onclick="selectUser('Gast (Kommandeur)', true)">
+        <span>👁️ Gast / Kommandeur</span>
+        <span style="font-size:0.8rem; color:#7cc0ff;">Nur Ansicht →</span>
+      </button>
+    </div>
+  </div>
+
   <header>
-    <h1>🎯 Jungschützen Spieß</h1>
-    <span id="syncStatus" class="sync-badge">Bereit</span>
+    <h1>🎯 Jungschützen</h1>
+    <div class="header-right">
+      <button type="button" id="currentUserBtn" class="user-pill" title="Nutzer wechseln" onclick="openUserSelect()">👤 Nutzer</button>
+      <span id="syncStatus" class="sync-badge">Bereit</span>
+    </div>
   </header>
 
   <div class="container">
@@ -215,7 +295,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card admin-only">
         <div class="card-title">➕ Neuen Termin anlegen</div>
         <div class="grid-2">
           <div>
@@ -251,7 +331,7 @@
 
     <!-- ==================== REITER 2: SCHÜTZEN ==================== -->
     <section id="tab-schuetzen" class="tab-page">
-      <div class="card">
+      <div class="card admin-only">
         <div class="card-title" style="margin-bottom: 0; cursor: pointer;" onclick="toggleNewMemberBox()">
           <span>➕ Neues Mitglied hinzufügen</span>
           <span id="new-member-arrow" style="font-size: 0.85rem; color: var(--muted);">▼ Aufklappen</span>
@@ -279,7 +359,7 @@
         <div class="card-title">
           <span>👥 Schützen-Übersicht</span>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <button type="button" class="btn btn-whatsapp btn-sm" onclick="exportWhatsAppStrafen()">📲 WhatsApp-Liste</button>
+            <button type="button" class="btn btn-whatsapp btn-sm admin-only" onclick="exportWhatsAppStrafen()">📲 WhatsApp-Liste</button>
             <input type="text" id="search-schuetze" placeholder="Name oder ID..." style="width: 150px; margin: 0; padding: 6px 10px; font-size: 0.85rem;" oninput="renderSchuetzen()" />
           </div>
         </div>
@@ -322,14 +402,15 @@
     <!-- ==================== REITER 4: VERWALTUNG & KASSE ==================== -->
     <section id="tab-verwaltung" class="tab-page">
       <div class="card">
-        <div class="card-title">⚙️ System & Spieß-Profil</div>
+        <div class="card-title">⚙️ System & Aktiver Nutzer</div>
         <div class="grid-2" style="align-items: end;">
           <div>
-            <label>Aktiver Spieß (wird bei Strafen/Kasse eingetragen)</label>
-            <input type="text" id="active-spiess" placeholder="Dein Name / Kürzel" onchange="saveSpiessName()" />
+            <label>Angemeldet als</label>
+            <input type="text" id="active-spiess" readonly style="opacity:0.85;" />
           </div>
-          <div>
-            <button type="button" class="btn btn-info btn-block" style="margin-bottom: 10px;" onclick="loadFromCloud(true)">🔄 Cloud manuell laden</button>
+          <div style="display:flex; gap:8px; margin-bottom:10px;">
+            <button type="button" class="btn btn-secondary" style="flex:1;" onclick="openUserSelect()">👤 Wechseln</button>
+            <button type="button" class="btn btn-info" style="flex:1;" onclick="loadFromCloud(true)">🔄 Cloud laden</button>
           </div>
         </div>
       </div>
@@ -337,7 +418,7 @@
       <div class="card">
         <div class="card-title">
           <span>💰 Gesamtkasse</span>
-          <button type="button" class="btn btn-whatsapp btn-sm" onclick="exportWhatsAppStrafen()">📲 Strafen für WhatsApp kopieren</button>
+          <button type="button" class="btn btn-whatsapp btn-sm admin-only" onclick="exportWhatsAppStrafen()">📲 Strafen für WhatsApp kopieren</button>
         </div>
         <div class="grid-2">
           <div class="kassen-box">
@@ -353,7 +434,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card admin-only">
         <div class="card-title">🧾 Manuelle Kassenbuchung</div>
         <div class="grid-2">
           <div>
@@ -374,8 +455,8 @@
             <input type="text" id="kb-grund" placeholder="z. B. Getränke gekauft / Spende" />
           </div>
           <div>
-            <label>Eingetragen / Ausgegeben von (Spieß)</label>
-            <input type="text" id="kb-spiess" placeholder="Name des Spießes" />
+            <label>Eingetragen / Ausgegeben von</label>
+            <input type="text" id="kb-spiess" readonly style="opacity:0.85;" />
           </div>
         </div>
         <button type="button" class="btn btn-primary btn-block" onclick="addKassenbuchung()">Kassenbuchung speichern</button>
@@ -410,7 +491,7 @@
       
       <div id="mt-mitglieder-liste"></div>
 
-      <div style="margin-top: 16px; display: flex; gap: 10px;">
+      <div class="admin-only" style="margin-top: 16px; display: flex; gap: 10px;">
         <button type="button" class="btn btn-primary btn-block" onclick="saveTerminAnwesenheit()">💾 Anwesenheit speichern & Pflicht-Strafen prüfen</button>
       </div>
     </div>
@@ -434,10 +515,10 @@
         </label>
         <label>Spieß-Notizen</label>
         <textarea id="mk-notizen" rows="2" placeholder="Notizen zum Schützen..."></textarea>
-        <button type="button" class="btn btn-primary btn-sm" onclick="saveKarteiStammdaten()">Status & Notiz speichern</button>
+        <button type="button" class="btn btn-primary btn-sm admin-only" onclick="saveKarteiStammdaten()">Status & Notiz speichern</button>
       </div>
 
-      <div class="card" style="background: var(--surface-2);">
+      <div class="card admin-only" style="background: var(--surface-2);">
         <div class="card-title" style="font-size: 0.9rem;">📅 Für Termin abmelden (nächste 30 Tage)</div>
         <div style="display:flex; gap:8px;">
           <select id="mk-termin-select" style="margin:0;"></select>
@@ -445,7 +526,7 @@
         </div>
       </div>
 
-      <div class="card" style="background: var(--surface-2);">
+      <div class="card admin-only" style="background: var(--surface-2);">
         <div class="card-title" style="font-size: 0.9rem;">⚡ Schnell-Strafe eintragen (passt sich automatisch an U18/Ü18 an)</div>
         <div class="grid-2" style="margin-bottom: 12px;">
           <button type="button" class="btn btn-danger btn-sm" id="btn-qs-fehlen" onclick="quickStrafe('Unentschuldigtes Fehlen')">Unentschuldigtes Fehlen</button>
@@ -466,7 +547,7 @@
           </div>
           <div>
             <label>Spieß</label>
-            <input type="text" id="mk-straf-spiess" placeholder="Wer schreibt auf?" />
+            <input type="text" id="mk-straf-spiess" readonly style="opacity:0.85;" />
           </div>
         </div>
         <button type="button" class="btn btn-danger btn-sm btn-block" onclick="addIndividuelleStrafe()">Individuelle Strafe buchen</button>
@@ -478,7 +559,7 @@
           <strong id="mk-offen-summe" style="color: var(--danger);">0,00 €</strong>
         </div>
         <div id="mk-strafen-liste" style="margin-bottom: 12px; font-size: 0.85rem;"></div>
-        <button type="button" class="btn btn-primary btn-block" onclick="schuldenBegleichen()">✅ Schulden beglichen (in Gesamtkasse buchen)</button>
+        <button type="button" class="btn btn-primary btn-block admin-only" onclick="schuldenBegleichen()">✅ Schulden beglichen (in Gesamtkasse buchen)</button>
       </div>
     </div>
   </div>
@@ -511,10 +592,39 @@
     uniform: []
   };
 
+  let currentUser = { name: '', isGuest: false };
   let currentTerminId = null;
   let currentTerminStatus = {};
   let currentMitgliedId = null;
   let isSyncing = false;
+
+  // Nutzer-Auswahl beim Start
+  function selectUser(name, isGuest) {
+    currentUser = { name, isGuest };
+    sessionStorage.setItem('js_active_user', JSON.stringify(currentUser));
+    applyUserRole();
+    document.getElementById('login-screen').classList.add('hidden');
+  }
+
+  function openUserSelect() {
+    document.getElementById('login-screen').classList.remove('hidden');
+  }
+
+  function applyUserRole() {
+    const btn = document.getElementById('currentUserBtn');
+    btn.textContent = (currentUser.isGuest ? '👁️ ' : '🎖️ ') + currentUser.name;
+
+    if (currentUser.isGuest) {
+      document.body.classList.add('guest-mode');
+    } else {
+      document.body.classList.remove('guest-mode');
+    }
+
+    document.getElementById('active-spiess').value = currentUser.name;
+    document.getElementById('kb-spiess').value = currentUser.name;
+    document.getElementById('mk-straf-spiess').value = currentUser.name;
+    renderAll();
+  }
 
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -528,10 +638,14 @@
   });
 
   window.addEventListener('DOMContentLoaded', () => {
+    // Prüfen, ob in dieser Sitzung schon ein Nutzer gewählt wurde
     try {
-      const savedSpiess = localStorage.getItem('js_spiess_name') || '';
-      document.getElementById('active-spiess').value = savedSpiess;
-      document.getElementById('kb-spiess').value = savedSpiess;
+      const savedSessionUser = sessionStorage.getItem('js_active_user');
+      if (savedSessionUser) {
+        currentUser = JSON.parse(savedSessionUser);
+        applyUserRole();
+        document.getElementById('login-screen').classList.add('hidden');
+      }
 
       const cached = localStorage.getItem('js_app_cache');
       if (cached) {
@@ -539,7 +653,7 @@
         renderAll();
       }
     } catch (e) {
-      console.warn('Cache-Fehler ignoriert:', e);
+      console.warn('Init-Hinweis:', e);
     }
 
     loadFromCloud(false);
@@ -560,12 +674,6 @@
       }
     });
   });
-
-  function saveSpiessName() {
-    const val = document.getElementById('active-spiess').value.trim();
-    localStorage.setItem('js_spiess_name', val);
-    document.getElementById('kb-spiess').value = val;
-  }
 
   function setSyncBadge(text, cls) {
     const el = document.getElementById('syncStatus');
@@ -606,6 +714,10 @@
   }
 
   async function apiPost(payload) {
+    if (currentUser.isGuest) {
+      alert('Im Gast-Modus sind keine Änderungen möglich.');
+      return null;
+    }
     setSyncBadge('Speichere...', 'loading');
     try {
       const res = await fetch(SCRIPT_URL, {
@@ -654,8 +766,9 @@
   }
 
   function parseAmount(val) {
-    if (typeof val === 'number') return val;
-    return parseFloat(String(val || '0').replace(',', '.')) || 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    const num = parseFloat(String(val || '0').replace(',', '.').trim());
+    return isNaN(num) ? 0 : num;
   }
 
   function formatEuro(num) {
@@ -777,6 +890,7 @@
   }
 
   function setMemberTerminStatus(mitgliedId, status) {
+    if (currentUser.isGuest) return;
     currentTerminStatus[mitgliedId] = status;
     const group = document.getElementById('st-group-' + mitgliedId);
     group.querySelectorAll('.st-btn').forEach(btn => {
@@ -798,7 +912,7 @@
     });
 
     if (termin.Typ === 'Pflichttermin') {
-      const spiess = document.getElementById('active-spiess').value.trim() || 'Spieß';
+      const spiess = currentUser.name || 'Spieß';
       const betroffene = appData.mitglieder.filter(m => {
         const isDauer = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
         if (isDauer) return false;
@@ -806,7 +920,7 @@
         return st === 'Zu spät' || st === 'Unentschuldigt';
       });
 
-      if (betroffene.length > 0 && confirm(`Pflichttermin: Für ${betroffene.length} Schützen (Zu spät / Unentschuldigt) direkt die Strafe aus dem Katalog buchen (inkl. U18/Ü18-Staffelung)?`)) {
+      if (betroffene.length > 0 && confirm(`Pflichttermin: Für ${betroffene.length} Schützen (Zu spät / Unentschuldigt) direkt die Strafe aus dem Katalog buchen?`)) {
         const today = new Date().toISOString().split('T')[0];
         for (const m of betroffene) {
           const st = currentTerminStatus[m.ID];
@@ -831,7 +945,7 @@
   // ==================== REITER 2: SCHÜTZEN & KARTEI ====================
   function getOffeneStrafenSumme(mitgliedId) {
     return appData.strafen
-      .filter(s => s.MitgliedID === mitgliedId && s.Status === 'Offen')
+      .filter(s => String(s.MitgliedID).trim() === String(mitgliedId).trim() && String(s.Status).trim().toLowerCase() === 'offen')
       .reduce((sum, s) => sum + parseAmount(s.Betrag), 0);
   }
 
@@ -865,7 +979,7 @@
           </div>
           <div style="display:flex; align-items:center; gap:12px;">
             <strong style="color: ${offen > 0 ? 'var(--danger)' : '#74f2ab'};">${formatEuro(offen)}</strong>
-            <button type="button" class="btn btn-danger btn-sm" title="Mitglied löschen" onclick="deleteMitglied(event, '${m.ID}', '${m.Vorname} ${m.Nachname}')">🗑️</button>
+            <button type="button" class="btn btn-danger btn-sm admin-only" title="Mitglied löschen" onclick="deleteMitglied(event, '${m.ID}', '${m.Vorname} ${m.Nachname}')">🗑️</button>
           </div>
         </div>
       `;
@@ -905,15 +1019,19 @@
     altBadge.textContent = ue18 ? 'Ü18' : 'U18';
     altBadge.className = 'badge ' + (ue18 ? 'badge-ue18' : 'badge-u18');
 
-    // Live-Preise für das jeweilige Alter direkt auf den Schnell-Buttons anzeigen
     document.getElementById('btn-qs-fehlen').textContent = `Unentschuldigtes Fehlen (${formatEuro(getKatalogBetrag('Unentschuldigtes Fehlen', ue18, ue18 ? 10 : 5))})`;
     document.getElementById('btn-qs-spaet').textContent = `Verspätung (${formatEuro(getKatalogBetrag('Verspätung', ue18, ue18 ? 4 : 2))})`;
     document.getElementById('btn-qs-unfug').textContent = `Grober Unfug (${formatEuro(getKatalogBetrag('Grober Unfug', ue18, 3))})`;
     document.getElementById('btn-qs-uniform').textContent = `Fehlerhafte Uniform (${formatEuro(getKatalogBetrag('Fehlerhafte Uniform', ue18, 2.5))})`;
 
-    document.getElementById('mk-dauer').checked = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
-    document.getElementById('mk-notizen').value = m.Notizen || '';
-    document.getElementById('mk-straf-spiess').value = document.getElementById('active-spiess').value || '';
+    const dauerChk = document.getElementById('mk-dauer');
+    const notizTxt = document.getElementById('mk-notizen');
+    dauerChk.checked = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
+    dauerChk.disabled = currentUser.isGuest;
+    notizTxt.value = m.Notizen || '';
+    notizTxt.readOnly = currentUser.isGuest;
+
+    document.getElementById('mk-straf-spiess').value = currentUser.name || '';
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -939,7 +1057,7 @@
   }
 
   function renderKarteiStrafen(mitgliedId) {
-    const offene = appData.strafen.filter(s => s.MitgliedID === mitgliedId && s.Status === 'Offen');
+    const offene = appData.strafen.filter(s => String(s.MitgliedID).trim() === String(mitgliedId).trim() && String(s.Status).trim().toLowerCase() === 'offen');
     const summe = offene.reduce((acc, s) => acc + parseAmount(s.Betrag), 0);
     document.getElementById('mk-offen-summe').textContent = formatEuro(summe);
 
@@ -1016,7 +1134,7 @@
       'Fehlerhafte Uniform': 2.5
     };
     const betrag = getKatalogBetrag(kategorie, ue18, fallbacks[kategorie] || 2.0);
-    const spiess = document.getElementById('mk-straf-spiess').value.trim() || document.getElementById('active-spiess').value.trim() || 'Spieß';
+    const spiess = currentUser.name || 'Spieß';
     const today = new Date().toISOString().split('T')[0];
 
     await apiPost({
@@ -1033,7 +1151,7 @@
   async function addIndividuelleStrafe() {
     const grund = document.getElementById('mk-straf-grund').value.trim();
     const betrag = parseAmount(document.getElementById('mk-straf-betrag').value);
-    const spiess = document.getElementById('mk-straf-spiess').value.trim() || 'Spieß';
+    const spiess = currentUser.name || 'Spieß';
 
     if (!grund || isNaN(betrag) || betrag <= 0) return alert('Bitte Grund und gültigen Betrag eingeben!');
     const today = new Date().toISOString().split('T')[0];
@@ -1057,12 +1175,12 @@
     const offeneSumme = getOffeneStrafenSumme(currentMitgliedId);
     if (offeneSumme <= 0) return alert('Dieser Schütze hat keine offenen Strafen.');
 
-    const spiess = document.getElementById('mk-straf-spiess').value.trim() || document.getElementById('active-spiess').value.trim() || 'Spieß';
+    const spiess = currentUser.name || 'Spieß';
     const today = new Date().toISOString().split('T')[0];
 
     if (!confirm(`${formatEuro(offeneSumme)} als bezahlt markieren und in die Gesamtkasse buchen?`)) return;
 
-    await apiPost({
+    const res = await apiPost({
       action: 'payStrafen',
       mitgliedId: currentMitgliedId,
       mitgliedName: `${m.Vorname} ${m.Nachname}`,
@@ -1070,7 +1188,10 @@
       datum: today,
       spiess: spiess
     });
-    renderKarteiStrafen(currentMitgliedId);
+    if (res) {
+      renderKarteiStrafen(currentMitgliedId);
+      alert(`✅ ${formatEuro(offeneSumme)} wurden in die Gesamtkasse gebucht!`);
+    }
   }
 
   // ==================== REITER 3: REGELWERK ====================
@@ -1104,7 +1225,7 @@
     const typ = document.getElementById('kb-typ').value;
     const betrag = parseAmount(document.getElementById('kb-betrag').value);
     const grund = document.getElementById('kb-grund').value.trim();
-    const spiess = document.getElementById('kb-spiess').value.trim() || 'Spieß';
+    const spiess = currentUser.name || 'Spieß';
 
     if (isNaN(betrag) || betrag <= 0 || !grund) return alert('Bitte Betrag und Grund eingeben!');
     const today = new Date().toISOString().split('T')[0];
@@ -1127,14 +1248,17 @@
   function renderVerwaltung() {
     let gesamtBar = 0;
     appData.kassenbuch.forEach(b => {
-      const val = parseAmount(b.Betrag) * (b.Typ === 'Ausgabe' ? -1 : 1);
+      const isAusgabe = String(b.Typ || '').trim().toLowerCase() === 'ausgabe';
+      const val = parseAmount(b.Betrag) * (isAusgabe ? -1 : 1);
       gesamtBar += val;
     });
 
     let gesamtOffen = 0;
-    appData.strafen.filter(s => s.Status === 'Offen').forEach(s => {
-      gesamtOffen += parseAmount(s.Betrag);
-    });
+    appData.strafen
+      .filter(s => String(s.Status || '').trim().toLowerCase() === 'offen')
+      .forEach(s => {
+        gesamtOffen += parseAmount(s.Betrag);
+      });
 
     document.getElementById('top-kasse-gesamt').textContent = formatEuro(gesamtBar);
     document.getElementById('top-kasse-offen').textContent = formatEuro(gesamtOffen);
@@ -1145,7 +1269,7 @@
     const kbBody = document.getElementById('kassenbuch-tabelle');
     const rev = [...appData.kassenbuch].reverse();
     kbBody.innerHTML = rev.map(b => {
-      const isAusgabe = b.Typ === 'Ausgabe';
+      const isAusgabe = String(b.Typ || '').trim().toLowerCase() === 'ausgabe';
       return `
         <tr>
           <td>${formatDateDE(b.Datum)}</td>
