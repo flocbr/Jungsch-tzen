@@ -552,7 +552,6 @@
       </div>
       <p id="mt-meta" style="color: var(--muted); font-size: 0.85rem; margin-bottom: 14px;"></p>
 
-      <!-- Bearbeitungsfeld für den Termin -->
       <div id="mt-edit-box" class="edit-drawer admin-only" style="display:none;">
         <div style="font-weight:700; color:var(--accent); margin-bottom:10px; font-size:0.9rem;">✏️ Termin-Daten bearbeiten</div>
         <div class="grid-2">
@@ -635,7 +634,7 @@
       </div>
 
       <div class="card admin-only" style="background: var(--surface-2);">
-        <div class="card-title" style="font-size: 0.9rem;">📅 Für Termin abmelden (nächste 30 Tage)</div>
+        <div class="card-title" style="font-size: 0.9rem;">📅 Für Termin abmelden (alle kommenden Termine)</div>
         <div style="display:flex; gap:8px;">
           <select id="mk-termin-select" style="margin:0;"></select>
           <button type="button" class="btn btn-info" onclick="abmeldenFuerTermin()">Abmelden</button>
@@ -919,7 +918,6 @@
     return `${p[2]}.${p[1]}.${p[0]}`;
   }
 
-  // Entfernt Google-Sheets "1899-12-30T..." und gibt sauberes HH:MM oder Ganztägig zurück
   function cleanTimeRaw(uhrzeit) {
     const u = String(uhrzeit || '').trim();
     if (!u) return '';
@@ -1021,7 +1019,6 @@
     document.getElementById('mt-titel').textContent = termin.Titel;
     document.getElementById('mt-meta').textContent = `${formatDayWithDate(termin.Datum)} • ${formatTimeLabel(termin.Uhrzeit)} • ${termin.Typ}`;
 
-    // Bearbeitungsfelder vorbefüllen (mit bereinigter Uhrzeit ohne 1899!)
     const rawTime = cleanTimeRaw(termin.Uhrzeit);
     const isAllDay = rawTime === 'Ganztägig';
     document.getElementById('mt-edit-titel').value = termin.Titel || '';
@@ -1220,9 +1217,9 @@
   }
 
   function openKartei(mitgliedId) {
-    const m = appData.mitglieder.find(x => x.ID === mitgliedId);
+    const m = appData.mitglieder.find(x => String(x.ID).trim() === String(mitgliedId).trim());
     if (!m) return;
-    currentMitgliedId = mitgliedId;
+    currentMitgliedId = String(m.ID).trim();
 
     document.getElementById('mk-edit-box').style.display = 'none';
     const ue18 = isUe18(m.Geburtsdatum);
@@ -1250,26 +1247,21 @@
 
     document.getElementById('mk-straf-spiess').value = currentUser.name || '';
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const in30Days = new Date(today);
-    in30Days.setDate(today.getDate() + 30);
-
-    const upcoming = appData.termine.filter(t => {
-      const td = new Date(t.Datum);
-      return td >= today && td <= in30Days;
-    });
+    const todayISO = new Date().toISOString().split('T')[0];
+    const upcoming = appData.termine
+      .filter(t => String(t.Datum || '').substring(0, 10) >= todayISO)
+      .sort((a, b) => String(a.Datum).localeCompare(String(b.Datum)));
 
     const sel = document.getElementById('mk-termin-select');
     if (upcoming.length === 0) {
-      sel.innerHTML = '<option value="">Keine Termine in den nächsten 30 Tagen</option>';
+      sel.innerHTML = '<option value="">Keine zukünftigen Termine vorhanden</option>';
     } else {
       sel.innerHTML = upcoming.map(t =>
-        `<option value="${t.TerminID}">${formatDateDE(t.Datum)} - ${t.Titel} (${t.Typ})</option>`
+        `<option value="${String(t.TerminID).trim()}">${formatDateDE(t.Datum)} - ${t.Titel} (${t.Typ})</option>`
       ).join('');
     }
 
-    renderKarteiStrafen(mitgliedId);
+    renderKarteiStrafen(currentMitgliedId);
     document.getElementById('modal-kartei').classList.add('open');
   }
 
@@ -1332,21 +1324,23 @@
   }
 
   async function abmeldenFuerTermin() {
-    const terminId = document.getElementById('mk-termin-select').value;
+    const terminId = String(document.getElementById('mk-termin-select').value || '').trim();
     if (!terminId) return alert('Kein Termin ausgewählt!');
-    const termin = appData.termine.find(t => t.TerminID === terminId);
-    if (!termin) return;
+    const termin = appData.termine.find(t => String(t.TerminID).trim() === terminId);
+    if (!termin) return alert('Termin wurde nicht gefunden!');
 
     let stObj = {};
     try { stObj = termin.StatusJSON ? JSON.parse(termin.StatusJSON) : {}; } catch (e) {}
-    stObj[currentMitgliedId] = 'Abgemeldet';
+    stObj[String(currentMitgliedId).trim()] = 'Abgemeldet';
 
-    await apiPost({
+    const res = await apiPost({
       action: 'updateTerminStatus',
       terminId: terminId,
       statusObj: stObj
     });
-    alert(`Schütze wurde für "${termin.Titel}" abgemeldet!`);
+    if (res) {
+      alert(`✅ Schütze wurde für "${termin.Titel}" abgemeldet!`);
+    }
   }
 
   function getKatalogBetrag(kategorie, ue18, fallback) {
