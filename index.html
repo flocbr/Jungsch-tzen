@@ -6,19 +6,18 @@
   <title>Jungschützen Spieß-Manager</title>
   <style>
     :root {
-      --bg: #111613;
-      --surface: #1a221d;
-      --surface-2: #232e27;
-      --border: #2f3e35;
-      --primary: #2e7d4f;
-      --primary-hover: #38965f;
-      --accent: #d4a843;
-      --danger: #c93b3b;
-      --warning: #d9822b;
-      --info: #3b82c9;
-      --whatsapp: #25D366;
-      --text: #eef2ef;
-      --muted: #98a89e;
+      --bg: #0b1911;
+      --surface: #12291c;
+      --surface-2: #193827;
+      --border: #28543c;
+      --primary: #1e824c;
+      --primary-hover: #26a15e;
+      --accent: #e5b84b;
+      --danger: #d94343;
+      --warning: #e69138;
+      --info: #3d8bd9;
+      --text: #f4f7f5;
+      --muted: #a6bfb0;
       --radius: 12px;
     }
 
@@ -27,8 +26,8 @@
 
     /* Header */
     header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #10261a 0%, #173625 100%);
+      border-bottom: 2px solid var(--accent);
       padding: 14px 18px;
       display: flex;
       justify-content: space-between;
@@ -37,9 +36,9 @@
       top: 0;
       z-index: 50;
     }
-    header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px; }
-    .sync-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
-    .sync-badge.online { color: #5ce08e; border-color: #2e7d4f; }
+    header h1 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.4px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+    .sync-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); font-weight: 600; }
+    .sync-badge.online { color: #6ef0a3; border-color: #26a15e; background: rgba(30, 130, 76, 0.2); }
     .sync-badge.loading { color: var(--accent); border-color: var(--accent); }
 
     /* Container */
@@ -61,6 +60,7 @@
       border-radius: 10px;
       padding: 10px 8px;
       text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
     }
     .mini-kasse .lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px; }
     .mini-kasse .val { font-size: 1.05rem; font-weight: 800; margin-top: 3px; }
@@ -72,6 +72,7 @@
       border-radius: var(--radius);
       padding: 16px;
       margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--accent); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 
@@ -79,10 +80,10 @@
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
     @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
-    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
     input, select, textarea {
       width: 100%;
-      background: var(--surface-2);
+      background: var(--bg);
       border: 1px solid var(--border);
       color: var(--text);
       padding: 10px 12px;
@@ -90,15 +91,15 @@
       font-size: 0.95rem;
       margin-bottom: 10px;
     }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
 
     /* Buttons */
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-      padding: 10px 14px; border-radius: 8px; border: none; font-weight: 600;
+      padding: 10px 14px; border-radius: 8px; border: none; font-weight: 700;
       font-size: 0.9rem; cursor: pointer; transition: 0.15s; color: #fff;
     }
-    .btn-primary { background: var(--primary); }
+    .btn-primary { background: var(--primary); border: 1px solid #2ea363; }
     .btn-primary:hover { background: var(--primary-hover); }
     .btn-danger { background: var(--danger); }
     .btn-warning { background: var(--warning); color: #111; }
@@ -111,11 +112,11 @@
 
     /* Badges */
     .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
-    .badge-u18 { background: rgba(59, 130, 201, 0.2); color: #6eb5ff; border: 1px solid #3b82c9; }
-    .badge-ue18 { background: rgba(46, 125, 79, 0.25); color: #6ee79e; border: 1px solid #2e7d4f; }
-    .badge-pflicht { background: rgba(201, 59, 59, 0.25); color: #ff8585; border: 1px solid #c93b3b; }
-    .badge-normal { background: rgba(152, 168, 158, 0.2); color: #cbd5ce; border: 1px solid #526158; }
-    .badge-dauer { background: rgba(212, 168, 67, 0.2); color: #f5cc6c; border: 1px solid #d4a843; }
+    .badge-u18 { background: rgba(61, 139, 217, 0.22); color: #7cc0ff; border: 1px solid #3d8bd9; }
+    .badge-ue18 { background: rgba(30, 130, 76, 0.28); color: #74f2ab; border: 1px solid #26a15e; }
+    .badge-pflicht { background: rgba(217, 67, 67, 0.25); color: #ff8f8f; border: 1px solid #d94343; }
+    .badge-normal { background: rgba(166, 191, 176, 0.18); color: #d5e3db; border: 1px solid #4d735c; }
+    .badge-dauer { background: rgba(229, 184, 75, 0.22); color: #ffd978; border: 1px solid #e5b84b; }
 
     /* Lists */
     .list-item {
@@ -130,32 +131,34 @@
       cursor: pointer;
       transition: 0.15s;
     }
-    .list-item:hover { border-color: var(--primary); }
+    .list-item:hover { border-color: var(--accent); background: #1f4530; }
 
     /* Bottom Navigation */
     nav.bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
+      background: #0f2418;
+      border-top: 2px solid var(--border);
       display: grid; grid-template-columns: repeat(4, 1fr);
-      height: 68px; z-index: 60;
+      height: 68px; z-index: 90;
     }
     .nav-btn {
       background: none; border: none; color: var(--muted);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 4px; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+      gap: 4px; font-size: 0.76rem; font-weight: 700; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
-    .nav-btn span.icon { font-size: 1.25rem; }
-    .nav-btn.active { color: var(--accent); background: rgba(212, 168, 67, 0.08); border-top: 2px solid var(--accent); }
+    .nav-btn span.icon { font-size: 1.3rem; pointer-events: none; }
+    .nav-btn span.lbl-txt { pointer-events: none; }
+    .nav-btn.active { color: var(--accent); background: rgba(229, 184, 75, 0.12); border-top: 3px solid var(--accent); }
 
     /* Modal / Kartei Overlay */
     .modal-backdrop {
-      display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
-      z-index: 100; overflow-y: auto; padding: 16px;
+      display: none; position: fixed; inset: 0; background: rgba(5, 12, 8, 0.85);
+      z-index: 120; overflow-y: auto; padding: 16px;
     }
     .modal-backdrop.open { display: flex; justify-content: center; align-items: flex-start; }
     .modal-box {
-      background: var(--surface); border: 1px solid var(--border);
+      background: var(--surface); border: 1px solid var(--accent);
       border-radius: 14px; width: 100%; max-width: 680px;
       padding: 20px; position: relative; margin: 20px auto;
     }
@@ -170,13 +173,13 @@
     /* Tables */
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
     th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
-    th { color: var(--muted); font-weight: 600; }
+    th { color: var(--accent); font-weight: 700; }
 
     /* Status Pills im Termin */
     .status-group { display: flex; gap: 5px; flex-wrap: wrap; }
     .st-btn {
       padding: 5px 9px; border-radius: 6px; border: 1px solid var(--border);
-      background: var(--surface); color: var(--muted); font-size: 0.78rem; cursor: pointer; font-weight: 600;
+      background: var(--bg); color: var(--muted); font-size: 0.78rem; cursor: pointer; font-weight: 600;
     }
     .st-btn.active-anwesend { background: var(--primary); color: #fff; border-color: var(--primary); }
     .st-btn.active-abgemeldet { background: var(--info); color: #fff; border-color: var(--info); }
@@ -203,11 +206,11 @@
     <section id="tab-termine" class="tab-page active">
       <div class="top-kasse-bar">
         <div class="mini-kasse">
-          <div class="lbl" style="color:#6eb5ff;">U18 Kasse</div>
+          <div class="lbl" style="color:#7cc0ff;">U18 Kasse</div>
           <div class="val" id="top-kasse-u18">0,00 €</div>
         </div>
         <div class="mini-kasse">
-          <div class="lbl" style="color:#6ee79e;">Ü18 Kasse</div>
+          <div class="lbl" style="color:#74f2ab;">Ü18 Kasse</div>
           <div class="val" id="top-kasse-ue18">0,00 €</div>
         </div>
         <div class="mini-kasse">
@@ -241,7 +244,7 @@
             <input type="time" id="t-uhrzeit" value="19:00" />
           </div>
         </div>
-        <button class="btn btn-primary btn-block" onclick="createTermin()">Termin speichern</button>
+        <button type="button" class="btn btn-primary btn-block" onclick="createTermin()">Termin speichern</button>
       </div>
 
       <div class="card">
@@ -272,15 +275,15 @@
               <input type="date" id="m-geb" />
             </div>
           </div>
-          <button class="btn btn-primary btn-block" onclick="addMitglied()">Mitglied mit fester ID anlegen</button>
+          <button type="button" class="btn btn-primary btn-block" onclick="addMitglied()">Mitglied mit fester ID anlegen</button>
         </div>
       </div>
 
       <div class="card">
         <div class="card-title">
-          <span>🪖 Schützen-Übersicht</span>
+          <span>👥 Schützen-Übersicht</span>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <button class="btn btn-whatsapp btn-sm" onclick="exportWhatsAppStrafen()">📲 WhatsApp-Liste</button>
+            <button type="button" class="btn btn-whatsapp btn-sm" onclick="exportWhatsAppStrafen()">📲 WhatsApp-Liste</button>
             <input type="text" id="search-schuetze" placeholder="Name oder ID..." style="width: 150px; margin: 0; padding: 6px 10px; font-size: 0.85rem;" oninput="renderSchuetzen()" />
           </div>
         </div>
@@ -329,7 +332,7 @@
             <input type="text" id="active-spiess" placeholder="Dein Name / Kürzel" onchange="saveSpiessName()" />
           </div>
           <div>
-            <button class="btn btn-info btn-block" style="margin-bottom: 10px;" onclick="loadFromCloud(true)">🔄 Cloud manuell laden</button>
+            <button type="button" class="btn btn-info btn-block" style="margin-bottom: 10px;" onclick="loadFromCloud(true)">🔄 Cloud manuell laden</button>
           </div>
         </div>
       </div>
@@ -337,7 +340,7 @@
       <div class="card">
         <div class="card-title">
           <span>💰 Kassenstände (Getrennt nach Alter)</span>
-          <button class="btn btn-whatsapp btn-sm" onclick="exportWhatsAppStrafen()">📲 Strafen für WhatsApp kopieren</button>
+          <button type="button" class="btn btn-whatsapp btn-sm" onclick="exportWhatsAppStrafen()">📲 Strafen für WhatsApp kopieren</button>
         </div>
         <div class="grid-2">
           <div class="kassen-box">
@@ -385,7 +388,7 @@
             <input type="text" id="kb-spiess" placeholder="Name des Spießes" />
           </div>
         </div>
-        <button class="btn btn-primary btn-block" onclick="addKassenbuchung()">Kassenbuchung speichern</button>
+        <button type="button" class="btn btn-primary btn-block" onclick="addKassenbuchung()">Kassenbuchung speichern</button>
       </div>
 
       <div class="card">
@@ -412,14 +415,14 @@
   <!-- ==================== MODAL: TERMIN ANWESENHEIT ==================== -->
   <div id="modal-termin" class="modal-backdrop">
     <div class="modal-box">
-      <button class="modal-close" onclick="closeModal('modal-termin')">✕</button>
+      <button type="button" class="modal-close" onclick="closeModal('modal-termin')">✕</button>
       <h2 id="mt-titel" style="margin-bottom: 4px;">Termin</h2>
       <p id="mt-meta" style="color: var(--muted); font-size: 0.85rem; margin-bottom: 14px;"></p>
       
       <div id="mt-mitglieder-liste"></div>
 
       <div style="margin-top: 16px; display: flex; gap: 10px;">
-        <button class="btn btn-primary btn-block" onclick="saveTerminAnwesenheit()">💾 Anwesenheit speichern & Pflicht-Strafen prüfen</button>
+        <button type="button" class="btn btn-primary btn-block" onclick="saveTerminAnwesenheit()">💾 Anwesenheit speichern & Pflicht-Strafen prüfen</button>
       </div>
     </div>
   </div>
@@ -427,7 +430,7 @@
   <!-- ==================== MODAL: SCHÜTZEN-KARTEI ==================== -->
   <div id="modal-kartei" class="modal-backdrop">
     <div class="modal-box">
-      <button class="modal-close" onclick="closeModal('modal-kartei')">✕</button>
+      <button type="button" class="modal-close" onclick="closeModal('modal-kartei')">✕</button>
       
       <div style="display:flex; align-items:center; gap:10px; margin-bottom: 14px; flex-wrap:wrap;">
         <h2 id="mk-name">Max Mustermann</h2>
@@ -442,24 +445,24 @@
         </label>
         <label>Spieß-Notizen</label>
         <textarea id="mk-notizen" rows="2" placeholder="Notizen zum Schützen..."></textarea>
-        <button class="btn btn-primary btn-sm" onclick="saveKarteiStammdaten()">Status & Notiz speichern</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="saveKarteiStammdaten()">Status & Notiz speichern</button>
       </div>
 
       <div class="card" style="background: var(--surface-2);">
         <div class="card-title" style="font-size: 0.9rem;">📅 Für Termin abmelden (nächste 30 Tage)</div>
         <div style="display:flex; gap:8px;">
           <select id="mk-termin-select" style="margin:0;"></select>
-          <button class="btn btn-info" onclick="abmeldenFuerTermin()">Abmelden</button>
+          <button type="button" class="btn btn-info" onclick="abmeldenFuerTermin()">Abmelden</button>
         </div>
       </div>
 
       <div class="card" style="background: var(--surface-2);">
         <div class="card-title" style="font-size: 0.9rem;">⚡ Schnell-Strafe eintragen</div>
         <div class="grid-2" style="margin-bottom: 12px;">
-          <button class="btn btn-danger btn-sm" onclick="quickStrafe('Unentschuldigtes Fehlen')">Unentschuldigtes Fehlen</button>
-          <button class="btn btn-warning btn-sm" onclick="quickStrafe('Verspätung')">Verspätung</button>
-          <button class="btn btn-warning btn-sm" onclick="quickStrafe('Grober Unfug')">Grober Unfug</button>
-          <button class="btn btn-info btn-sm" onclick="quickStrafe('Fehlerhafte Uniform')">Fehlerhafte Uniform</button>
+          <button type="button" class="btn btn-danger btn-sm" onclick="quickStrafe('Unentschuldigtes Fehlen')">Unentschuldigtes Fehlen</button>
+          <button type="button" class="btn btn-warning btn-sm" onclick="quickStrafe('Verspätung')">Verspätung</button>
+          <button type="button" class="btn btn-warning btn-sm" onclick="quickStrafe('Grober Unfug')">Grober Unfug</button>
+          <button type="button" class="btn btn-info btn-sm" onclick="quickStrafe('Fehlerhafte Uniform')">Fehlerhafte Uniform</button>
         </div>
 
         <div class="card-title" style="font-size: 0.9rem; margin-top: 8px;">✍️ Individuelle Strafe</div>
@@ -477,7 +480,7 @@
             <input type="text" id="mk-straf-spiess" placeholder="Wer schreibt auf?" />
           </div>
         </div>
-        <button class="btn btn-danger btn-sm btn-block" onclick="addIndividuelleStrafe()">Individuelle Strafe buchen</button>
+        <button type="button" class="btn btn-danger btn-sm btn-block" onclick="addIndividuelleStrafe()">Individuelle Strafe buchen</button>
       </div>
 
       <div class="card" style="background: var(--surface-2); margin-bottom: 0;">
@@ -486,30 +489,29 @@
           <strong id="mk-offen-summe" style="color: var(--danger);">0,00 €</strong>
         </div>
         <div id="mk-strafen-liste" style="margin-bottom: 12px; font-size: 0.85rem;"></div>
-        <button class="btn btn-primary btn-block" onclick="schuldenBegleichen()">✅ Schulden beglichen (in Kasse buchen)</button>
+        <button type="button" class="btn btn-primary btn-block" onclick="schuldenBegleichen()">✅ Schulden beglichen (in Kasse buchen)</button>
       </div>
     </div>
   </div>
 
   <!-- ==================== NAVIGATION ==================== -->
   <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="switchTab('termine', this)">
-      <span class="icon">📅</span><span>Termine</span>
+    <button type="button" class="nav-btn active" data-tab="termine">
+      <span class="icon">📅</span><span class="lbl-txt">Termine</span>
     </button>
-    <button class="nav-btn" onclick="switchTab('schuetzen', this)">
-      <span class="icon">🪖</span><span>Schützen</span>
+    <button type="button" class="nav-btn" data-tab="schuetzen">
+      <span class="icon">👥</span><span class="lbl-txt">Schützen</span>
     </button>
-    <button class="nav-btn" onclick="switchTab('regeln', this)">
-      <span class="icon">⚖️</span><span>Regeln</span>
+    <button type="button" class="nav-btn" data-tab="regeln">
+      <span class="icon">⚖️</span><span class="lbl-txt">Regeln</span>
     </button>
-    <button class="nav-btn" onclick="switchTab('verwaltung', this)">
-      <span class="icon">💰</span><span>Verwaltung</span>
+    <button type="button" class="nav-btn" data-tab="verwaltung">
+      <span class="icon">💰</span><span class="lbl-txt">Verwaltung</span>
     </button>
   </nav>
 
 <script>
-  // HIER DEINE GOOGLE APPS SCRIPT WEB-APP URL EINTRAGEN:
-  const SCRIPT_URL = https://script.google.com/macros/s/AKfycbxiBcxRNy83RlKLurtcTtsfoqpFHptgEzq7iFpQKFaj7i6b6l__OkVB3PJ3RKNin0UQ/exec;
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiBcxRNy83RlKLurtcTtsfoqpFHptgEzq7iFpQKFaj7i6b6l__OkVB3PJ3RKNin0UQ/exec";
 
   let appData = {
     mitglieder: [],
@@ -525,20 +527,36 @@
   let currentMitgliedId = null;
   let isSyncing = false;
 
-  // Initialisierung + smarter Auto-Sync
-  window.addEventListener('DOMContentLoaded', () => {
-    const savedSpiess = localStorage.getItem('js_spiess_name') || '';
-    document.getElementById('active-spiess').value = savedSpiess;
-    document.getElementById('kb-spiess').value = savedSpiess;
+  // Navigation sofort aktivieren (unabhängig vom Cloud-Ladevorgang)
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-tab');
+      document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      const page = document.getElementById('tab-' + target);
+      if (page) page.classList.add('active');
+      btn.classList.add('active');
+    });
+  });
 
-    const cached = localStorage.getItem('js_app_cache');
-    if (cached) {
-      appData = JSON.parse(cached);
-      renderAll();
+  window.addEventListener('DOMContentLoaded', () => {
+    try {
+      const savedSpiess = localStorage.getItem('js_spiess_name') || '';
+      document.getElementById('active-spiess').value = savedSpiess;
+      document.getElementById('kb-spiess').value = savedSpiess;
+
+      const cached = localStorage.getItem('js_app_cache');
+      if (cached) {
+        appData = JSON.parse(cached);
+        renderAll();
+      }
+    } catch (e) {
+      console.warn('Cache-Fehler ignoriert:', e);
     }
+
     loadFromCloud(false);
 
-    // Alle 30 Sekunden im Hintergrund prüfen, sofern kein Modal offen und kein Feld aktiv fokussiert ist
+    // Smarter Auto-Sync alle 30 Sekunden
     setInterval(() => {
       if (document.hidden || isSyncing) return;
       const modalOpen = document.querySelector('.modal-backdrop.open');
@@ -549,7 +567,6 @@
       }
     }, 30000);
 
-    // Sofort nachladen, wenn der Nutzer in die App/den Tab zurückkehrt
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && !isSyncing) {
         loadFromCloud(false);
@@ -569,20 +586,22 @@
     el.className = 'sync-badge ' + (cls || '');
   }
 
-  // Cloud Sync
   async function loadFromCloud(manual = false) {
-    if (!SCRIPT_URL.startsWith('http')) {
-      setSyncBadge('Demo-Modus (URL fehlt)', '');
-      return;
-    }
     if (isSyncing) return;
     isSyncing = true;
     setSyncBadge('Lade Cloud...', 'loading');
     try {
       const res = await fetch(SCRIPT_URL + '?action=getAll');
       const json = await res.json();
-      if (json.status === 'ok') {
-        appData = json.data;
+      if (json.status === 'ok' && json.data) {
+        appData = {
+          mitglieder: Array.isArray(json.data.mitglieder) ? json.data.mitglieder : [],
+          termine: Array.isArray(json.data.termine) ? json.data.termine : [],
+          strafen: Array.isArray(json.data.strafen) ? json.data.strafen : [],
+          kassenbuch: Array.isArray(json.data.kassenbuch) ? json.data.kassenbuch : [],
+          strafenkatalog: Array.isArray(json.data.strafenkatalog) ? json.data.strafenkatalog : [],
+          uniform: Array.isArray(json.data.uniform) ? json.data.uniform : []
+        };
         localStorage.setItem('js_app_cache', JSON.stringify(appData));
         renderAll();
         setSyncBadge('Cloud aktuell', 'online');
@@ -591,6 +610,7 @@
         setSyncBadge('Sync-Fehler', '');
       }
     } catch (err) {
+      console.error('Sync-Fehler:', err);
       setSyncBadge('Offline / Cache', '');
       if (manual) alert('Keine Verbindung zur Cloud möglich. Lokaler Stand wird angezeigt.');
     } finally {
@@ -621,14 +641,6 @@
     }
   }
 
-  // Tab Navigation
-  function switchTab(tabName, btn) {
-    document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tabName).classList.add('active');
-    btn.classList.add('active');
-  }
-
   function closeModal(id) {
     document.getElementById(id).classList.remove('open');
   }
@@ -641,10 +653,10 @@
     arrow.textContent = isHidden ? '▲ Einklappen' : '▼ Aufklappen';
   }
 
-  // Alter & U18/Ü18 Berechnung
   function isUe18(geburtsdatum) {
     if (!geburtsdatum) return true;
     const dob = new Date(geburtsdatum);
+    if (isNaN(dob.getTime())) return true;
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
     const m = today.getMonth() - dob.getMonth();
@@ -661,15 +673,15 @@
   function formatDateDE(iso) {
     if (!iso) return '';
     const p = String(iso).split('-');
-    if (p.length !== 3) return iso;
+    if (p.length !== 3) return String(iso);
     return `${p[2]}.${p[1]}.${p[0]}`;
   }
 
   function renderAll() {
-    renderTermine();
-    renderSchuetzen();
-    renderRegeln();
-    renderVerwaltung();
+    try { renderTermine(); } catch (e) { console.error('Render Termine:', e); }
+    try { renderSchuetzen(); } catch (e) { console.error('Render Schützen:', e); }
+    try { renderRegeln(); } catch (e) { console.error('Render Regeln:', e); }
+    try { renderVerwaltung(); } catch (e) { console.error('Render Verwaltung:', e); }
   }
 
   // ==================== WHATSAPP EXPORT ====================
@@ -762,7 +774,7 @@
           <div class="status-group" id="st-group-${m.ID}">
             ${['Anwesend', 'Abgemeldet', 'Zu spät', 'Unentschuldigt'].map(opt => {
               const activeCls = st === opt ? 'active-' + opt.toLowerCase().replace(' ', '') : '';
-              return `<button class="st-btn ${activeCls}" onclick="setMemberTerminStatus('${m.ID}', '${opt}')">${opt}</button>`;
+              return `<button type="button" class="st-btn ${activeCls}" onclick="setMemberTerminStatus('${m.ID}', '${opt}')">${opt}</button>`;
             }).join('')}
           </div>
         </div>
@@ -858,8 +870,8 @@
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:12px;">
-            <strong style="color: ${offen > 0 ? 'var(--danger)' : '#5ce08e'};">${formatEuro(offen)}</strong>
-            <button class="btn btn-danger btn-sm" title="Mitglied löschen" onclick="deleteMitglied(event, '${m.ID}', '${m.Vorname} ${m.Nachname}')">🗑️</button>
+            <strong style="color: ${offen > 0 ? 'var(--danger)' : '#74f2ab'};">${formatEuro(offen)}</strong>
+            <button type="button" class="btn btn-danger btn-sm" title="Mitglied löschen" onclick="deleteMitglied(event, '${m.ID}', '${m.Vorname} ${m.Nachname}')">🗑️</button>
           </div>
         </div>
       `;
@@ -1135,7 +1147,7 @@
           <td><span class="badge ${b.Kasse === 'U18' ? 'badge-u18' : 'badge-ue18'}">${b.Kasse}</span></td>
           <td>${b.Grund}</td>
           <td style="color:var(--muted);">${b.Spiess || '-'}</td>
-          <td style="text-align:right; font-weight:700; color:${isAusgabe ? 'var(--danger)' : '#5ce08e'};">
+          <td style="text-align:right; font-weight:700; color:${isAusgabe ? 'var(--danger)' : '#74f2ab'};">
             ${isAusgabe ? '-' : '+'}${formatEuro(b.Betrag)}
           </td>
         </tr>
