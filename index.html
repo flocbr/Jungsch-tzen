@@ -1,628 +1,1147 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Jungschützen Dannenbüttel v44</title>
-    <style>
-        :root { --green: #1a472a; --gold: #c5a059; --red: #d9534f; --bg: #f4f7f4; }
-        
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: var(--bg); margin: 0; padding: 0;
-            height: 100vh; height: 100dvh; 
-            display: flex; flex-direction: column;
-            touch-action: manipulation;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Jungschützen Spieß-Manager</title>
+  <style>
+    :root {
+      --bg: #111613;
+      --surface: #1a221d;
+      --surface-2: #232e27;
+      --border: #2f3e35;
+      --primary: #2e7d4f;
+      --primary-hover: #38965f;
+      --accent: #d4a843;
+      --danger: #c93b3b;
+      --warning: #d9822b;
+      --info: #3b82c9;
+      --whatsapp: #25D366;
+      --text: #eef2ef;
+      --muted: #98a89e;
+      --radius: 12px;
+    }
 
-        body.modal-open { overflow: hidden; position: fixed; width: 100%; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 85px; }
 
-        .header { 
-            background: var(--green); color: white; padding: 12px 10px; text-align: center; 
-            border-bottom: 4px solid var(--gold); flex-shrink: 0; position: relative; z-index: 10;
-        }
+    /* Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    header h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: 0.3px; display: flex; align-items: center; gap: 8px; }
+    .sync-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
+    .sync-badge.online { color: #5ce08e; border-color: #2e7d4f; }
+    .sync-badge.loading { color: var(--accent); border-color: var(--accent); }
 
-        .cash-banner {
-            background: rgba(0, 0, 0, 0.2); padding: 4px 10px; border-radius: 20px;
-            display: inline-block; font-size: 14px; margin-top: 5px; font-weight: bold; border: 1px solid var(--gold);
-        }
+    /* Container */
+    .container { max-width: 960px; margin: 0 auto; padding: 16px; }
+    .tab-page { display: none; animation: fadeIn 0.15s ease-in; }
+    .tab-page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-        .user-badge {
-            position: absolute; left: 10px; top: 15px; font-size: 12px; background: var(--gold);
-            color: black; padding: 2px 6px; border-radius: 4px; font-weight: bold; cursor: pointer;
-        }
+    /* Top Kassen-Leiste auf Hauptseite */
+    .top-kasse-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .mini-kasse {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .mini-kasse .lbl { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px; }
+    .mini-kasse .val { font-size: 1.05rem; font-weight: 800; margin-top: 3px; }
 
-        .loading-spinner {
-            display: none; position: absolute; right: 15px; top: 18px; width: 16px; height: 16px;
-            border: 2px solid #fff; border-top: 2px solid var(--gold); border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* Cards & Forms */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--accent); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
 
-        .content {
-            flex-grow: 1; overflow-y: auto; padding: 15px 15px 120px 15px; 
-            -webkit-overflow-scrolling: touch;
-        }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
-        .page { display: none; }
-        .page.active { display: block; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+    input, select, textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 10px;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
 
-        .navbar { 
-            position: fixed; bottom: 0; left: 0; width: 100%; background: white; 
-            display: flex; border-top: 2px solid var(--gold); z-index: 999; 
-            padding-bottom: calc(15px + env(safe-area-inset-bottom)); 
-            box-shadow: 0 -3px 10px rgba(0,0,0,0.15);
-        }
-        
-        .nav-item { 
-            flex: 1; text-align: center; padding: 15px 5px; color: #666; font-size: 12px; cursor: pointer;
-            border: none; background: none; -webkit-tap-highlight-color: transparent;
-        }
-        
-        .nav-item.active { color: var(--green); font-weight: bold; background: #f0f0f0; }
-        .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 14px; border-radius: 8px; border: none; font-weight: 600;
+      font-size: 0.9rem; cursor: pointer; transition: 0.15s; color: #fff;
+    }
+    .btn-primary { background: var(--primary); }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-danger { background: var(--danger); }
+    .btn-warning { background: var(--warning); color: #111; }
+    .btn-info { background: var(--info); }
+    .btn-whatsapp { background: #1fa855; color: #fff; }
+    .btn-whatsapp:hover { background: #25c465; }
+    .btn-secondary { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); }
+    .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
+    .btn-block { width: 100%; }
 
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        h3 { color: var(--green); margin: 0 0 10px 0; border-bottom: 2px solid var(--gold); padding-bottom: 5px; font-size: 16px; }
+    /* Badges */
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+    .badge-u18 { background: rgba(59, 130, 201, 0.2); color: #6eb5ff; border: 1px solid #3b82c9; }
+    .badge-ue18 { background: rgba(46, 125, 79, 0.25); color: #6ee79e; border: 1px solid #2e7d4f; }
+    .badge-pflicht { background: rgba(201, 59, 59, 0.25); color: #ff8585; border: 1px solid #c93b3b; }
+    .badge-normal { background: rgba(152, 168, 158, 0.2); color: #cbd5ce; border: 1px solid #526158; }
+    .badge-dauer { background: rgba(212, 168, 67, 0.2); color: #f5cc6c; border: 1px solid #d4a843; }
 
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; font-family: inherit; }
-        textarea { resize: none; height: 80px; }
-        
-        .btn { background: var(--green); color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 5px; -webkit-appearance: none; }
-        .btn:disabled { background: #ccc !important; cursor: not-allowed; }
-        .btn-red { background: var(--red); }
-        .btn-wa { background: #25D366; }
-        .btn-sm { padding: 8px 12px; font-size: 14px; width: auto; display: inline-block; margin-right: 5px; }
-        
-        .member-item { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #eee; background: white; border-radius: 10px; margin-bottom: 8px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        
-        .t-card { 
-            background: white; border-radius: 12px; margin-bottom: 15px; 
-            border-left: 6px solid var(--green); box-shadow: 0 3px 8px rgba(0,0,0,0.08); 
-            padding: 15px;
-        }
-        .t-header-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    /* Lists */
+    .list-item {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .list-item:hover { border-color: var(--primary); }
 
-        .attendance-box { background: #f9f9f9; border-radius: 8px; padding: 5px 10px; border: 1px solid #eee; margin-top: 10px; }
-        .attendance-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .attendance-row:last-child { border: none; }
-        .checkbox-large { width: 30px; height: 30px; cursor: pointer; transform: scale(1.3); margin-right: 8px; }
-        
-        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: bold; margin-left: 5px; }
-        .status-ontime { background: #d4edda; color: #155724; }
-        .status-late { background: #f8d7da; color: #721c24; }
+    /* Bottom Navigation */
+    nav.bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      height: 68px; z-index: 60;
+    }
+    .nav-btn {
+      background: none; border: none; color: var(--muted);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+    }
+    .nav-btn span.icon { font-size: 1.25rem; }
+    .nav-btn.active { color: var(--accent); background: rgba(212, 168, 67, 0.08); border-top: 2px solid var(--accent); }
 
-        .trash { color: #ccc; padding: 5px 10px; font-size: 20px; cursor: pointer; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; }
-        .modal-content { background: white; margin: 5% auto; padding: 20px; width: 92%; max-height: 85vh; border-radius: 15px; box-sizing: border-box; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        .badge { display: inline-block; background: var(--green); color: white; padding: 4px 8px; border-radius: 12px; margin: 2px; font-size: 12px; }
+    /* Modal / Kartei Overlay */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
+      z-index: 100; overflow-y: auto; padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; justify-content: center; align-items: flex-start; }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; width: 100%; max-width: 680px;
+      padding: 20px; position: relative; margin: 20px auto;
+    }
+    .modal-close {
+      position: absolute; top: 14px; right: 14px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text); width: 34px; height: 34px; border-radius: 8px;
+      font-size: 1.1rem; font-weight: bold; cursor: pointer;
+    }
+    .modal-close:hover { background: var(--danger); border-color: var(--danger); }
 
-        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
-        table.ordnung-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
-        table.ordnung-table th, table.ordnung-table td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: top; }
-        table.ordnung-table th { background: var(--green); color: white; font-size: 14px; }
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; }
 
-        #loginBlocker {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--green); z-index: 999999;
-            color: white; text-align: center; padding: 40px 20px; box-sizing: border-box; flex-direction: column; justify-content: center; align-items: center;
-        }
-        .login-btn { background: white; color: var(--green); border: 3px solid var(--gold); padding: 20px; width: 80%; max-width: 300px; font-size: 22px; font-weight: bold; border-radius: 15px; margin: 15px 0; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .fine-entry { padding: 4px 0; border-bottom: 1px dotted #ccc; font-size: 13px; }
-    </style>
+    /* Status Pills im Termin */
+    .status-group { display: flex; gap: 5px; flex-wrap: wrap; }
+    .st-btn {
+      padding: 5px 9px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--muted); font-size: 0.78rem; cursor: pointer; font-weight: 600;
+    }
+    .st-btn.active-anwesend { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .st-btn.active-abgemeldet { background: var(--info); color: #fff; border-color: var(--info); }
+    .st-btn.active-zuspät { background: var(--warning); color: #111; border-color: var(--warning); }
+    .st-btn.active-unentschuldigt { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+    .kassen-box {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px; text-align: center;
+    }
+    .kassen-wert { font-size: 1.5rem; font-weight: 800; margin: 6px 0; }
+  </style>
 </head>
 <body>
 
-<div id="loginBlocker">
-    <h2 style="color: var(--gold); margin-bottom: 5px; font-size: 24px;">Jungschützen Dannenbüttel</h2>
-    <p style="margin-top: 0; font-size: 14px; opacity: 0.9;">Wer nutzt diese App auf diesem Gerät?</p>
-    <button class="login-btn" onclick="selectUser('Florian')">🤠 Florian</button>
-    <button class="login-btn" onclick="selectUser('Jill')">👩‍💻 Jill</button>
-</div>
+  <header>
+    <h1>🎯 Jungschützen Spieß</h1>
+    <span id="syncStatus" class="sync-badge">Bereit</span>
+  </header>
 
-<div class="header">
-    <div id="userRoleBadge" class="user-badge" onclick="switchUserPrompt()">Bediener: ?</div>
-    <h1 style="margin:0; font-size: 18px;">Jungschützen Dannenbüttel</h1>
-    <div class="cash-banner">💰 Kasse: <span id="cashDisplay">0.00</span> €</div>
-    <div id="spinner" class="loading-spinner"></div>
-</div>
+  <div class="container">
 
-<div class="content">
-    <!-- Tab 1: Termine -->
-    <div id="page-kalender" class="page active">
-        <h3 style="margin-bottom: 15px;">📅 Anstehende Termine & Antreten</h3>
-        <div id="calendarTermineList"></div>
-    </div>
+    <!-- ==================== REITER 1: TERMINE (HAUPTSEITE) ==================== -->
+    <section id="tab-termine" class="tab-page active">
+      <div class="top-kasse-bar">
+        <div class="mini-kasse">
+          <div class="lbl" style="color:#6eb5ff;">U18 Kasse</div>
+          <div class="val" id="top-kasse-u18">0,00 €</div>
+        </div>
+        <div class="mini-kasse">
+          <div class="lbl" style="color:#6ee79e;">Ü18 Kasse</div>
+          <div class="val" id="top-kasse-ue18">0,00 €</div>
+        </div>
+        <div class="mini-kasse">
+          <div class="lbl" style="color:var(--accent);">Gesamt Bar</div>
+          <div class="val" id="top-kasse-gesamt">0,00 €</div>
+        </div>
+      </div>
 
-    <!-- Tab 2: Schützen -->
-    <div id="page-mitglieder" class="page">
-        <div id="mList"></div>
-        <button class="btn" style="background:var(--gold)" onclick="addM()">+ Mitglied hinzufügen</button>
-        <button class="btn btn-wa" style="margin-top:15px;" onclick="wa()">📋 WhatsApp Export</button>
-    </div>
+      <div class="card">
+        <div class="card-title">➕ Neuen Termin anlegen</div>
+        <div class="grid-2">
+          <div>
+            <label>Titel / Anlass</label>
+            <input type="text" id="t-titel" placeholder="z. B. Übungsschießen / Versammlung" />
+          </div>
+          <div>
+            <label>Termin-Art</label>
+            <select id="t-typ">
+              <option value="Pflichttermin">🔴 Pflichttermin (mit Strafen)</option>
+              <option value="Normal">⚪ Normaler Termin</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Datum (Tag / Monat / Jahr)</label>
+            <input type="date" id="t-datum" />
+          </div>
+          <div>
+            <label>Uhrzeit</label>
+            <input type="time" id="t-uhrzeit" value="19:00" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="createTermin()">Termin speichern</button>
+      </div>
 
-    <!-- Tab 3: Regelwerk -->
-    <div id="page-regeln" class="page">
-        <div class="card" style="padding: 10px;">
-            <h3>👔 Offizielle Kleidungsordnung & Strafen</h3>
-            <div class="table-responsive">
-                <table class="ordnung-table">
-                    <thead>
-                        <tr><th>Verstoß / Kleidungsstück</th><th>Strafe (U18)</th><th>Strafe (Ü18)</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td><b>Unentschuldigtes Fehlen</b></td><td>5.00 €</td><td>10.00 €</td></tr>
-                        <tr><td><b>Unentschuldigtes Verspäten</b></td><td>2.50 €</td><td>5.00 €</td></tr>
-                        <tr><td><b>Spät-Abmeldung (&lt; 24h vor Termin)</b></td><td colspan="2" style="text-align:center;">5.00 € (Fixbetrag)</td></tr>
-                        <tr><td><b>Grober Unfug / Fehltritt</b></td><td>1.00 €</td><td>2.00 €</td></tr>
-                        <tr><td><b>Fehlende/Falsche Uniformteile</b><br><small>• Schützenhut<br>• Vereins-Krawatte<br>• Weißes Hemd (Langarm)<br>• Schwarze Hose<br>• Schwarze Socken & Schuhe</small></td><td>1.00 € je Teil</td><td>2.00 € je Teil</td></tr>
-                    </tbody>
-                </table>
+      <div class="card">
+        <div class="card-title">📅 Anstehende & Vergangene Termine</div>
+        <div id="termine-liste">Lade Termine...</div>
+      </div>
+    </section>
+
+    <!-- ==================== REITER 2: SCHÜTZEN ==================== -->
+    <section id="tab-schuetzen" class="tab-page">
+      <div class="card">
+        <div class="card-title" style="margin-bottom: 0; cursor: pointer;" onclick="toggleNewMemberBox()">
+          <span>➕ Neues Mitglied hinzufügen</span>
+          <span id="new-member-arrow" style="font-size: 0.85rem; color: var(--muted);">▼ Aufklappen</span>
+        </div>
+        <div id="new-member-box" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+          <div class="grid-3">
+            <div>
+              <label>Vorname</label>
+              <input type="text" id="m-vorname" placeholder="Vorname" />
             </div>
-        </div>
-    </div>
-
-    <!-- Tab 4: Verwaltung -->
-    <div id="page-termine" class="page">
-        <div class="card">
-            <h3 id="tFormTitle">Neuen Termin anlegen</h3>
-            <input type="hidden" id="editTIdx" value="">
-            <input type="text" id="eN" placeholder="Name (z.B. Antreten Schützenplatz)">
-            <input type="datetime-local" id="eDT">
-            <button class="btn" id="btnSaveE" onclick="addE()">Termin speichern</button>
-            <button class="btn" id="btnCancelE" style="background:#888; display:none; margin-top:5px;" onclick="cancelEditE()">Abbrechen</button>
-        </div>
-
-        <div class="card">
-            <h3>Termine bearbeiten / löschen</h3>
-            <div id="tList"></div>
-        </div>
-
-        <div class="card">
-            <h3>Manuelle Kassenbuchung</h3>
-            <input type="number" id="cashAmt" placeholder="Betrag in €" step="0.01">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <button class="btn" style="background:#28a745;" onclick="modCash(true)">[+] Einzahlen</button>
-                <button class="btn btn-red" onclick="modCash(false)">[-] Auszahlen</button>
+            <div>
+              <label>Nachname</label>
+              <input type="text" id="m-nachname" placeholder="Nachname" />
             </div>
-        </div>
-        
-        <button class="btn" style="background:#555; margin-top:20px;" onclick="loadFromCloud()">🔄 Cloud-Daten manuell laden</button>
-    </div>
-</div>
-
-<div class="navbar">
-    <div id="nav-kalender" class="nav-item active" onclick="showPage('kalender')"><span class="nav-icon">📅</span>Termine</div>
-    <div id="nav-mitglieder" class="nav-item" onclick="showPage('mitglieder')"><span class="nav-icon">👤</span>Schützen</div>
-    <div id="nav-regeln" class="nav-item" onclick="showPage('regeln')"><span class="nav-icon">📜</span>Regelwerk</div>
-    <div id="nav-termine" class="nav-item" onclick="showPage('termine')"><span class="nav-icon">⚙️</span>Verwaltung</div>
-</div>
-
-<!-- Modal Mitglied-Details -->
-<div id="modalM" class="modal">
-    <div class="modal-content">
-        <h2 id="modN" style="margin:0; color:var(--green);"></h2>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin: 5px 0;">
-            <p id="modAge" style="font-weight:bold; margin:0;"></p>
-            <label style="font-size: 14px; font-weight: bold; color: var(--red); cursor: pointer;">
-                <input type="checkbox" id="modIsDauerAbm" onchange="toggleDauerAbm()" style="width: auto; margin-right: 5px;"> Dauerabgemeldet 💤
-            </label>
-        </div>
-        
-        <label style="font-size: 13px; font-weight: bold; color: var(--green);">📝 Interne Spieß-Notizen:</label>
-        <textarea id="modNotes" placeholder="Hier Verfehlungen oder Notizen eintragen..." oninput="saveNotesLocal()" onchange="saveNotesCloud()"></textarea>
-        <hr>
-        
-        <div>
-            <label>Abmelden für Einzel-Termin:</label>
-            <select id="evSel"></select>
-            <button class="btn" style="background:orange; color:black; padding: 10px;" onclick="doAbm()">🕒 Abmelden (24h Check)</button>
-            <hr>
-            
-            <label style="font-size: 13px; font-weight: bold; color: var(--red);">⚡ Strafe verhängen:</label>
-            
-            <div style="background: #fff3cd; padding: 10px; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 10px;">
-                <label style="font-size: 12px; font-weight: bold;">Individueller Betrag (€):</label>
-                <input type="number" id="customFineAmount" placeholder="z.B. 3.50" step="0.01" style="padding: 8px; margin: 4px 0;">
-                <button class="btn" style="background: var(--red); padding: 10px; font-size: 14px;" onclick="addCustomFine()">Freie Strafe buchen</button>
+            <div>
+              <label>Geburtsdatum (für U18/Ü18)</label>
+              <input type="date" id="m-geb" />
             </div>
-
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
-                <button class="btn btn-red action-btn" style="grid-column: span 2; padding: 12px;" onclick="f('Unentschuldigtes Fehlen', 5, false)">🚫 Unentschuldigtes Fehlen</button>
-                <button class="btn btn-red action-btn" style="grid-column: span 2; padding: 12px;" onclick="f('Unentschuldigtes Verspäten', 2.5, false)">⏰ Verspätung</button>
-                <button class="btn action-btn" style="padding: 12px;" onclick="promptUnfug()">🤡 Grober Unfug</button>
-                <button class="btn action-btn" style="padding: 12px;" onclick="promptUniform()">👔 Uniformfehler</button>
-            </div>
+          </div>
+          <button class="btn btn-primary btn-block" onclick="addMitglied()">Mitglied mit fester ID anlegen</button>
         </div>
-        <div style="margin-top:15px;"><div id="memberFineLog"></div></div>
-        <button class="btn action-btn" style="background:#28a745; margin-top:15px;" id="btnPayAll" onclick="pay()">💰 Schulden beglichen</button>
-        <button class="btn" style="background:black; margin-top:10px;" onclick="closeM('modalM')">Schließen</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>🪖 Schützen-Übersicht</span>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-whatsapp btn-sm" onclick="exportWhatsAppStrafen()">📲 WhatsApp-Liste</button>
+            <input type="text" id="search-schuetze" placeholder="Name oder ID..." style="width: 150px; margin: 0; padding: 6px 10px; font-size: 0.85rem;" oninput="renderSchuetzen()" />
+          </div>
+        </div>
+        <div id="schuetzen-liste">Lade Mitglieder...</div>
+      </div>
+    </section>
+
+    <!-- ==================== REITER 3: REGELWERK ==================== -->
+    <section id="tab-regeln" class="tab-page">
+      <div class="card">
+        <div class="card-title">⚖️ Strafenkatalog (aus Google Sheet)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Verstoß</th>
+              <th>Info</th>
+              <th style="text-align:right;">Strafe</th>
+            </tr>
+          </thead>
+          <tbody id="katalog-tabelle"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎖️ Fehlerfreie Uniform (Kontroll-Checkliste)</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Teil</th>
+              <th>Vorgabe</th>
+              <th>Worauf achten?</th>
+            </tr>
+          </thead>
+          <tbody id="uniform-tabelle"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==================== REITER 4: VERWALTUNG & KASSE ==================== -->
+    <section id="tab-verwaltung" class="tab-page">
+      <div class="card">
+        <div class="card-title">⚙️ System & Spieß-Profil</div>
+        <div class="grid-2" style="align-items: end;">
+          <div>
+            <label>Aktiver Spieß (wird bei Strafen/Kasse eingetragen)</label>
+            <input type="text" id="active-spiess" placeholder="Dein Name / Kürzel" onchange="saveSpiessName()" />
+          </div>
+          <div>
+            <button class="btn btn-info btn-block" style="margin-bottom: 10px;" onclick="loadFromCloud(true)">🔄 Cloud manuell laden</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>💰 Kassenstände (Getrennt nach Alter)</span>
+          <button class="btn btn-whatsapp btn-sm" onclick="exportWhatsAppStrafen()">📲 Strafen für WhatsApp kopieren</button>
+        </div>
+        <div class="grid-2">
+          <div class="kassen-box">
+            <span class="badge badge-u18">U18 KASSE</span>
+            <div class="kassen-wert" id="kasse-u18-bar">0,00 €</div>
+            <div style="font-size: 0.8rem; color: var(--muted);">Offene Strafen U18: <strong id="kasse-u18-offen" style="color: var(--warning);">0,00 €</strong></div>
+          </div>
+          <div class="kassen-box">
+            <span class="badge badge-ue18">Ü18 KASSE</span>
+            <div class="kassen-wert" id="kasse-ue18-bar">0,00 €</div>
+            <div style="font-size: 0.8rem; color: var(--muted);">Offene Strafen Ü18: <strong id="kasse-ue18-offen" style="color: var(--warning);">0,00 €</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🧾 Manuelle Kassenbuchung</div>
+        <div class="grid-3">
+          <div>
+            <label>Kasse</label>
+            <select id="kb-kasse">
+              <option value="Ü18">Ü18 Kasse</option>
+              <option value="U18">U18 Kasse</option>
+            </select>
+          </div>
+          <div>
+            <label>Buchungsart</label>
+            <select id="kb-typ">
+              <option value="Einnahme">➕ Einnahme (+)</option>
+              <option value="Ausgabe">➖ Ausgabe (-)</option>
+            </select>
+          </div>
+          <div>
+            <label>Betrag (€)</label>
+            <input type="number" step="0.50" id="kb-betrag" placeholder="0.00" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Grund / Verwendungszweck</label>
+            <input type="text" id="kb-grund" placeholder="z. B. Getränke gekauft / Spende" />
+          </div>
+          <div>
+            <label>Eingetragen von (Spieß)</label>
+            <input type="text" id="kb-spiess" placeholder="Name des Spießes" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="addKassenbuchung()">Kassenbuchung speichern</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📒 Kassenbuch-Verlauf</div>
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Kasse</th>
+                <th>Grund</th>
+                <th>Spieß</th>
+                <th style="text-align:right;">Betrag</th>
+              </tr>
+            </thead>
+            <tbody id="kassenbuch-tabelle"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ==================== MODAL: TERMIN ANWESENHEIT ==================== -->
+  <div id="modal-termin" class="modal-backdrop">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('modal-termin')">✕</button>
+      <h2 id="mt-titel" style="margin-bottom: 4px;">Termin</h2>
+      <p id="mt-meta" style="color: var(--muted); font-size: 0.85rem; margin-bottom: 14px;"></p>
+      
+      <div id="mt-mitglieder-liste"></div>
+
+      <div style="margin-top: 16px; display: flex; gap: 10px;">
+        <button class="btn btn-primary btn-block" onclick="saveTerminAnwesenheit()">💾 Anwesenheit speichern & Pflicht-Strafen prüfen</button>
+      </div>
     </div>
-</div>
+  </div>
+
+  <!-- ==================== MODAL: SCHÜTZEN-KARTEI ==================== -->
+  <div id="modal-kartei" class="modal-backdrop">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal('modal-kartei')">✕</button>
+      
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom: 14px; flex-wrap:wrap;">
+        <h2 id="mk-name">Max Mustermann</h2>
+        <span id="mk-id" class="badge badge-normal">JS-001</span>
+        <span id="mk-alter-badge" class="badge badge-ue18">Ü18</span>
+      </div>
+
+      <div class="card" style="background: var(--surface-2);">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--text); font-size:0.95rem; margin-bottom: 10px;">
+          <input type="checkbox" id="mk-dauer" style="width:20px; height:20px; margin:0;" />
+          <span><strong>Dauerabgemeldet</strong> (greift automatisch auch bei Pflichtterminen)</span>
+        </label>
+        <label>Spieß-Notizen</label>
+        <textarea id="mk-notizen" rows="2" placeholder="Notizen zum Schützen..."></textarea>
+        <button class="btn btn-primary btn-sm" onclick="saveKarteiStammdaten()">Status & Notiz speichern</button>
+      </div>
+
+      <div class="card" style="background: var(--surface-2);">
+        <div class="card-title" style="font-size: 0.9rem;">📅 Für Termin abmelden (nächste 30 Tage)</div>
+        <div style="display:flex; gap:8px;">
+          <select id="mk-termin-select" style="margin:0;"></select>
+          <button class="btn btn-info" onclick="abmeldenFuerTermin()">Abmelden</button>
+        </div>
+      </div>
+
+      <div class="card" style="background: var(--surface-2);">
+        <div class="card-title" style="font-size: 0.9rem;">⚡ Schnell-Strafe eintragen</div>
+        <div class="grid-2" style="margin-bottom: 12px;">
+          <button class="btn btn-danger btn-sm" onclick="quickStrafe('Unentschuldigtes Fehlen')">Unentschuldigtes Fehlen</button>
+          <button class="btn btn-warning btn-sm" onclick="quickStrafe('Verspätung')">Verspätung</button>
+          <button class="btn btn-warning btn-sm" onclick="quickStrafe('Grober Unfug')">Grober Unfug</button>
+          <button class="btn btn-info btn-sm" onclick="quickStrafe('Fehlerhafte Uniform')">Fehlerhafte Uniform</button>
+        </div>
+
+        <div class="card-title" style="font-size: 0.9rem; margin-top: 8px;">✍️ Individuelle Strafe</div>
+        <div class="grid-3">
+          <div>
+            <label>Grund</label>
+            <input type="text" id="mk-straf-grund" placeholder="z. B. Kappe vergessen" />
+          </div>
+          <div>
+            <label>Betrag (€)</label>
+            <input type="number" step="0.50" id="mk-straf-betrag" placeholder="2.00" />
+          </div>
+          <div>
+            <label>Spieß</label>
+            <input type="text" id="mk-straf-spiess" placeholder="Wer schreibt auf?" />
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm btn-block" onclick="addIndividuelleStrafe()">Individuelle Strafe buchen</button>
+      </div>
+
+      <div class="card" style="background: var(--surface-2); margin-bottom: 0;">
+        <div class="card-title" style="font-size: 0.9rem;">
+          <span>🧾 Offene Strafen dieses Schützen</span>
+          <strong id="mk-offen-summe" style="color: var(--danger);">0,00 €</strong>
+        </div>
+        <div id="mk-strafen-liste" style="margin-bottom: 12px; font-size: 0.85rem;"></div>
+        <button class="btn btn-primary btn-block" onclick="schuldenBegleichen()">✅ Schulden beglichen (in Kasse buchen)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== NAVIGATION ==================== -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="switchTab('termine', this)">
+      <span class="icon">📅</span><span>Termine</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('schuetzen', this)">
+      <span class="icon">🪖</span><span>Schützen</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('regeln', this)">
+      <span class="icon">⚖️</span><span>Regeln</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('verwaltung', this)">
+      <span class="icon">💰</span><span>Verwaltung</span>
+    </button>
+  </nav>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxe92SEys_t2XZVWHMTtQWHdjfEpgozCPIV3bQjXUrbE9C2rTknzm5efxXwFX75soXbMA/exec";
+  // HIER DEINE GOOGLE APPS SCRIPT WEB-APP URL EINTRAGEN:
+  const SCRIPT_URL = https://script.google.com/macros/s/AKfycbxiBcxRNy83RlKLurtcTtsfoqpFHptgEzq7iFpQKFaj7i6b6l__OkVB3PJ3RKNin0UQ/exec;
 
-let members = [];
-let events = [];
-let sysLog = [];
-let cashBalance = 0.0;
-let aI = null; 
-let currentUser = ""; 
-let isSaving = false;
+  let appData = {
+    mitglieder: [],
+    termine: [],
+    strafen: [],
+    kassenbuch: [],
+    strafenkatalog: [],
+    uniform: []
+  };
 
-function showLoading(show) { document.getElementById('spinner').style.display = show ? 'block' : 'none'; }
-function openM(id) { document.getElementById(id).style.display = 'block'; document.body.classList.add('modal-open'); }
-function closeM(id) { document.getElementById(id).style.display = 'none'; document.body.classList.remove('modal-open'); }
+  let currentTerminId = null;
+  let currentTerminStatus = {};
+  let currentMitgliedId = null;
+  let isSyncing = false;
 
-function checkUserIdentity() {
-    let savedUser = localStorage.getItem("spiess_active_user");
-    if (savedUser) { 
-        currentUser = savedUser; 
-        document.getElementById("loginBlocker").style.display = "none";
-        document.getElementById("userRoleBadge").innerText = "Bediener: " + currentUser;
-    } else {
-        document.getElementById("loginBlocker").style.display = "flex";
+  // Initialisierung + smarter Auto-Sync
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedSpiess = localStorage.getItem('js_spiess_name') || '';
+    document.getElementById('active-spiess').value = savedSpiess;
+    document.getElementById('kb-spiess').value = savedSpiess;
+
+    const cached = localStorage.getItem('js_app_cache');
+    if (cached) {
+      appData = JSON.parse(cached);
+      renderAll();
     }
-}
+    loadFromCloud(false);
 
-function selectUser(name) {
-    currentUser = name;
-    localStorage.setItem("spiess_active_user", name);
-    document.getElementById("loginBlocker").style.display = "none";
-    document.getElementById("userRoleBadge").innerText = "Bediener: " + currentUser;
-    render();
-}
+    // Alle 30 Sekunden im Hintergrund prüfen, sofern kein Modal offen und kein Feld aktiv fokussiert ist
+    setInterval(() => {
+      if (document.hidden || isSyncing) return;
+      const modalOpen = document.querySelector('.modal-backdrop.open');
+      const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      const isEditing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag);
+      if (!modalOpen && !isEditing) {
+        loadFromCloud(false);
+      }
+    }, 30000);
 
-function switchUserPrompt() {
-    let name = prompt("Wer bedient die App gerade? (Florian / Jill):");
-    if (name && (name.toLowerCase() === "florian" || name.toLowerCase() === "jill")) {
-        currentUser = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-        localStorage.setItem("spiess_active_user", currentUser);
-        checkUserIdentity();
-        render();
-    }
-}
-
-function safeParseDate(dateStr) {
-    if (!dateStr) return new Date(0);
-    let cleanStr = dateStr.replace(' ', 'T'); 
-    let d = new Date(cleanStr);
-    if (!isNaN(d.getTime())) return d;
-    let parts = dateStr.split(/[- :T.]/);
-    if (parts.length >= 5) return new Date(parts[0], parts[1]-1, parts[2], parts[3], parts[4]);
-    return new Date(dateStr);
-}
-
-function deduplicateMembers(rawList) {
-    if (!rawList || !Array.isArray(rawList)) return [];
-    let uniqueMap = {};
-    rawList.forEach(m => {
-        if (m && m.name) {
-            let cleanName = m.name.trim();
-            uniqueMap[cleanName] = m; 
-        }
+    // Sofort nachladen, wenn der Nutzer in die App/den Tab zurückkehrt
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && !isSyncing) {
+        loadFromCloud(false);
+      }
     });
-    return Object.values(uniqueMap);
-}
+  });
 
-async function saveToCloud(actionType) {
-    if (!WEB_APP_URL || WEB_APP_URL.startsWith("DEINE_")) return;
-    if (isSaving) return; 
-    isSaving = true; showLoading(true);
-    
-    members = deduplicateMembers(members);
-    
-    let payload = { action: actionType, members, events, cashBalance, sysLog };
+  function saveSpiessName() {
+    const val = document.getElementById('active-spiess').value.trim();
+    localStorage.setItem('js_spiess_name', val);
+    document.getElementById('kb-spiess').value = val;
+  }
+
+  function setSyncBadge(text, cls) {
+    const el = document.getElementById('syncStatus');
+    el.textContent = text;
+    el.className = 'sync-badge ' + (cls || '');
+  }
+
+  // Cloud Sync
+  async function loadFromCloud(manual = false) {
+    if (!SCRIPT_URL.startsWith('http')) {
+      setSyncBadge('Demo-Modus (URL fehlt)', '');
+      return;
+    }
+    if (isSyncing) return;
+    isSyncing = true;
+    setSyncBadge('Lade Cloud...', 'loading');
     try {
-        await fetch(WEB_APP_URL, { 
-            method: "POST", mode: "no-cors", cache: "no-cache", 
-            headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) 
-        });
-    } catch (e) { console.error(e); } 
-    finally { setTimeout(() => { isSaving = false; showLoading(false); }, 800); }
-}
+      const res = await fetch(SCRIPT_URL + '?action=getAll');
+      const json = await res.json();
+      if (json.status === 'ok') {
+        appData = json.data;
+        localStorage.setItem('js_app_cache', JSON.stringify(appData));
+        renderAll();
+        setSyncBadge('Cloud aktuell', 'online');
+        if (manual) alert('Daten erfolgreich aus der Cloud aktualisiert!');
+      } else {
+        setSyncBadge('Sync-Fehler', '');
+      }
+    } catch (err) {
+      setSyncBadge('Offline / Cache', '');
+      if (manual) alert('Keine Verbindung zur Cloud möglich. Lokaler Stand wird angezeigt.');
+    } finally {
+      isSyncing = false;
+    }
+  }
 
-async function loadFromCloud() {
-    showLoading(true);
+  async function apiPost(payload) {
+    setSyncBadge('Speichere...', 'loading');
     try {
-        const response = await fetch(WEB_APP_URL);
-        const data = await response.json();
-        if (data) {
-            members = deduplicateMembers(data.members || []);
-            events = data.events || [];
-            cashBalance = Number(data.cashBalance) || 0.0;
-            sysLog = data.sysLog || [];
-        }
-        render();
-    } catch (e) { console.error("Fehler beim Abruf:", e); } 
-    finally { showLoading(false); }
-}
-
-function showPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + id).classList.add('active');
-    document.getElementById('nav-' + id).classList.add('active');
-    render();
-}
-
-function getAge(bday) {
-    const bd = safeParseDate(bday); const today = new Date();
-    let age = today.getFullYear() - bd.getFullYear();
-    if (today.getMonth() < bd.getMonth() || (today.getMonth() == bd.getMonth() && today.getDate() < bd.getDate())) age--;
-    return age;
-}
-
-function getMemberFineSum(m) {
-    const factor = getAge(m.bday) < 18 ? 1 : 2;
-    let sum = 0; if (m.fines) m.fines.forEach(x => sum += x.isFixed ? x.a : (x.a * factor));
-    return sum;
-}
-
-function toggleAttendanceDirect(mId, eventId, eventDtString) {
-    const m = members.find(m => m.id === mId); if (!m) return;
-    if (!m.attendance) m.attendance = {};
-    
-    const isChecked = document.getElementById(`chkDirect-${eventId}-${mId}`).checked;
-    
-    if (isChecked) {
-        const now = new Date(); const eventTime = safeParseDate(eventDtString);
-        let status = "pünktlich";
-        if (now > eventTime) {
-            status = "verspätet"; if (!m.fines) m.fines = [];
-            m.fines.push({
-                id: "fine_" + eventId,
-                t: 'Unentschuldigtes Verspäten', a: 2.5, isFixed: false, 
-                date: now.toLocaleDateString('de-DE'), 
-                time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
-            });
-            alert(`⏰ Verspätungsstrafe für ${m.name} erfasst.`);
-        }
-        m.attendance[eventId] = status;
-    } else { 
-        delete m.attendance[eventId];
-        if (m.fines) { m.fines = m.fines.filter(f => f.id !== "fine_" + eventId); }
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (json.status === 'ok') {
+        await loadFromCloud(false);
+        return json;
+      } else {
+        alert('Fehler: ' + (json.message || 'Unbekannt'));
+        setSyncBadge('Fehler', '');
+        return null;
+      }
+    } catch (err) {
+      alert('Netzwerkfehler beim Speichern! Bitte Verbindung prüfen.');
+      setSyncBadge('Offline', '');
+      return null;
     }
-    
-    saveToCloud("saveMembers");
-    render(); 
-}
+  }
 
-function addM() { 
-    const n = prompt("Name:"); const bRaw = prompt("Geburtstag (TT.MM.JJJJ):", "01.01.2005");
-    if(!n || !bRaw) return;
-    let p = bRaw.split('.');
-    if(p.length === 3) {
-        let cleanId = "m_" + n.trim().replace(/\s+/g, '_').toLowerCase();
-        if (members.some(m => m.name.toLowerCase() === n.trim().toLowerCase())) {
-            alert("Dieser Schütze existiert bereits!");
-            return;
-        }
-        members.push({id: cleanId, name: n.trim(), bday:`${p[2]}-${p[1]}-${p[0]}`, notes:"", fines:[], abm:[], attendance:{}, isDauerAbm: false}); 
-        members = deduplicateMembers(members);
-        render(); 
-        saveToCloud("saveMembers");
+  // Tab Navigation
+  function switchTab(tabName, btn) {
+    document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tabName).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  function toggleNewMemberBox() {
+    const box = document.getElementById('new-member-box');
+    const arrow = document.getElementById('new-member-arrow');
+    const isHidden = box.style.display === 'none';
+    box.style.display = isHidden ? 'block' : 'none';
+    arrow.textContent = isHidden ? '▲ Einklappen' : '▼ Aufklappen';
+  }
+
+  // Alter & U18/Ü18 Berechnung
+  function isUe18(geburtsdatum) {
+    if (!geburtsdatum) return true;
+    const dob = new Date(geburtsdatum);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+      age--;
     }
-}
+    return age >= 18;
+  }
 
-function delM(id) { if(confirm("Mitglied löschen?")) { members = members.filter(m => m.id !== id); render(); saveToCloud("saveMembers"); } }
+  function formatEuro(num) {
+    return Number(num || 0).toFixed(2).replace('.', ',') + ' €';
+  }
 
-function saveNotesLocal() {
-    const m = members.find(m => m.id === aI);
-    if(m) { m.notes = document.getElementById('modNotes').value; }
-}
+  function formatDateDE(iso) {
+    if (!iso) return '';
+    const p = String(iso).split('-');
+    if (p.length !== 3) return iso;
+    return `${p[2]}.${p[1]}.${p[0]}`;
+  }
 
-function saveNotesCloud() {
-    saveNotesLocal();
-    saveToCloud("saveMembers");
-}
+  function renderAll() {
+    renderTermine();
+    renderSchuetzen();
+    renderRegeln();
+    renderVerwaltung();
+  }
 
-function toggleDauerAbm() {
-    const m = members.find(m => m.id === aI);
-    if(m) {
-        m.isDauerAbm = document.getElementById('modIsDauerAbm').checked;
-        saveToCloud("saveMembers");
-        render();
+  // ==================== WHATSAPP EXPORT ====================
+  async function exportWhatsAppStrafen() {
+    const schuldner = appData.mitglieder
+      .map(m => ({
+        name: `${m.Vorname} ${m.Nachname}`,
+        summe: getOffeneStrafenSumme(m.ID)
+      }))
+      .filter(x => x.summe > 0);
+
+    if (schuldner.length === 0) {
+      alert('Aktuell hat kein Schütze offene Strafen!');
+      return;
     }
-}
 
-function promptUnfug() {
-    const beschreibung = prompt("Was für ein Unfug wurde getrieben? (z.B. Marschordnung gestört):");
-    if (beschreibung) { f(`Grober Unfug: ${beschreibung}`, 1, false); }
-}
+    const zeilen = schuldner.map(s => `- ${s.name}: ${formatEuro(s.summe)}`).join('\n');
+    const text = `Hier sind einmal die aktuellen Strafen:\n\n${zeilen}\n\nBei Fragen meldet euch gerne bei Jill und Florian`;
 
-function promptUniform() {
-    const fehler = prompt("Welches Teil fehlt/ist falsch? (z.B. Keine Krawatte / Falsche Socken):");
-    if (fehler) { f(`Uniformfehler: ${fehler}`, 1, false); }
-}
-
-function addCustomFine() {
-    const m = members.find(m => m.id === aI); if(!m) return;
-    const amtInput = document.getElementById('customFineAmount');
-    const amt = parseFloat(amtInput.value);
-    
-    if (isNaN(amt) || amt <= 0) { alert("Bitte einen gültigen Betrag eingeben!"); return; }
-    
-    const grund = prompt("Grund für die individuelle Strafe:", "Manuelle Buchung");
-    if (!grund) return;
-    
-    if(!m.fines) m.fines = [];
-    const now = new Date();
-    m.fines.push({ 
-        t: grund, 
-        a: amt, 
-        isFixed: true, 
-        date: now.toLocaleDateString('de-DE'),
-        time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
-    });
-    
-    amtInput.value = "";
-    render(); 
-    saveToCloud("saveMembers"); 
-    opMDetail(aI);
-}
-
-function addE() { 
-    const n = document.getElementById('eN').value; const dt = document.getElementById('eDT').value; 
-    const editIdx = document.getElementById('editTIdx').value;
-    if(n && dt) { 
-        if(editIdx !== "") { events[parseInt(editIdx)].n = n; events[parseInt(editIdx)].dt = dt; cancelEditE(); } 
-        else { events.push({id: "e_" + Date.now(), n, dt}); }
-        document.getElementById('eN').value = ''; document.getElementById('eDT').value = '';
-        render(); saveToCloud("saveEvents");
-    } 
-}
-
-function editE(idx) {
-    document.getElementById('editTIdx').value = idx;
-    document.getElementById('eN').value = events[idx].n;   document.getElementById('eDT').value = events[idx].dt;
-    document.getElementById('tFormTitle').innerText = "Termin bearbeiten";
-    document.getElementById('btnSaveE').innerText = "Änderung speichern";
-    document.getElementById('btnCancelE').style.display = "block";
-}
-
-function cancelEditE() {
-    document.getElementById('editTIdx').value = ""; document.getElementById('eN').value = ""; document.getElementById('eDT').value = "";
-    document.getElementById('tFormTitle').innerText = "Neuen Termin anlegen";
-    document.getElementById('btnSaveE').innerText = "Termin speichern";
-    document.getElementById('btnCancelE').style.display = "none";
-}
-
-function delE(idx) { if(confirm("Termin wirklich löschen?")) { events.splice(idx, 1); render(); saveToCloud("saveEvents"); } }
-function modCash(isAdd) { const val = parseFloat(document.getElementById('cashAmt').value); if(isNaN(val)) return; cashBalance += isAdd ? val : -val; document.getElementById('cashAmt').value = ''; render(); saveToCloud("saveCash"); }
-
-function render() {
-    document.getElementById('cashDisplay').innerText = cashBalance.toFixed(2);
-    const sortedEvents = [...events].sort((a,b) => safeParseDate(a.dt) - safeParseDate(b.dt));
-
-    const calList = document.getElementById('calendarTermineList');
-    if(sortedEvents.length === 0) {
-        calList.innerHTML = '<div class="card">Keine aktiven Termine vorhanden.</div>';
-    } else {
-        calList.innerHTML = sortedEvents.map(e => {
-            const activeSchuetzen = members.filter(m => !m.isDauerAbm && !(m.abm && m.abm.includes(e.n)));
-            const abgemeldetSchuetzen = members.filter(m => !m.isDauerAbm && (m.abm && m.abm.includes(e.n)));
-            const dauerAbgemeldetSchuetzen = members.filter(m => m.isDauerAbm);
-
-            const schuetzenRows = activeSchuetzen.map(m => {
-                if (!m.attendance) m.attendance = {};
-                let currentStatus = m.attendance[e.id] || "";
-                let badgeHtml = currentStatus === "pünktlich" ? '<span class="status-badge status-ontime">Pünktlich</span>' : (currentStatus === "verspätet" ? '<span class="status-badge status-late">Zu Spät ⏰</span>' : '');
-                let isChecked = currentStatus !== "";
-
-                return `<div class="attendance-row">
-                    <div><b>${m.name}</b> ${badgeHtml}</div>
-                    <input type="checkbox" id="chkDirect-${e.id}-${m.id}" class="checkbox-large" ${isChecked ? 'checked' : ''} onchange="toggleAttendanceDirect('${m.id}', '${e.id}', '${e.dt}')">
-                </div>`;
-            }).join('');
-
-            const abmBadges = abgemeldetSchuetzen.map(m => `<span class="badge" style="background:#888;">${m.name}</span>`).join('');
-            const dauerAbmBadges = dauerAbgemeldetSchuetzen.map(m => `<span class="badge" style="background:#d9534f;">💤 ${m.name}</span>`).join('');
-
-            return `<div class="t-card">
-                <div class="t-header-info">
-                    <div>
-                        <strong style="font-size:17px; color:var(--green);">${e.n}</strong><br>
-                        <small style="color:#666;">📅 ${safeParseDate(e.dt).toLocaleString('de-DE')} Uhr</small>
-                    </div>
-                </div>
-                <div class="attendance-box">
-                    <div style="font-size:12px; font-weight:bold; color:var(--green); margin-bottom:5px; border-bottom:1px solid #ddd; padding-bottom:3px;">🎯 ANWESENHEIT ABHAKEN:</div>
-                    ${schuetzenRows === "" ? '<div style="color:#666; font-size:13px; padding:5px 0;">Keine aktiven Schützen vorhanden.</div>' : schuetzenRows}
-                </div>
-                ${abmBadges !== "" ? `<div style="margin-top:10px;"><small style="display:block;color:#777;font-weight:bold;">Abgemeldet:</small>${abmBadges}</div>` : ''}
-                ${dauerAbmBadges !== "" ? `<div style="margin-top:5px;"><small style="display:block;color:#777;font-weight:bold;">Dauerhaft abgemeldet:</small>${dauerAbmBadges}</div>` : ''}
-            </div>`;
-        }).join('');
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('✅ WhatsApp-Text wurde in die Zwischenablage kopiert!\n\nVorschau:\n' + text);
+    } catch (err) {
+      prompt('Kopiere diesen Text für WhatsApp:', text);
     }
-    
-    document.getElementById('mList').innerHTML = members.sort((a,b)=>a.name.localeCompare(b.name)).map(m => `
-        <div class="member-item">
-            <div style="flex-grow:1" onclick="opMDetail('${m.id}')"><b>${m.name}</b> ${m.isDauerAbm ? '💤' : ''} ${m.notes ? '📝' : ''}<br><small>${getAge(m.bday)} J.</small></div>
-            <b style="color:var(--red); margin-right:10px;">${getMemberFineSum(m).toFixed(2)}€</b>
-            <span class="trash" onclick="delM('${m.id}')">🗑️</span>
+  }
+
+  // ==================== REITER 1: TERMINE ====================
+  async function createTermin() {
+    const titel = document.getElementById('t-titel').value.trim();
+    const typ = document.getElementById('t-typ').value;
+    const datum = document.getElementById('t-datum').value;
+    const uhrzeit = document.getElementById('t-uhrzeit').value;
+
+    if (!titel || !datum) return alert('Bitte Titel und Datum angeben!');
+    const res = await apiPost({ action: 'addTermin', titel, typ, datum, uhrzeit });
+    if (res) {
+      document.getElementById('t-titel').value = '';
+    }
+  }
+
+  function renderTermine() {
+    const container = document.getElementById('termine-liste');
+    if (!appData.termine.length) {
+      container.innerHTML = '<p style="color:var(--muted);">Noch keine Termine eingetragen.</p>';
+      return;
+    }
+    const sorted = [...appData.termine].sort((a, b) => String(a.Datum).localeCompare(String(b.Datum)));
+    container.innerHTML = sorted.map(t => {
+      const badgeCls = t.Typ === 'Pflichttermin' ? 'badge-pflicht' : 'badge-normal';
+      return `
+        <div class="list-item" onclick="openTerminModal('${t.TerminID}')">
+          <div>
+            <div style="font-weight:700; margin-bottom:4px;">${t.Titel}</div>
+            <div style="font-size:0.82rem; color:var(--muted);">📅 ${formatDateDE(t.Datum)} • 🕒 ${t.Uhrzeit || ''} Uhr</div>
+          </div>
+          <span class="badge ${badgeCls}">${t.Typ}</span>
         </div>
-    `).join('');
-
-    document.getElementById('tList').innerHTML = sortedEvents.map(e => {
-        const oIdx = events.findIndex(orig => orig.id === e.id);
-        return `<div class="member-item" style="padding:10px 15px;">
-            <div><b>${e.n}</b><br><small>${safeParseDate(e.dt).toLocaleString('de-DE')} Uhr</small></div>
-            <div>
-                <button class="btn btn-sm" style="background:var(--gold);" onclick="editE(${oIdx})">✏️</button>
-                <button class="btn btn-sm btn-red" onclick="delE(${oIdx})">🗑️</button>
-            </div>
-        </div>`;
+      `;
     }).join('');
-}
+  }
 
-function opMDetail(id) { 
-    aI = id; const m = members.find(m => m.id === id); if(!m) return;
-    document.getElementById('modN').innerText = m.name; document.getElementById('modAge').innerText = `${getAge(m.bday)} Jahre`;
-    document.getElementById('modNotes').value = m.notes || "";
-    document.getElementById('modIsDauerAbm').checked = m.isDauerAbm || false;
-    document.getElementById('customFineAmount').value = ""; 
-    document.getElementById('evSel').innerHTML = events.map(e => `<option value="${e.dt}|${e.n}">${e.n}</option>`).join('');
-    
-    document.getElementById('memberFineLog').innerHTML = (!m.fines || m.fines.length === 0) 
-        ? '<i>Keine Strafen. Saubere Weste!</i>' 
-        : m.fines.map(f => {
-            let stamp = f.date ? f.date : '';
-            if (f.time) stamp += (stamp ? ' ' : '') + f.time;
-            let timeHtml = stamp ? `<br><small style="color:#888;">📅 Erfasst: ${stamp} Uhr</small>` : '';
-            return `<div class="fine-entry"><b>${f.a.toFixed(2)}€</b> - ${f.t}${timeHtml}</div>`;
-        }).join('');
-
-    document.getElementById('btnPayAll').innerText = `💰 Schulden beglichen (${getMemberFineSum(m).toFixed(2)}€)`;
-    openM('modalM'); 
-}
-
-function f(t, a, isFixed) { 
-    const m = members.find(m => m.id === aI); if(!m) return;
-    if(!m.fines) m.fines = []; 
-    const now = new Date();
-    m.fines.push({
-        t: t, 
-        a: a, 
-        isFixed: isFixed, 
-        date: now.toLocaleDateString('de-DE'),
-        time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
-    }); 
-    render(); saveToCloud("saveMembers"); opMDetail(aI);
-}
-
-function doAbm() {
-    const sel = document.getElementById('evSel').value; if(!sel) return;
-    const [dt, name] = sel.split('|'); const m = members.find(m => m.id === aI); if(!m) return;
-    if(!m.abm) m.abm = []; if(!m.abm.includes(name)) m.abm.push(name);
-    if ((safeParseDate(dt) - new Date()) / 3600000 < 24) {
-        if(!m.fines) m.fines = []; 
-        const now = new Date();
-        m.fines.push({
-            t: 'Spät-Abmeldung', 
-            a: 5, 
-            isFixed: true,
-            date: now.toLocaleDateString('de-DE'),
-            time: now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})
-        });
+  function openTerminModal(terminId) {
+    const termin = appData.termine.find(t => t.TerminID === terminId);
+    if (!termin) return;
+    currentTerminId = terminId;
+    try {
+      currentTerminStatus = termin.StatusJSON ? JSON.parse(termin.StatusJSON) : {};
+    } catch (e) {
+      currentTerminStatus = {};
     }
-    render(); saveToCloud("saveMembers"); closeM('modalM'); alert("Abgemeldet!");
-}
 
-function pay() { 
-    const m = members.find(m => m.id === aI); if(!m) return;
-    const sum = getMemberFineSum(m);
-    if(confirm(`${m.name} hat bezahlt?`)) { cashBalance += sum; m.fines = []; render(); saveToCloud("saveMembers"); saveToCloud("saveCash"); closeM('modalM'); } 
-}
+    document.getElementById('mt-titel').textContent = termin.Titel;
+    document.getElementById('mt-meta').textContent = `${formatDateDE(termin.Datum)} um ${termin.Uhrzeit} Uhr • ${termin.Typ}`;
 
-function wa() { 
-    let t = "*DEPPENSOLD JUNG SCHÜTZEN*\n\n"; 
-    members.forEach(m => { let s = getMemberFineSum(m); if(s>0) t += `${m.name}: ${s.toFixed(2)}€\n`; });
-    navigator.clipboard.writeText(t).then(() => alert("Kopiert!"));
-}
+    const listEl = document.getElementById('mt-mitglieder-liste');
+    listEl.innerHTML = appData.mitglieder.map(m => {
+      const isDauer = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
+      const defaultSt = isDauer ? 'Abgemeldet' : 'Anwesend';
+      const st = currentTerminStatus[m.ID] || defaultSt;
+      const ue18 = isUe18(m.Geburtsdatum);
 
-checkUserIdentity();
-loadFromCloud();
+      return `
+        <div class="list-item" style="cursor:default; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong>${m.Vorname} ${m.Nachname}</strong> <span style="color:var(--muted); font-size:0.8rem;">(${m.ID})</span>
+            <span class="badge ${ue18 ? 'badge-ue18' : 'badge-u18'}">${ue18 ? 'Ü18' : 'U18'}</span>
+            ${isDauer ? '<span class="badge badge-dauer">Dauerabgemeldet</span>' : ''}
+          </div>
+          <div class="status-group" id="st-group-${m.ID}">
+            ${['Anwesend', 'Abgemeldet', 'Zu spät', 'Unentschuldigt'].map(opt => {
+              const activeCls = st === opt ? 'active-' + opt.toLowerCase().replace(' ', '') : '';
+              return `<button class="st-btn ${activeCls}" onclick="setMemberTerminStatus('${m.ID}', '${opt}')">${opt}</button>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('modal-termin').classList.add('open');
+  }
+
+  function setMemberTerminStatus(mitgliedId, status) {
+    currentTerminStatus[mitgliedId] = status;
+    const group = document.getElementById('st-group-' + mitgliedId);
+    group.querySelectorAll('.st-btn').forEach(btn => {
+      btn.className = 'st-btn';
+      if (btn.textContent === status) {
+        btn.classList.add('active-' + status.toLowerCase().replace(' ', ''));
+      }
+    });
+  }
+
+  async function saveTerminAnwesenheit() {
+    const termin = appData.termine.find(t => t.TerminID === currentTerminId);
+    if (!termin) return;
+
+    await apiPost({
+      action: 'updateTerminStatus',
+      terminId: currentTerminId,
+      statusObj: currentTerminStatus
+    });
+
+    if (termin.Typ === 'Pflichttermin') {
+      const spiess = document.getElementById('active-spiess').value.trim() || 'Spieß';
+      const betroffene = appData.mitglieder.filter(m => {
+        const isDauer = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
+        if (isDauer) return false;
+        const st = currentTerminStatus[m.ID];
+        return st === 'Zu spät' || st === 'Unentschuldigt';
+      });
+
+      if (betroffene.length > 0 && confirm(`Pflichttermin: Für ${betroffene.length} Schützen (Zu spät / Unentschuldigt) direkt die Strafe aus dem Katalog buchen?`)) {
+        const today = new Date().toISOString().split('T')[0];
+        for (const m of betroffene) {
+          const st = currentTerminStatus[m.ID];
+          const katName = st === 'Zu spät' ? 'Verspätung' : 'Unentschuldigtes Fehlen';
+          const betrag = getKatalogBetrag(katName, st === 'Zu spät' ? 2.0 : 5.0);
+          await apiPost({
+            action: 'addStrafe',
+            mitgliedId: m.ID,
+            datum: today,
+            grund: `${katName} (${termin.Titel})`,
+            betrag: betrag,
+            spiess: spiess
+          });
+        }
+      }
+    }
+    closeModal('modal-termin');
+  }
+
+  // ==================== REITER 2: SCHÜTZEN & KARTEI ====================
+  function getOffeneStrafenSumme(mitgliedId) {
+    return appData.strafen
+      .filter(s => s.MitgliedID === mitgliedId && s.Status === 'Offen')
+      .reduce((sum, s) => sum + Number(s.Betrag || 0), 0);
+  }
+
+  function renderSchuetzen() {
+    const query = (document.getElementById('search-schuetze').value || '').toLowerCase();
+    const container = document.getElementById('schuetzen-liste');
+
+    const filtered = appData.mitglieder.filter(m =>
+      `${m.Vorname} ${m.Nachname} ${m.ID}`.toLowerCase().includes(query)
+    );
+
+    if (!filtered.length) {
+      container.innerHTML = '<p style="color:var(--muted);">Keine Schützen gefunden.</p>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(m => {
+      const ue18 = isUe18(m.Geburtsdatum);
+      const isDauer = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
+      const offen = getOffeneStrafenSumme(m.ID);
+
+      return `
+        <div class="list-item" onclick="openKartei('${m.ID}')">
+          <div>
+            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span style="color:var(--muted); font-size:0.8rem; font-weight:700;">${m.ID}</span>
+              <strong>${m.Vorname} ${m.Nachname}</strong>
+              <span class="badge ${ue18 ? 'badge-ue18' : 'badge-u18'}">${ue18 ? 'Ü18' : 'U18'}</span>
+              ${isDauer ? '<span class="badge badge-dauer">Dauerabgemeldet</span>' : ''}
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <strong style="color: ${offen > 0 ? 'var(--danger)' : '#5ce08e'};">${formatEuro(offen)}</strong>
+            <button class="btn btn-danger btn-sm" title="Mitglied löschen" onclick="deleteMitglied(event, '${m.ID}', '${m.Vorname} ${m.Nachname}')">🗑️</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function addMitglied() {
+    const vorname = document.getElementById('m-vorname').value.trim();
+    const nachname = document.getElementById('m-nachname').value.trim();
+    const geburtsdatum = document.getElementById('m-geb').value;
+
+    if (!vorname || !nachname || !geburtsdatum) return alert('Bitte Vorname, Nachname und Geburtsdatum angeben!');
+    const res = await apiPost({ action: 'addMitglied', vorname, nachname, geburtsdatum });
+    if (res) {
+      document.getElementById('m-vorname').value = '';
+      document.getElementById('m-nachname').value = '';
+      document.getElementById('m-geb').value = '';
+      alert(`Mitglied erfolgreich mit ID ${res.id} angelegt!`);
+    }
+  }
+
+  async function deleteMitglied(event, id, name) {
+    event.stopPropagation();
+    if (!confirm(`⚠️ Möchtest du "${name}" (${id}) wirklich unwiderruflich aus der Liste löschen?`)) return;
+    await apiPost({ action: 'deleteMitglied', id });
+  }
+
+  function openKartei(mitgliedId) {
+    const m = appData.mitglieder.find(x => x.ID === mitgliedId);
+    if (!m) return;
+    currentMitgliedId = mitgliedId;
+
+    const ue18 = isUe18(m.Geburtsdatum);
+    document.getElementById('mk-name').textContent = `${m.Vorname} ${m.Nachname}`;
+    document.getElementById('mk-id').textContent = m.ID;
+    const altBadge = document.getElementById('mk-alter-badge');
+    altBadge.textContent = ue18 ? 'Ü18' : 'U18';
+    altBadge.className = 'badge ' + (ue18 ? 'badge-ue18' : 'badge-u18');
+
+    document.getElementById('mk-dauer').checked = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
+    document.getElementById('mk-notizen').value = m.Notizen || '';
+    document.getElementById('mk-straf-spiess').value = document.getElementById('active-spiess').value || '';
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const in30Days = new Date(today);
+    in30Days.setDate(today.getDate() + 30);
+
+    const upcoming = appData.termine.filter(t => {
+      const td = new Date(t.Datum);
+      return td >= today && td <= in30Days;
+    });
+
+    const sel = document.getElementById('mk-termin-select');
+    if (upcoming.length === 0) {
+      sel.innerHTML = '<option value="">Keine Termine in den nächsten 30 Tagen</option>';
+    } else {
+      sel.innerHTML = upcoming.map(t =>
+        `<option value="${t.TerminID}">${formatDateDE(t.Datum)} - ${t.Titel} (${t.Typ})</option>`
+      ).join('');
+    }
+
+    renderKarteiStrafen(mitgliedId);
+    document.getElementById('modal-kartei').classList.add('open');
+  }
+
+  function renderKarteiStrafen(mitgliedId) {
+    const offene = appData.strafen.filter(s => s.MitgliedID === mitgliedId && s.Status === 'Offen');
+    const summe = offene.reduce((acc, s) => acc + Number(s.Betrag || 0), 0);
+    document.getElementById('mk-offen-summe').textContent = formatEuro(summe);
+
+    const listEl = document.getElementById('mk-strafen-liste');
+    if (!offene.length) {
+      listEl.innerHTML = '<div style="color:var(--muted);">Keine offenen Strafen vorhanden.</div>';
+      return;
+    }
+    listEl.innerHTML = offene.map(s => `
+      <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border);">
+        <div>
+          <strong>${s.Grund}</strong>
+          <div style="font-size:0.75rem; color:var(--muted);">${formatDateDE(s.Datum)} • Spieß: ${s.Spiess || '-'}</div>
+        </div>
+        <strong style="color:var(--danger);">${formatEuro(s.Betrag)}</strong>
+      </div>
+    `).join('');
+  }
+
+  async function saveKarteiStammdaten() {
+    const dauer = document.getElementById('mk-dauer').checked;
+    const notizen = document.getElementById('mk-notizen').value;
+    await apiPost({
+      action: 'updateMitglied',
+      id: currentMitgliedId,
+      dauerabgemeldet: dauer,
+      notizen: notizen
+    });
+    alert('Kartei-Daten gespeichert!');
+  }
+
+  async function abmeldenFuerTermin() {
+    const terminId = document.getElementById('mk-termin-select').value;
+    if (!terminId) return alert('Kein Termin ausgewählt!');
+    const termin = appData.termine.find(t => t.TerminID === terminId);
+    if (!termin) return;
+
+    let stObj = {};
+    try { stObj = termin.StatusJSON ? JSON.parse(termin.StatusJSON) : {}; } catch (e) {}
+    stObj[currentMitgliedId] = 'Abgemeldet';
+
+    await apiPost({
+      action: 'updateTerminStatus',
+      terminId: terminId,
+      statusObj: stObj
+    });
+    alert(`Schütze wurde für "${termin.Titel}" abgemeldet!`);
+  }
+
+  function getKatalogBetrag(kategorie, fallback) {
+    const item = appData.strafenkatalog.find(k =>
+      String(k.Kategorie || '').toLowerCase() === kategorie.toLowerCase()
+    );
+    return item ? Number(item.Betrag) : fallback;
+  }
+
+  async function quickStrafe(kategorie) {
+    const fallbacks = {
+      'Unentschuldigtes Fehlen': 5.0,
+      'Verspätung': 2.0,
+      'Grober Unfug': 3.0,
+      'Fehlerhafte Uniform': 2.5
+    };
+    const betrag = getKatalogBetrag(kategorie, fallbacks[kategorie] || 2.0);
+    const spiess = document.getElementById('mk-straf-spiess').value.trim() || document.getElementById('active-spiess').value.trim() || 'Spieß';
+    const today = new Date().toISOString().split('T')[0];
+
+    await apiPost({
+      action: 'addStrafe',
+      mitgliedId: currentMitgliedId,
+      datum: today,
+      grund: kategorie,
+      betrag: betrag,
+      spiess: spiess
+    });
+    renderKarteiStrafen(currentMitgliedId);
+  }
+
+  async function addIndividuelleStrafe() {
+    const grund = document.getElementById('mk-straf-grund').value.trim();
+    const betrag = parseFloat(document.getElementById('mk-straf-betrag').value);
+    const spiess = document.getElementById('mk-straf-spiess').value.trim() || 'Spieß';
+
+    if (!grund || isNaN(betrag) || betrag <= 0) return alert('Bitte Grund und gültigen Betrag eingeben!');
+    const today = new Date().toISOString().split('T')[0];
+
+    await apiPost({
+      action: 'addStrafe',
+      mitgliedId: currentMitgliedId,
+      datum: today,
+      grund: grund,
+      betrag: betrag,
+      spiess: spiess
+    });
+    document.getElementById('mk-straf-grund').value = '';
+    document.getElementById('mk-straf-betrag').value = '';
+    renderKarteiStrafen(currentMitgliedId);
+  }
+
+  async function schuldenBegleichen() {
+    const m = appData.mitglieder.find(x => x.ID === currentMitgliedId);
+    if (!m) return;
+    const offeneSumme = getOffeneStrafenSumme(currentMitgliedId);
+    if (offeneSumme <= 0) return alert('Dieser Schütze hat keine offenen Strafen.');
+
+    const kasse = isUe18(m.Geburtsdatum) ? 'Ü18' : 'U18';
+    const spiess = document.getElementById('mk-straf-spiess').value.trim() || document.getElementById('active-spiess').value.trim() || 'Spieß';
+    const today = new Date().toISOString().split('T')[0];
+
+    if (!confirm(`${formatEuro(offeneSumme)} als bezahlt markieren und direkt in die ${kasse}-Kasse buchen?`)) return;
+
+    await apiPost({
+      action: 'payStrafen',
+      mitgliedId: currentMitgliedId,
+      mitgliedName: `${m.Vorname} ${m.Nachname}`,
+      kasse: kasse,
+      datum: today,
+      spiess: spiess
+    });
+    renderKarteiStrafen(currentMitgliedId);
+  }
+
+  // ==================== REITER 3: REGELWERK ====================
+  function renderRegeln() {
+    const katBody = document.getElementById('katalog-tabelle');
+    katBody.innerHTML = appData.strafenkatalog.map(k => `
+      <tr>
+        <td><strong>${k.Kategorie || ''}</strong></td>
+        <td style="color:var(--muted);">${k.Bezeichnung || ''} ${k.Beschreibung ? '(' + k.Beschreibung + ')' : ''}</td>
+        <td style="text-align:right; font-weight:700; color:var(--accent);">${formatEuro(k.Betrag)}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="3" style="color:var(--muted);">Keine Einträge im Sheet "Strafenkatalog".</td></tr>';
+
+    const uniBody = document.getElementById('uniform-tabelle');
+    uniBody.innerHTML = appData.uniform.map(u => `
+      <tr>
+        <td><strong>${u.Kleidungsstueck || ''}</strong></td>
+        <td>${u.Vorgabe || ''}</td>
+        <td style="color:var(--muted);">${u.Kontrollpunkte || ''}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="3" style="color:var(--muted);">Keine Einträge im Sheet "Uniform".</td></tr>';
+  }
+
+  // ==================== REITER 4: VERWALTUNG & KASSE ====================
+  async function addKassenbuchung() {
+    const kasse = document.getElementById('kb-kasse').value;
+    const typ = document.getElementById('kb-typ').value;
+    const betrag = parseFloat(document.getElementById('kb-betrag').value);
+    const grund = document.getElementById('kb-grund').value.trim();
+    const spiess = document.getElementById('kb-spiess').value.trim() || 'Spieß';
+
+    if (isNaN(betrag) || betrag <= 0 || !grund) return alert('Bitte Betrag und Grund eingeben!');
+    const today = new Date().toISOString().split('T')[0];
+
+    const res = await apiPost({
+      action: 'addKassenbuchung',
+      datum: today,
+      kasse,
+      typ,
+      betrag,
+      grund,
+      spiess
+    });
+    if (res) {
+      document.getElementById('kb-betrag').value = '';
+      document.getElementById('kb-grund').value = '';
+    }
+  }
+
+  function renderVerwaltung() {
+    let u18Bar = 0;
+    let ue18Bar = 0;
+
+    appData.kassenbuch.forEach(b => {
+      const val = Number(b.Betrag || 0) * (b.Typ === 'Ausgabe' ? -1 : 1);
+      if (b.Kasse === 'U18') u18Bar += val;
+      else ue18Bar += val;
+    });
+
+    let u18Offen = 0;
+    let ue18Offen = 0;
+    appData.strafen.filter(s => s.Status === 'Offen').forEach(s => {
+      const m = appData.mitglieder.find(x => x.ID === s.MitgliedID);
+      const betrag = Number(s.Betrag || 0);
+      if (m && !isUe18(m.Geburtsdatum)) u18Offen += betrag;
+      else ue18Offen += betrag;
+    });
+
+    document.getElementById('top-kasse-u18').textContent = formatEuro(u18Bar);
+    document.getElementById('top-kasse-ue18').textContent = formatEuro(ue18Bar);
+    document.getElementById('top-kasse-gesamt').textContent = formatEuro(u18Bar + ue18Bar);
+
+    document.getElementById('kasse-u18-bar').textContent = formatEuro(u18Bar);
+    document.getElementById('kasse-u18-offen').textContent = formatEuro(u18Offen);
+    document.getElementById('kasse-ue18-bar').textContent = formatEuro(ue18Bar);
+    document.getElementById('kasse-ue18-offen').textContent = formatEuro(ue18Offen);
+
+    const kbBody = document.getElementById('kassenbuch-tabelle');
+    const rev = [...appData.kassenbuch].reverse();
+    kbBody.innerHTML = rev.map(b => {
+      const isAusgabe = b.Typ === 'Ausgabe';
+      return `
+        <tr>
+          <td>${formatDateDE(b.Datum)}</td>
+          <td><span class="badge ${b.Kasse === 'U18' ? 'badge-u18' : 'badge-ue18'}">${b.Kasse}</span></td>
+          <td>${b.Grund}</td>
+          <td style="color:var(--muted);">${b.Spiess || '-'}</td>
+          <td style="text-align:right; font-weight:700; color:${isAusgabe ? 'var(--danger)' : '#5ce08e'};">
+            ${isAusgabe ? '-' : '+'}${formatEuro(b.Betrag)}
+          </td>
+        </tr>
+      `;
+    }).join('') || '<tr><td colspan="5" style="color:var(--muted);">Noch keine Kassenbuchungen vorhanden.</td></tr>';
+  }
 </script>
 </body>
 </html>
