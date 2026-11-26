@@ -710,7 +710,7 @@
   </nav>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxszOxkTq26JXonLAAth29sPb_OhiQnO0tEX_HRBAK0JnJbMWDiTXI8Y51dwF2jwy8R/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxiBcxRNy83RlKLurtcTtsfoqpFHptgEzq7iFpQKFaj7i6b6l__OkVB3PJ3RKNin0UQ/exec";
 
   let appData = {
     mitglieder: [],
@@ -891,7 +891,6 @@
     }
   }
 
-  // Zuverlässige Prüfung für Dauerabmeldung (TRUE, true, WAHR, 1, ja)
   function isDauerabgemeldet(val) {
     if (val === true) return true;
     const s = String(val || '').trim().toLowerCase();
@@ -963,7 +962,6 @@
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  // Prüft anhand der internen Geräte-Uhr, ob gerade ein Termin läuft (ab Startzeit bis 23:59 Uhr)
   function getCurrentlyActiveTermin() {
     const now = new Date();
     const todayISO = getTodayLocalISO();
@@ -1188,7 +1186,7 @@
           const st = currentTerminStatus[String(m.ID).trim()];
           const ue18 = isUe18(m.Geburtsdatum);
           const katName = st === 'Zu spät' ? 'Verspätung' : 'Unentschuldigtes Fehlen';
-          const fallback = st === 'Zu spät' ? (ue18 ? 4.0 : 2.0) : (ue18 ? 10.0 : 5.0);
+          const fallback = st === 'Zu spät' ? (ue18 ? 10.0 : 5.0) : (ue18 ? 10.0 : 5.0);
           const betrag = getKatalogBetrag(katName, ue18, fallback);
           await apiPost({
             action: 'addStrafe',
@@ -1285,9 +1283,9 @@
     document.getElementById('mk-edit-nachname').value = m.Nachname || '';
     document.getElementById('mk-edit-geb').value = String(m.Geburtsdatum || '').substring(0, 10);
 
-    // Schnellstrafen-Buttons exakt aus dem Strafenkatalog befüllen
+    // Schnellstrafen-Buttons: Verspätung fest auf 5 € (U18) / 10 € (Ü18), Rest aus Katalog
     document.getElementById('btn-qs-fehlen').textContent = `Unentschuldigtes Fehlen (${formatEuro(getKatalogBetrag('Unentschuldigtes Fehlen', ue18, ue18 ? 10 : 5))})`;
-    document.getElementById('btn-qs-spaet').textContent = `Verspätung (${formatEuro(getKatalogBetrag('Verspätung', ue18, ue18 ? 4 : 2))})`;
+    document.getElementById('btn-qs-spaet').textContent = `Verspätung (${formatEuro(getKatalogBetrag('Verspätung', ue18, ue18 ? 10 : 5))})`;
     document.getElementById('btn-qs-unfug').textContent = `Grober Unfug (${formatEuro(getKatalogBetrag('Grober Unfug', ue18, 3))})`;
     document.getElementById('btn-qs-uniform').textContent = `Fehlerhafte Uniform (${formatEuro(getKatalogBetrag('Fehlerhafte Uniform', ue18, 2.5))})`;
 
@@ -1300,7 +1298,6 @@
       liveHintEl.innerHTML = '';
     }
 
-    // Dauerabmeldung-Haken sauber setzen
     const dauerChk = document.getElementById('mk-dauer');
     const notizTxt = document.getElementById('mk-notizen');
     dauerChk.checked = isDauerabgemeldet(m.Dauerabgemeldet);
@@ -1386,7 +1383,6 @@
     });
 
     if (res) {
-      // Wenn Dauerabmeldung aktiviert wurde, alle zukünftigen Termine ohne bestehenden Status auf "Abgemeldet" setzen
       if (dauer) {
         const todayISO = getTodayLocalISO();
         const futureTermine = appData.termine.filter(t => String(t.Datum || '').substring(0, 10) >= todayISO);
@@ -1428,9 +1424,14 @@
     }
   }
 
-  // Liest Preise flexibel aus dem Strafenkatalog (egal wie die Spalten im Sheet genau heißen)
   function getKatalogBetrag(kategorie, ue18, fallback) {
     const target = String(kategorie || '').trim().toLowerCase();
+
+    // Feste Sonderregel für Verspätung: U18 = 5 €, Ü18 = 10 €
+    if (target === 'verspätung') {
+      return ue18 ? 10.0 : 5.0;
+    }
+
     const item = appData.strafenkatalog.find(k => {
       const kat = String(k.Kategorie || k.Verstoss || k.Bezeichnung || '').trim().toLowerCase();
       return kat === target || kat.includes(target) || target.includes(kat);
@@ -1465,7 +1466,7 @@
     const ue18 = m ? isUe18(m.Geburtsdatum) : true;
     const fallbacks = {
       'Unentschuldigtes Fehlen': ue18 ? 10.0 : 5.0,
-      'Verspätung': ue18 ? 4.0 : 2.0,
+      'Verspätung': ue18 ? 10.0 : 5.0,
       'Grober Unfug': 3.0,
       'Fehlerhafte Uniform': 2.5
     };
