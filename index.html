@@ -1135,7 +1135,7 @@
           const st = currentTerminStatus[m.ID];
           const ue18 = isUe18(m.Geburtsdatum);
           const katName = st === 'Zu spät' ? 'Verspätung' : 'Unentschuldigtes Fehlen';
-          const fallback = st === 'Zu spät' ? (ue18 ? 10.0 : 5.0) : (ue18 ? 10.0 : 5.0);
+          const fallback = st === 'Zu spät' ? (ue18 ? 4.0 : 2.0) : (ue18 ? 10.0 : 5.0);
           const betrag = getKatalogBetrag(katName, ue18, fallback);
           await apiPost({
             action: 'addStrafe',
