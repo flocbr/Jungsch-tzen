@@ -207,6 +207,18 @@
     .badge-normal { background: rgba(166, 191, 176, 0.18); color: #d5e3db; border: 1px solid #4d735c; }
     .badge-dauer { background: rgba(229, 184, 75, 0.22); color: #ffd978; border: 1px solid #e5b84b; }
 
+    /* Aktiv-Termin-Banner in Kartei */
+    .live-termin-banner {
+      background: rgba(30, 130, 76, 0.22);
+      border: 1px solid #26a15e;
+      color: #8bf5b8;
+      padding: 8px 11px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
     /* Lists & Kompakte Termin-Zeile */
     .list-item {
       background: var(--surface-2);
@@ -409,7 +421,7 @@
               <input type="date" id="m-geb" />
             </div>
           </div>
-          <button type="button" class="btn btn-primary btn-block" onclick="addMitglied()">Mitglied mit fester ID anlegen</button>
+          <button type="button" class="btn btn-primary btn-block" onclick="addMitglied()">Mitglied anlegen</button>
         </div>
       </div>
 
@@ -418,7 +430,7 @@
           <span>👥 Schützen-Übersicht</span>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <button type="button" class="btn btn-whatsapp btn-sm admin-only" onclick="exportWhatsAppStrafen()">📲 WhatsApp-Liste</button>
-            <input type="text" id="search-schuetze" placeholder="Name oder ID..." style="width: 150px; margin: 0; padding: 6px 10px; font-size: 0.85rem;" oninput="renderSchuetzen()" />
+            <input type="text" id="search-schuetze" placeholder="Name suchen..." style="width: 150px; margin: 0; padding: 6px 10px; font-size: 0.85rem;" oninput="renderSchuetzen()" />
           </div>
         </div>
         <div id="schuetzen-liste">Lade Mitglieder...</div>
@@ -599,7 +611,6 @@
       
       <div style="display:flex; align-items:center; gap:8px; margin-bottom: 14px; padding-right: 42px; flex-wrap:wrap;">
         <h2 id="mk-name">Max Mustermann</h2>
-        <span id="mk-id" class="badge badge-normal">JS-001</span>
         <span id="mk-alter-badge" class="badge badge-ue18">Ü18</span>
         <button type="button" class="icon-btn admin-only" title="Name & Geburtsdatum bearbeiten" onclick="toggleKarteiEdit()">✏️</button>
       </div>
@@ -625,7 +636,7 @@
 
       <div class="card" style="background: var(--surface-2);">
         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:var(--text); font-size:0.95rem; margin-bottom: 10px;">
-          <input type="checkbox" id="mk-dauer" style="width:20px; height:20px; margin:0;" />
+          <input type="checkbox" id="mk-dauer" style="width:20px; height:20px; margin:0; accent-color:var(--accent);" />
           <span><strong>Dauerabgemeldet</strong> (greift automatisch auch bei Pflichtterminen)</span>
         </label>
         <label>Spieß-Notizen</label>
@@ -643,6 +654,9 @@
 
       <div class="card admin-only" style="background: var(--surface-2);">
         <div class="card-title" style="font-size: 0.9rem;">⚡ Schnell-Strafe eintragen (passt sich automatisch an U18/Ü18 an)</div>
+        
+        <div id="mk-live-termin-hint"></div>
+
         <div class="grid-2" style="margin-bottom: 12px;">
           <button type="button" class="btn btn-danger btn-sm" id="btn-qs-fehlen" onclick="quickStrafe('Unentschuldigtes Fehlen')">Unentschuldigtes Fehlen</button>
           <button type="button" class="btn btn-warning btn-sm" id="btn-qs-spaet" onclick="quickStrafe('Verspätung')">Verspätung</button>
@@ -877,6 +891,13 @@
     }
   }
 
+  // Zuverlässige Prüfung für Dauerabmeldung (TRUE, true, WAHR, 1, ja)
+  function isDauerabgemeldet(val) {
+    if (val === true) return true;
+    const s = String(val || '').trim().toLowerCase();
+    return s === 'true' || s === 'wahr' || s === '1' || s === 'ja';
+  }
+
   function isUe18(geburtsdatum) {
     if (!geburtsdatum) return true;
     const dob = new Date(geburtsdatum);
@@ -892,7 +913,8 @@
 
   function parseAmount(val) {
     if (typeof val === 'number') return isNaN(val) ? 0 : val;
-    const num = parseFloat(String(val || '0').replace(',', '.').trim());
+    const cleaned = String(val || '0').replace('€', '').replace(',', '.').trim();
+    const num = parseFloat(cleaned);
     return isNaN(num) ? 0 : num;
   }
 
@@ -931,6 +953,37 @@
     const clean = cleanTimeRaw(uhrzeit);
     if (!clean || clean === 'Ganztägig') return 'Ganztägig';
     return `${clean} Uhr`;
+  }
+
+  function getTodayLocalISO() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // Prüft anhand der internen Geräte-Uhr, ob gerade ein Termin läuft (ab Startzeit bis 23:59 Uhr)
+  function getCurrentlyActiveTermin() {
+    const now = new Date();
+    const todayISO = getTodayLocalISO();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const todaysTermine = appData.termine
+      .filter(t => String(t.Datum || '').substring(0, 10) === todayISO)
+      .map(t => {
+        const rawTime = cleanTimeRaw(t.Uhrzeit);
+        let startMinutes = 0;
+        if (rawTime && rawTime !== 'Ganztägig' && rawTime.includes(':')) {
+          const parts = rawTime.split(':');
+          startMinutes = (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0);
+        }
+        return { termin: t, startMinutes };
+      })
+      .filter(item => nowMinutes >= item.startMinutes && nowMinutes <= (23 * 60 + 59))
+      .sort((a, b) => b.startMinutes - a.startMinutes);
+
+    return todaysTermine.length > 0 ? todaysTermine[0].termin : null;
   }
 
   function renderAll() {
@@ -1032,22 +1085,23 @@
 
     const listEl = document.getElementById('mt-mitglieder-liste');
     listEl.innerHTML = appData.mitglieder.map(m => {
-      const isDauer = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
+      const mId = String(m.ID).trim();
+      const isDauer = isDauerabgemeldet(m.Dauerabgemeldet);
       const defaultSt = isDauer ? 'Abgemeldet' : 'Anwesend';
-      const st = currentTerminStatus[m.ID] || defaultSt;
+      const st = currentTerminStatus[mId] || defaultSt;
       const ue18 = isUe18(m.Geburtsdatum);
 
       return `
         <div class="list-item" style="cursor:default; flex-wrap:wrap; gap:8px;">
           <div>
-            <strong>${m.Vorname} ${m.Nachname}</strong> <span style="color:var(--muted); font-size:0.8rem;">(${m.ID})</span>
+            <strong>${m.Vorname} ${m.Nachname}</strong>
             <span class="badge ${ue18 ? 'badge-ue18' : 'badge-u18'}">${ue18 ? 'Ü18' : 'U18'}</span>
             ${isDauer ? '<span class="badge badge-dauer">Dauerabgemeldet</span>' : ''}
           </div>
-          <div class="status-group" id="st-group-${m.ID}">
+          <div class="status-group" id="st-group-${mId}">
             ${['Anwesend', 'Abgemeldet', 'Zu spät', 'Unentschuldigt'].map(opt => {
               const activeCls = st === opt ? 'active-' + opt.toLowerCase().replace(' ', '') : '';
-              return `<button type="button" class="st-btn ${activeCls}" onclick="setMemberTerminStatus('${m.ID}', '${opt}')">${opt}</button>`;
+              return `<button type="button" class="st-btn ${activeCls}" onclick="setMemberTerminStatus('${mId}', '${opt}')">${opt}</button>`;
             }).join('')}
           </div>
         </div>
@@ -1123,23 +1177,22 @@
     if (termin.Typ === 'Pflichttermin') {
       const spiess = currentUser.name || 'Spieß';
       const betroffene = appData.mitglieder.filter(m => {
-        const isDauer = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
-        if (isDauer) return false;
-        const st = currentTerminStatus[m.ID];
+        if (isDauerabgemeldet(m.Dauerabgemeldet)) return false;
+        const st = currentTerminStatus[String(m.ID).trim()];
         return st === 'Zu spät' || st === 'Unentschuldigt';
       });
 
       if (betroffene.length > 0 && confirm(`Pflichttermin: Für ${betroffene.length} Schützen (Zu spät / Unentschuldigt) direkt die Strafe aus dem Katalog buchen?`)) {
-        const today = new Date().toISOString().split('T')[0];
+        const today = getTodayLocalISO();
         for (const m of betroffene) {
-          const st = currentTerminStatus[m.ID];
+          const st = currentTerminStatus[String(m.ID).trim()];
           const ue18 = isUe18(m.Geburtsdatum);
           const katName = st === 'Zu spät' ? 'Verspätung' : 'Unentschuldigtes Fehlen';
           const fallback = st === 'Zu spät' ? (ue18 ? 4.0 : 2.0) : (ue18 ? 10.0 : 5.0);
           const betrag = getKatalogBetrag(katName, ue18, fallback);
           await apiPost({
             action: 'addStrafe',
-            mitgliedId: m.ID,
+            mitgliedId: String(m.ID).trim(),
             datum: today,
             grund: `${katName} (${termin.Titel})`,
             betrag: betrag,
@@ -1163,7 +1216,7 @@
     const container = document.getElementById('schuetzen-liste');
 
     const filtered = appData.mitglieder.filter(m =>
-      `${m.Vorname} ${m.Nachname} ${m.ID}`.toLowerCase().includes(query)
+      `${m.Vorname} ${m.Nachname}`.toLowerCase().includes(query)
     );
 
     if (!filtered.length) {
@@ -1172,15 +1225,15 @@
     }
 
     container.innerHTML = filtered.map(m => {
+      const mId = String(m.ID).trim();
       const ue18 = isUe18(m.Geburtsdatum);
-      const isDauer = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
-      const offen = getOffeneStrafenSumme(m.ID);
+      const isDauer = isDauerabgemeldet(m.Dauerabgemeldet);
+      const offen = getOffeneStrafenSumme(mId);
 
       return `
-        <div class="list-item" onclick="openKartei('${m.ID}')">
+        <div class="list-item" onclick="openKartei('${mId}')">
           <div>
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-              <span style="color:var(--muted); font-size:0.8rem; font-weight:700;">${m.ID}</span>
               <strong>${m.Vorname} ${m.Nachname}</strong>
               <span class="badge ${ue18 ? 'badge-ue18' : 'badge-u18'}">${ue18 ? 'Ü18' : 'U18'}</span>
               ${isDauer ? '<span class="badge badge-dauer">Dauerabgemeldet</span>' : ''}
@@ -1188,7 +1241,7 @@
           </div>
           <div style="display:flex; align-items:center; gap:12px;">
             <strong style="color: ${offen > 0 ? 'var(--danger)' : '#74f2ab'};">${formatEuro(offen)}</strong>
-            <button type="button" class="btn btn-danger btn-sm admin-only" title="Mitglied löschen" onclick="deleteMitglied(event, '${m.ID}', '${m.Vorname} ${m.Nachname}')">🗑️</button>
+            <button type="button" class="btn btn-danger btn-sm admin-only" title="Mitglied löschen" onclick="deleteMitglied(event, '${mId}', '${m.Vorname} ${m.Nachname}')">🗑️</button>
           </div>
         </div>
       `;
@@ -1206,13 +1259,13 @@
       document.getElementById('m-vorname').value = '';
       document.getElementById('m-nachname').value = '';
       document.getElementById('m-geb').value = '';
-      alert(`Mitglied erfolgreich mit ID ${res.id} angelegt!`);
+      alert(`Mitglied "${vorname} ${nachname}" erfolgreich angelegt!`);
     }
   }
 
   async function deleteMitglied(event, id, name) {
     event.stopPropagation();
-    if (!confirm(`⚠️ Möchtest du "${name}" (${id}) wirklich unwiderruflich aus der Liste löschen?`)) return;
+    if (!confirm(`⚠️ Möchtest du "${name}" wirklich unwiderruflich aus der Liste löschen?`)) return;
     await apiPost({ action: 'deleteMitglied', id });
   }
 
@@ -1224,7 +1277,6 @@
     document.getElementById('mk-edit-box').style.display = 'none';
     const ue18 = isUe18(m.Geburtsdatum);
     document.getElementById('mk-name').textContent = `${m.Vorname} ${m.Nachname}`;
-    document.getElementById('mk-id').textContent = m.ID;
     const altBadge = document.getElementById('mk-alter-badge');
     altBadge.textContent = ue18 ? 'Ü18' : 'U18';
     altBadge.className = 'badge ' + (ue18 ? 'badge-ue18' : 'badge-u18');
@@ -1233,21 +1285,32 @@
     document.getElementById('mk-edit-nachname').value = m.Nachname || '';
     document.getElementById('mk-edit-geb').value = String(m.Geburtsdatum || '').substring(0, 10);
 
+    // Schnellstrafen-Buttons exakt aus dem Strafenkatalog befüllen
     document.getElementById('btn-qs-fehlen').textContent = `Unentschuldigtes Fehlen (${formatEuro(getKatalogBetrag('Unentschuldigtes Fehlen', ue18, ue18 ? 10 : 5))})`;
     document.getElementById('btn-qs-spaet').textContent = `Verspätung (${formatEuro(getKatalogBetrag('Verspätung', ue18, ue18 ? 4 : 2))})`;
     document.getElementById('btn-qs-unfug').textContent = `Grober Unfug (${formatEuro(getKatalogBetrag('Grober Unfug', ue18, 3))})`;
     document.getElementById('btn-qs-uniform').textContent = `Fehlerhafte Uniform (${formatEuro(getKatalogBetrag('Fehlerhafte Uniform', ue18, 2.5))})`;
 
+    // Hinweis anzeigen, falls laut Geräte-Uhr gerade ein Termin läuft
+    const liveTermin = getCurrentlyActiveTermin();
+    const liveHintEl = document.getElementById('mk-live-termin-hint');
+    if (liveTermin) {
+      liveHintEl.innerHTML = `<div class="live-termin-banner">🕒 Aktiver Termin erkannt: <strong>${liveTermin.Titel}</strong> – wird automatisch als Notiz zur Strafe ergänzt.</div>`;
+    } else {
+      liveHintEl.innerHTML = '';
+    }
+
+    // Dauerabmeldung-Haken sauber setzen
     const dauerChk = document.getElementById('mk-dauer');
     const notizTxt = document.getElementById('mk-notizen');
-    dauerChk.checked = String(m.Dauerabgemeldet).toUpperCase() === 'TRUE';
+    dauerChk.checked = isDauerabgemeldet(m.Dauerabgemeldet);
     dauerChk.disabled = currentUser.isGuest;
     notizTxt.value = m.Notizen || '';
     notizTxt.readOnly = currentUser.isGuest;
 
     document.getElementById('mk-straf-spiess').value = currentUser.name || '';
 
-    const todayISO = new Date().toISOString().split('T')[0];
+    const todayISO = getTodayLocalISO();
     const upcoming = appData.termine
       .filter(t => String(t.Datum || '').substring(0, 10) >= todayISO)
       .sort((a, b) => String(a.Datum).localeCompare(String(b.Datum)));
@@ -1314,13 +1377,35 @@
   async function saveKarteiStammdaten() {
     const dauer = document.getElementById('mk-dauer').checked;
     const notizen = document.getElementById('mk-notizen').value;
-    await apiPost({
+
+    const res = await apiPost({
       action: 'updateMitglied',
       id: currentMitgliedId,
       dauerabgemeldet: dauer,
       notizen: notizen
     });
-    alert('Kartei-Daten gespeichert!');
+
+    if (res) {
+      // Wenn Dauerabmeldung aktiviert wurde, alle zukünftigen Termine ohne bestehenden Status auf "Abgemeldet" setzen
+      if (dauer) {
+        const todayISO = getTodayLocalISO();
+        const futureTermine = appData.termine.filter(t => String(t.Datum || '').substring(0, 10) >= todayISO);
+        for (const t of futureTermine) {
+          let stObj = {};
+          try { stObj = t.StatusJSON ? JSON.parse(t.StatusJSON) : {}; } catch (e) {}
+          if (!stObj[currentMitgliedId]) {
+            stObj[currentMitgliedId] = 'Abgemeldet';
+            await apiPost({
+              action: 'updateTerminStatus',
+              terminId: String(t.TerminID).trim(),
+              statusObj: stObj
+            });
+          }
+        }
+      }
+      openKartei(currentMitgliedId);
+      alert('✅ Status & Notiz gespeichert!');
+    }
   }
 
   async function abmeldenFuerTermin() {
@@ -1343,25 +1428,40 @@
     }
   }
 
+  // Liest Preise flexibel aus dem Strafenkatalog (egal wie die Spalten im Sheet genau heißen)
   function getKatalogBetrag(kategorie, ue18, fallback) {
-    const item = appData.strafenkatalog.find(k =>
-      String(k.Kategorie || '').trim().toLowerCase() === kategorie.toLowerCase()
-    );
+    const target = String(kategorie || '').trim().toLowerCase();
+    const item = appData.strafenkatalog.find(k => {
+      const kat = String(k.Kategorie || k.Verstoss || k.Bezeichnung || '').trim().toLowerCase();
+      return kat === target || kat.includes(target) || target.includes(kat);
+    });
     if (!item) return fallback;
-    if (ue18 && item.BetragUE18 !== undefined && item.BetragUE18 !== '') {
-      return parseAmount(item.BetragUE18);
+
+    const u18Raw = item.BetragU18 !== undefined ? item.BetragU18 : (item.U18 !== undefined ? item.U18 : item['Betrag U18']);
+    const ue18Raw = item.BetragUE18 !== undefined ? item.BetragUE18 : (item.UE18 !== undefined ? item.UE18 : (item['Ü18'] !== undefined ? item['Ü18'] : item['Betrag Ü18']));
+
+    if (ue18 && ue18Raw !== undefined && String(ue18Raw).trim() !== '') {
+      return parseAmount(ue18Raw);
     }
-    if (!ue18 && item.BetragU18 !== undefined && item.BetragU18 !== '') {
-      return parseAmount(item.BetragU18);
+    if (!ue18 && u18Raw !== undefined && String(u18Raw).trim() !== '') {
+      return parseAmount(u18Raw);
     }
-    if (item.Betrag !== undefined && item.Betrag !== '') {
+    if (item.Betrag !== undefined && String(item.Betrag).trim() !== '') {
       return parseAmount(item.Betrag);
     }
     return fallback;
   }
 
+  function appendActiveTerminToReason(grund) {
+    const liveTermin = getCurrentlyActiveTermin();
+    if (!liveTermin) return grund;
+    const suffix = `(${liveTermin.Titel})`;
+    if (grund.includes(suffix)) return grund;
+    return `${grund} ${suffix}`;
+  }
+
   async function quickStrafe(kategorie) {
-    const m = appData.mitglieder.find(x => x.ID === currentMitgliedId);
+    const m = appData.mitglieder.find(x => String(x.ID).trim() === String(currentMitgliedId).trim());
     const ue18 = m ? isUe18(m.Geburtsdatum) : true;
     const fallbacks = {
       'Unentschuldigtes Fehlen': ue18 ? 10.0 : 5.0,
@@ -1371,48 +1471,54 @@
     };
     const betrag = getKatalogBetrag(kategorie, ue18, fallbacks[kategorie] || 2.0);
     const spiess = currentUser.name || 'Spieß';
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayLocalISO();
+    const grundMitTermin = appendActiveTerminToReason(kategorie);
 
-    await apiPost({
+    const res = await apiPost({
       action: 'addStrafe',
       mitgliedId: currentMitgliedId,
       datum: today,
-      grund: kategorie,
+      grund: grundMitTermin,
       betrag: betrag,
       spiess: spiess
     });
-    renderKarteiStrafen(currentMitgliedId);
+    if (res) {
+      renderKarteiStrafen(currentMitgliedId);
+    }
   }
 
   async function addIndividuelleStrafe() {
-    const grund = document.getElementById('mk-straf-grund').value.trim();
+    const grundRaw = document.getElementById('mk-straf-grund').value.trim();
     const betrag = parseAmount(document.getElementById('mk-straf-betrag').value);
     const spiess = currentUser.name || 'Spieß';
 
-    if (!grund || isNaN(betrag) || betrag <= 0) return alert('Bitte Grund und gültigen Betrag eingeben!');
-    const today = new Date().toISOString().split('T')[0];
+    if (!grundRaw || isNaN(betrag) || betrag <= 0) return alert('Bitte Grund und gültigen Betrag eingeben!');
+    const today = getTodayLocalISO();
+    const grundMitTermin = appendActiveTerminToReason(grundRaw);
 
-    await apiPost({
+    const res = await apiPost({
       action: 'addStrafe',
       mitgliedId: currentMitgliedId,
       datum: today,
-      grund: grund,
+      grund: grundMitTermin,
       betrag: betrag,
       spiess: spiess
     });
-    document.getElementById('mk-straf-grund').value = '';
-    document.getElementById('mk-straf-betrag').value = '';
-    renderKarteiStrafen(currentMitgliedId);
+    if (res) {
+      document.getElementById('mk-straf-grund').value = '';
+      document.getElementById('mk-straf-betrag').value = '';
+      renderKarteiStrafen(currentMitgliedId);
+    }
   }
 
   async function schuldenBegleichen() {
-    const m = appData.mitglieder.find(x => x.ID === currentMitgliedId);
+    const m = appData.mitglieder.find(x => String(x.ID).trim() === String(currentMitgliedId).trim());
     if (!m) return;
     const offeneSumme = getOffeneStrafenSumme(currentMitgliedId);
     if (offeneSumme <= 0) return alert('Dieser Schütze hat keine offenen Strafen.');
 
     const spiess = currentUser.name || 'Spieß';
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayLocalISO();
 
     if (!confirm(`${formatEuro(offeneSumme)} als bezahlt markieren und in die Gesamtkasse buchen?`)) return;
 
@@ -1434,8 +1540,8 @@
   function renderRegeln() {
     const katBody = document.getElementById('katalog-tabelle');
     katBody.innerHTML = appData.strafenkatalog.map(k => {
-      const u18Val = k.BetragU18 !== undefined && k.BetragU18 !== '' ? k.BetragU18 : k.Betrag;
-      const ue18Val = k.BetragUE18 !== undefined && k.BetragUE18 !== '' ? k.BetragUE18 : k.Betrag;
+      const u18Val = k.BetragU18 !== undefined && k.BetragU18 !== '' ? k.BetragU18 : (k.U18 !== undefined ? k.U18 : k.Betrag);
+      const ue18Val = k.BetragUE18 !== undefined && k.BetragUE18 !== '' ? k.BetragUE18 : (k.UE18 !== undefined ? k.UE18 : (k['Ü18'] !== undefined ? k['Ü18'] : k.Betrag));
       return `
         <tr>
           <td><strong>${k.Kategorie || ''}</strong></td>
@@ -1464,7 +1570,7 @@
     const spiess = currentUser.name || 'Spieß';
 
     if (isNaN(betrag) || betrag <= 0 || !grund) return alert('Bitte Betrag und Grund eingeben!');
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayLocalISO();
 
     const res = await apiPost({
       action: 'addKassenbuchung',
